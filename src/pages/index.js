@@ -544,7 +544,13 @@ export default function MyRamadhanHome() {
 
           {/* 5. REFLECTION JOURNAL */}
           <div
-            onClick={() => router.push('/jurnal')}
+            onClick={() => {
+              if (!user) {
+                router.push('/auth/login');
+              } else {
+                router.push('/jurnal');
+              }
+            }}
             className='col-span-2 relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
           >
             <Moon
