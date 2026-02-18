@@ -354,7 +354,7 @@ export default function MyRamadhanHome() {
 
                 {hero.timeLeft ? (
                   <h2
-                    className='text-[4.5rem] font-black tracking-[-0.05em] tabular-nums
+                    className='text-[4rem] font-black tracking-[-0.05em] tabular-nums
                       bg-gradient-to-b from-white via-white/90 to-white/60
                       bg-clip-text text-transparent drop-shadow-xl leading-none'
                   >
