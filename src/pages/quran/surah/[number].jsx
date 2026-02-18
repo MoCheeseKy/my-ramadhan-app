@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import {
-  ArrowLeft,
-  Bookmark,
-  Highlighter,
-  MoreVertical,
-  PlayCircle,
-} from 'lucide-react';
+import { ArrowLeft, Bookmark, Highlighter, Moon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function SurahDetail() {
@@ -127,7 +121,25 @@ export default function SurahDetail() {
     }
   };
 
-  if (!surah) return <div className='p-10 text-center'>Memuat...</div>;
+  if (!surah)
+    return (
+      <div className='min-h-screen bg-[#1e3a8a] flex items-center justify-center'>
+        <div className='flex flex-col items-center gap-6'>
+          {/* Moon spinner */}
+          <div className='relative'>
+            <div className='absolute inset-0 bg-blue-400/20 blur-xl rounded-full scale-150' />
+            <Moon
+              size={42}
+              className='text-white animate-spin [animation-duration:2.5s]'
+            />
+          </div>
+
+          <p className='text-blue-200 text-sm tracking-wide'>
+            Menyiapkan perjalanan Ramadhanmu...
+          </p>
+        </div>
+      </div>
+    );
 
   return (
     <div className='min-h-screen bg-white pb-20'>

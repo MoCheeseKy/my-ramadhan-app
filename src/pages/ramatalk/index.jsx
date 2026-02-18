@@ -167,7 +167,7 @@ export default function RamatalkPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder='Tulis pesan...'
-              className='w-full bg-slate-100 border-none rounded-full py-3.5 pl-5 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none'
+              className='text-black w-full bg-slate-100 border-none rounded-full py-3.5 pl-5 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none'
               disabled={isLoading}
             />
             <button

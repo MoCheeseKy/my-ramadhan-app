@@ -77,7 +77,7 @@ export default function Login() {
 
           <h1 className='text-3xl font-extrabold tracking-tight'>MyRamadhan</h1>
           <p className='text-blue-200 text-sm mt-2'>
-            Warm, Adaptive, & Mindful
+            Kita usahakan Ramadhan penuh berkah itu!
           </p>
         </div>
 
