@@ -103,7 +103,7 @@ export default function MyRamadhanHome() {
           </div>
 
           <div className='w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-xl hover:scale-105 transition-transform'>
-            😼
+            <Moon className='text-[#1e3a8a]' />
           </div>
         </header>
 
@@ -317,37 +317,6 @@ export default function MyRamadhanHome() {
           </div>
         </div>
       </div>
-
-      {/* --- FLOATING NAVIGATION --- */}
-      <nav className='fixed bottom-6 left-1/2 -translate-x-1/2 z-50'>
-        <div
-          className='relative bg-white/70 backdrop-blur-2xl border border-white/50
-            shadow-[0_20px_50px_rgba(0,0,0,0.1)]
-            rounded-full px-3 py-2 flex items-center gap-2'
-        >
-          <div className='absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#312e81] rounded-full blur-xl opacity-30' />
-
-          <button className='relative w-12 h-12 rounded-full bg-[#312e81] text-white flex items-center justify-center shadow-lg transition-all duration-300 scale-110'>
-            <MoreHorizontal size={22} />
-          </button>
-
-          <button className='w-12 h-12 rounded-full text-slate-400 hover:text-[#1e3a8a] hover:bg-blue-50 transition-all duration-300 flex items-center justify-center hover:scale-110'>
-            <BookOpen size={20} />
-          </button>
-
-          <button className='w-12 h-12 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-300 flex items-center justify-center hover:scale-110'>
-            <Sparkles size={20} />
-          </button>
-
-          <button className='w-12 h-12 rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300 flex items-center justify-center hover:scale-110'>
-            <CheckCircle2 size={20} />
-          </button>
-
-          <button className='w-12 h-12 rounded-full text-slate-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all duration-300 flex items-center justify-center hover:scale-110'>
-            <Trophy size={20} />
-          </button>
-        </div>
-      </nav>
     </main>
   );
 }
