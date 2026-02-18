@@ -1,97 +1,183 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
-import { Sparkles, ShieldAlert, ArrowRight, Key } from 'lucide-react';
+import { Moon, ShieldAlert, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState('choice'); // choice, register, login, result
+  const [step, setStep] = useState('choice');
   const [userData, setUserData] = useState(null);
   const router = useRouter();
 
+  // ================= REGISTER =================
   const handleRegister = async () => {
+    if (!username) return;
+
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username }),
     });
+
     const data = await res.json();
     setUserData(data);
     setStep('result');
   };
 
-  const saveAndGo = () => {
-    localStorage.setItem('myRamadhan_user', JSON.stringify(userData));
+  // ================= LOGIN =================
+  const handleLogin = async () => {
+    if (!code) return;
+
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalCode: code.trim().toUpperCase(),
+      }),
+    });
+
+    if (!res.ok) {
+      alert('Kode tidak valid');
+      return;
+    }
+
+    const data = await res.json();
+    setUserData(data);
+    saveAndGo(data);
+  };
+
+  // ================= SAVE =================
+  const saveAndGo = (dataOverride) => {
+    const dataToSave = dataOverride || userData;
+    localStorage.setItem('myRamadhan_user', JSON.stringify(dataToSave));
     router.push('/');
   };
 
   return (
-    <div className='min-h-screen bg-[#F6F9FC] flex items-center justify-center p-6 selection:bg-blue-200'>
-      <div className='w-full max-w-md bg-white rounded-[2.5rem] p-8 shadow-xl border border-slate-100 animate-fadeUp'>
-        <div className='text-center mb-10'>
-          <div className='w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200'>
-            <Sparkles className='text-white' size={32} />
+    <div className='min-h-screen bg-[#1e3a8a] text-white relative overflow-hidden flex items-center justify-center px-6'>
+      {/* MOON */}
+      <div className='absolute top-16 right-28 w-40 h-40 bg-[#1e3a8a] rounded-full' />
+
+      {/* STARS */}
+      <div className='absolute inset-0 opacity-40'>
+        <div className='absolute top-10 left-10 w-1 h-1 bg-white rounded-full' />
+        <div className='absolute top-40 left-1/3 w-1 h-1 bg-white rounded-full' />
+        <div className='absolute top-32 right-1/4 w-1 h-1 bg-white rounded-full' />
+        <div className='absolute bottom-40 left-1/4 w-1 h-1 bg-white rounded-full' />
+        <div className='absolute bottom-20 right-20 w-1 h-1 bg-white rounded-full' />
+      </div>
+
+      {/* CONTENT */}
+      <div className='relative w-full max-w-md text-center'>
+        {/* HEADER */}
+        <div className='mb-12'>
+          <div className='w-16 h-16 mx-auto mb-4 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur'>
+            <Moon size={30} />
           </div>
-          <h1 className='text-2xl font-extrabold text-slate-800'>MyRamadhan</h1>
-          <p className='text-slate-500 text-sm mt-1 font-medium'>
+
+          <h1 className='text-3xl font-extrabold tracking-tight'>MyRamadhan</h1>
+          <p className='text-blue-200 text-sm mt-2'>
             Warm, Adaptive, & Mindful
           </p>
         </div>
 
+        {/* ================= CHOICE ================= */}
         {step === 'choice' && (
-          <div className='grid gap-4'>
+          <div className='space-y-4'>
             <button
               onClick={() => setStep('register')}
-              className='w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center justify-center gap-2'
+              className='w-full py-4 bg-white text-blue-900 rounded-2xl font-bold hover:scale-[1.03] active:scale-[0.97] transition flex items-center justify-center gap-2 shadow-lg'
             >
-              Mulai Perjalanan Baru <ArrowRight size={18} />
+              Mulai Perjalanan Baru
+              <ArrowRight size={18} />
             </button>
+
             <button
               onClick={() => setStep('login')}
-              className='w-full py-4 bg-white text-slate-600 border border-slate-200 rounded-2xl font-bold hover:bg-slate-50 transition-all'
+              className='w-full py-4 border border-white/30 rounded-2xl font-bold text-white hover:bg-white/10 transition'
             >
               Sudah punya kode unik
             </button>
           </div>
         )}
 
+        {/* ================= REGISTER ================= */}
         {step === 'register' && (
           <div className='space-y-4'>
             <input
               type='text'
               placeholder='Siapa namamu?'
-              className='w-full px-6 py-4 rounded-2xl bg-slate-50 border-none focus:ring-2 focus:ring-blue-500 outline-none transition-all'
+              className='w-full px-6 py-4 rounded-2xl bg-white/10 backdrop-blur border border-white/20 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white outline-none'
               onChange={(e) => setUsername(e.target.value)}
             />
+
             <button
               onClick={handleRegister}
-              className='w-full py-4 bg-blue-600 text-white rounded-2xl font-bold'
+              className='w-full py-4 bg-white text-blue-900 rounded-2xl font-bold hover:scale-[1.03] active:scale-[0.97] transition shadow-lg'
             >
               Generate Kode Saya
+            </button>
+
+            <button
+              onClick={() => setStep('choice')}
+              className='text-sm text-blue-200 hover:text-white transition'
+            >
+              ← Kembali
             </button>
           </div>
         )}
 
+        {/* ================= LOGIN ================= */}
+        {step === 'login' && (
+          <div className='space-y-4'>
+            <input
+              type='text'
+              placeholder='Masukkan kode kamu'
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              className='w-full px-6 py-4 rounded-2xl bg-white/10 backdrop-blur border border-white/20 text-white placeholder:text-blue-200 focus:ring-2 focus:ring-white outline-none uppercase tracking-widest'
+            />
+
+            <button
+              onClick={handleLogin}
+              className='w-full py-4 bg-white text-blue-900 rounded-2xl font-bold hover:scale-[1.03] active:scale-[0.97] transition shadow-lg'
+            >
+              Masuk
+            </button>
+
+            <button
+              onClick={() => setStep('choice')}
+              className='text-sm text-blue-200 hover:text-white transition'
+            >
+              ← Kembali
+            </button>
+          </div>
+        )}
+
+        {/* ================= RESULT ================= */}
         {step === 'result' && userData && (
           <div className='space-y-6'>
-            <div className='p-4 bg-amber-50 rounded-2xl border border-amber-100 flex gap-3'>
-              <ShieldAlert className='text-amber-500 shrink-0' size={20} />
-              <p className='text-xs text-amber-700 leading-relaxed font-medium'>
+            <div className='p-4 bg-amber-400/10 rounded-2xl border border-amber-300/20 flex gap-3 text-left'>
+              <ShieldAlert className='text-amber-300 shrink-0' size={20} />
+              <p className='text-xs text-amber-100 leading-relaxed font-medium'>
                 Simpan code ini baik-baik. Jika hilang, data tidak dapat
                 dikembalikan.
               </p>
             </div>
-            <div className='text-center py-6 bg-blue-50 rounded-3xl border-2 border-dashed border-blue-200'>
-              <p className='text-[10px] uppercase tracking-widest text-blue-400 font-bold mb-2'>
+
+            <div className='py-8 rounded-3xl bg-white/10 backdrop-blur border border-white/20'>
+              <p className='text-[10px] uppercase tracking-widest text-blue-200 mb-2'>
                 Unique Personal Code
               </p>
-              <span className='text-3xl font-black text-blue-600 tracking-wider'>
+
+              <span className='text-4xl font-black tracking-[0.3em]'>
                 {userData.personal_code}
               </span>
             </div>
+
             <button
-              onClick={saveAndGo}
-              className='w-full py-4 bg-slate-900 text-white rounded-2xl font-bold'
+              onClick={() => saveAndGo()}
+              className='w-full py-4 bg-white text-blue-900 rounded-2xl font-bold hover:scale-[1.03] active:scale-[0.97] transition shadow-lg'
             >
               Saya Sudah Simpan, Lanjut
             </button>

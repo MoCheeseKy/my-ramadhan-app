@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import { supabase } from '@/lib/supabase';
+import ProtectedRoute from './ProtectedRoute';
 
 const items = [
   {

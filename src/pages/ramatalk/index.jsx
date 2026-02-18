@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import { ArrowLeft, Send, Sparkles, User, Bot } from 'lucide-react';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 dayjs.locale('id');
 
@@ -95,88 +96,90 @@ export default function RamatalkPage() {
   };
 
   return (
-    <div className='min-h-screen bg-[#F6F9FC] flex flex-col'>
-      <Head>
-        <title>Ramatalk AI</title>
-      </Head>
+    <ProtectedRoute>
+      <div className='min-h-screen bg-[#F6F9FC] flex flex-col'>
+        <Head>
+          <title>Ramatalk AI</title>
+        </Head>
 
-      {/* Header */}
-      <header className='bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-3 sticky top-0 z-40 flex items-center gap-3'>
-        <button
-          onClick={() => router.push('/')}
-          className='p-2 -ml-2 rounded-full hover:bg-slate-100'
-        >
-          <ArrowLeft size={20} className='text-slate-600' />
-        </button>
-        <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg'>
-          <Sparkles size={20} />
-        </div>
-        <div>
-          <h1 className='font-bold text-slate-800 leading-tight'>
-            Ramatalk AI
-          </h1>
-          <div className='flex items-center gap-1.5'>
-            <span className='w-2 h-2 bg-emerald-500 rounded-full animate-pulse'></span>
-            <p className='text-xs text-slate-500 font-medium'>Online</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Chat Area */}
-      <main className='flex-1 p-4 space-y-4 pb-24 overflow-y-auto'>
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex items-end gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-slate-200' : 'bg-indigo-100 text-indigo-600'}`}
-            >
-              {msg.role === 'user' ? <User size={16} /> : <Bot size={18} />}
-            </div>
-            <div
-              className={`max-w-[80%] p-4 rounded-2xl text-[15px] leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-slate-800 text-white rounded-tr-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'}`}
-            >
-              {msg.text}
-            </div>
-          </div>
-        ))}
-        {isLoading && (
-          <div className='flex items-end gap-2'>
-            <div className='w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center'>
-              <Bot size={18} className='text-indigo-600' />
-            </div>
-            <div className='bg-white p-4 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-400'>
-              Sedang mengetik...
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </main>
-
-      {/* Input Area */}
-      <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 pb-6'>
-        <form
-          onSubmit={handleSend}
-          className='max-w-md mx-auto relative flex items-center gap-2'
-        >
-          <input
-            type='text'
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder='Tulis pesan...'
-            className='w-full bg-slate-100 border-none rounded-full py-3.5 pl-5 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none'
-            disabled={isLoading}
-          />
+        {/* Header */}
+        <header className='bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-3 sticky top-0 z-40 flex items-center gap-3'>
           <button
-            type='submit'
-            disabled={isLoading || !input.trim()}
-            className='absolute right-2 p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50'
+            onClick={() => router.push('/')}
+            className='p-2 -ml-2 rounded-full hover:bg-slate-100'
           >
-            <Send size={18} />
+            <ArrowLeft size={20} className='text-slate-600' />
           </button>
-        </form>
+          <div className='w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg'>
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h1 className='font-bold text-slate-800 leading-tight'>
+              Ramatalk AI
+            </h1>
+            <div className='flex items-center gap-1.5'>
+              <span className='w-2 h-2 bg-emerald-500 rounded-full animate-pulse'></span>
+              <p className='text-xs text-slate-500 font-medium'>Online</p>
+            </div>
+          </div>
+        </header>
+
+        {/* Chat Area */}
+        <main className='flex-1 p-4 space-y-4 pb-24 overflow-y-auto'>
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex items-end gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            >
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-slate-200' : 'bg-indigo-100 text-indigo-600'}`}
+              >
+                {msg.role === 'user' ? <User size={16} /> : <Bot size={18} />}
+              </div>
+              <div
+                className={`max-w-[80%] p-4 rounded-2xl text-[15px] leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-slate-800 text-white rounded-tr-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'}`}
+              >
+                {msg.text}
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className='flex items-end gap-2'>
+              <div className='w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center'>
+                <Bot size={18} className='text-indigo-600' />
+              </div>
+              <div className='bg-white p-4 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-400'>
+                Sedang mengetik...
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </main>
+
+        {/* Input Area */}
+        <div className='fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 pb-6'>
+          <form
+            onSubmit={handleSend}
+            className='max-w-md mx-auto relative flex items-center gap-2'
+          >
+            <input
+              type='text'
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder='Tulis pesan...'
+              className='w-full bg-slate-100 border-none rounded-full py-3.5 pl-5 pr-12 focus:ring-2 focus:ring-indigo-500 outline-none'
+              disabled={isLoading}
+            />
+            <button
+              type='submit'
+              disabled={isLoading || !input.trim()}
+              className='absolute right-2 p-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50'
+            >
+              <Send size={18} />
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
