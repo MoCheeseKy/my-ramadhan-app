@@ -61,3 +61,7 @@ body {
 .animate-fadeIn > *:nth-child(7) {
   animation-delay: 0.35s;
 }
+
+.font-amiri {
+  font-family: 'Amiri', serif;
+}

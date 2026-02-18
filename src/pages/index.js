@@ -92,13 +92,13 @@ export default function MyRamadhanHome() {
         {/* --- HEADER --- */}
         <header className='flex justify-between items-center mb-8 mt-2'>
           <div>
-            <span className='px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold uppercase tracking-wider rounded-md'>
+            <span className='px-2 py-0.5 bg-blue-100 text-[#1e3a8a] text-[10px] font-bold uppercase tracking-wider rounded-md'>
               {hijriDate}
             </span>
 
             <h1 className='text-2xl font-extrabold tracking-tight mt-2 leading-tight'>
               {greeting}, <br />
-              <span className='text-blue-600'>Rifky!</span> 👋
+              <span className='text-[#1e3a8a]'>Rifky!</span> 👋
             </h1>
           </div>
 
@@ -256,11 +256,11 @@ export default function MyRamadhanHome() {
           {/* 5. TOOLS: QURAN & BADGES */}
           {/* Quran */}
           <div className='relative bg-white rounded-[2rem] p-4 border border-slate-100 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden'>
-            <Moon
+            <BookOpen
               size={80}
               className='absolute -bottom-6 -right-6 text-blue-100'
             />
-            <BookOpen size={24} className='text-blue-600' />
+            <BookOpen size={24} className='text-[#1e3a8a]' />
             <span className='text-xs font-bold'>Al-Qur{"'"}an</span>
           </div>
 
@@ -278,16 +278,16 @@ export default function MyRamadhanHome() {
           <div className='col-span-2 relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden'>
             <Moon
               size={120}
-              className='absolute -bottom-8 -right-8 text-purple-100'
+              className='absolute -bottom-8 -right-8 text-[#1e3a8a]'
             />
             <div className='flex items-center gap-2 mb-3'>
-              <PenLine size={18} className='text-purple-500' />
+              <PenLine size={18} className='text-[#1e3a8a]' />
               <h3 className='font-bold'>Jurnal Refleksi</h3>
             </div>
             <p className='text-sm text-slate-500'>
               Bagaimana perasaanmu hari ini?
             </p>
-            <div className='mt-3 text-xs font-semibold text-purple-600 flex items-center gap-1'>
+            <div className='mt-3 text-xs font-semibold text-[#1e3a8a] flex items-center gap-1'>
               Mulai menulis <ChevronRight size={14} />
             </div>
           </div>
@@ -325,13 +325,13 @@ export default function MyRamadhanHome() {
             shadow-[0_20px_50px_rgba(0,0,0,0.1)]
             rounded-full px-3 py-2 flex items-center gap-2'
         >
-          <div className='absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-blue-600 rounded-full blur-xl opacity-30' />
+          <div className='absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-[#312e81] rounded-full blur-xl opacity-30' />
 
-          <button className='relative w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg transition-all duration-300 scale-110'>
+          <button className='relative w-12 h-12 rounded-full bg-[#312e81] text-white flex items-center justify-center shadow-lg transition-all duration-300 scale-110'>
             <MoreHorizontal size={22} />
           </button>
 
-          <button className='w-12 h-12 rounded-full text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 flex items-center justify-center hover:scale-110'>
+          <button className='w-12 h-12 rounded-full text-slate-400 hover:text-[#1e3a8a] hover:bg-blue-50 transition-all duration-300 flex items-center justify-center hover:scale-110'>
             <BookOpen size={20} />
           </button>
 
