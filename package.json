@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.96.0",
     "dayjs": "^1.11.19",
     "framer-motion": "^12.34.1",
