@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --background: #ffffff;
@@ -23,4 +23,41 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn > * {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.animate-fadeIn > *:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.animate-fadeIn > *:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.animate-fadeIn > *:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.animate-fadeIn > *:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.animate-fadeIn > *:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.animate-fadeIn > *:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.animate-fadeIn > *:nth-child(7) {
+  animation-delay: 0.35s;
 }

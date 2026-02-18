@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "dayjs": "^1.11.19",
+    "framer-motion": "^12.34.1",
+    "lucide-react": "^0.574.0",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
