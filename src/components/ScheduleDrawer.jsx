@@ -118,24 +118,32 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
   const [isSaving, setIsSaving] = useState(false);
 
   const [todaySchedule, setTodaySchedule] = useState(null);
-  const [upcomingSchedules, setUpcomingSchedules] = useState([]); // State baru untuk jadwal ke depan
+  const [upcomingSchedules, setUpcomingSchedules] = useState([]);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
 
+  const [currentTime, setCurrentTime] = useState(dayjs());
+
+  // Timer berjalan setiap detik
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setInterval(() => setCurrentTime(dayjs()), 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isOpen]);
+
+  // Load awal
   useEffect(() => {
     if (isOpen) {
       const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
       const city = localUser?.location_city || 'Jakarta';
+
       setSelectedCity(city);
+      fetchSchedule(city);
+
       setIsPickerOpen(false);
       setSearchTerm('');
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && selectedCity) {
-      fetchSchedule(selectedCity);
-    }
-  }, [isOpen, selectedCity]);
 
   const fetchSchedule = async (city) => {
     setIsLoadingSchedule(true);
@@ -145,13 +153,11 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
 
       const now = dayjs();
 
-      // 1. Ambil jadwal hari ini
       const todayData = data?.schedule?.find((item) =>
         dayjs(item.isoDate).isSame(now, 'day'),
       );
       if (todayData) setTodaySchedule(todayData.timings);
 
-      // 2. Ambil jadwal mendatang (besok dan seterusnya, maksimal 30 hari)
       const futureData = data.schedule
         .filter((item) => dayjs(item.isoDate).isAfter(now, 'day'))
         .slice(0, 30);
@@ -170,6 +176,7 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
   const handleCitySelect = async (city) => {
     setIsSaving(true);
     setSelectedCity(city);
+    fetchSchedule(city);
 
     try {
       const localUser =
@@ -195,6 +202,31 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
       setIsSaving(false);
     }
   };
+
+  // ─── LOGIKA MENCARI JADWAL SELANJUTNYA ───
+  let nextScheduleId = null;
+  if (todaySchedule) {
+    for (const item of SCHEDULE_CARDS) {
+      const timeStr = todaySchedule[item.id];
+      if (timeStr && timeStr !== '--:--') {
+        const [h, m] = timeStr.split(':').map(Number);
+        const targetTime = dayjs().hour(h).minute(m).second(0);
+
+        // Cari jadwal pertama yang waktunya belum lewat
+        if (currentTime.isBefore(targetTime)) {
+          // Aturan Khusus Imsak: Hanya mulai terhitung setelah pukul 01:00 pagi
+          if (item.id === 'Imsak') {
+            if (currentTime.hour() >= 1) {
+              nextScheduleId = item.id;
+            }
+          } else {
+            nextScheduleId = item.id;
+          }
+          break; // Berhenti mencari setelah ketemu 1 jadwal terdekat
+        }
+      }
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -290,7 +322,6 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
                           className='w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] transition-all'
                         />
                       </div>
-
                       <div className='max-h-52 overflow-y-auto space-y-1 pr-2 custom-scrollbar'>
                         {filteredCities.length > 0 ? (
                           filteredCities.map((city) => (
@@ -326,7 +357,7 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
                   Jadwal Hari Ini
                 </p>
                 <p className='text-[10px] font-bold text-slate-500 bg-slate-200/60 px-2 py-1 rounded-md'>
-                  {dayjs().format('DD MMM YYYY')}
+                  {currentTime.format('DD MMM YYYY')}
                 </p>
               </div>
 
@@ -335,7 +366,7 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
                   {[...Array(6)].map((_, i) => (
                     <div
                       key={i}
-                      className='h-24 bg-white/50 border border-slate-100 rounded-2xl animate-pulse'
+                      className='h-28 bg-white/50 border border-slate-100 rounded-2xl animate-pulse'
                     />
                   ))}
                 </div>
@@ -343,23 +374,75 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
                 <div className='grid grid-cols-3 gap-3'>
                   {SCHEDULE_CARDS.map((item) => {
                     const Icon = item.icon;
-                    const time = todaySchedule[item.id] || '--:--';
+                    const timeStr = todaySchedule[item.id] || '--:--';
+
+                    const isNext = nextScheduleId === item.id;
+                    let countdownText = '';
+                    let isPassed = false;
+
+                    if (timeStr !== '--:--') {
+                      const [h, m] = timeStr.split(':').map(Number);
+                      const targetTime = dayjs().hour(h).minute(m).second(0);
+                      const diffInSeconds = targetTime.diff(
+                        currentTime,
+                        'second',
+                      );
+
+                      if (diffInSeconds <= 0) {
+                        isPassed = true;
+                      }
+
+                      // Format Timer: -02j 15m 30d
+                      if (isNext) {
+                        const hours = Math.floor(diffInSeconds / 3600);
+                        const mins = Math.floor((diffInSeconds % 3600) / 60);
+                        const secs = diffInSeconds % 60;
+                        const pad = (n) => n.toString().padStart(2, '0');
+
+                        if (hours > 0)
+                          countdownText = `-${hours}j ${pad(mins)}m ${pad(secs)}d`;
+                        else if (mins > 0)
+                          countdownText = `-${mins}m ${pad(secs)}d`;
+                        else countdownText = `-${secs}d`;
+                      }
+                    }
+
                     return (
                       <div
                         key={item.id}
-                        className='bg-white border border-slate-100 rounded-2xl p-3 flex flex-col items-center justify-center shadow-sm'
+                        className={`bg-white border ${isNext ? 'border-emerald-400 shadow-md ring-1 ring-emerald-400/50' : 'border-slate-100 shadow-sm'} rounded-2xl p-3 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-500`}
                       >
                         <div
-                          className={`w-8 h-8 rounded-full ${item.bg} ${item.color} flex items-center justify-center mb-2`}
+                          className={`transition-all duration-300 flex flex-col items-center w-full ${isPassed ? 'opacity-40' : ''}`}
                         >
-                          <Icon size={16} />
+                          <div
+                            className={`w-8 h-8 rounded-full ${item.bg} ${item.color} flex items-center justify-center mb-2`}
+                          >
+                            <Icon size={16} />
+                          </div>
+                          <p className='text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5'>
+                            {item.label}
+                          </p>
+                          <p
+                            className={`text-sm font-black ${isNext ? 'text-emerald-600' : 'text-slate-800'}`}
+                          >
+                            {timeStr}
+                          </p>
                         </div>
-                        <p className='text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5'>
-                          {item.label}
-                        </p>
-                        <p className='text-sm font-black text-slate-800'>
-                          {time}
-                        </p>
+
+                        {/* HANYA MUNCUL DI JADWAL TERDEKAT SAJA */}
+                        {isNext && (
+                          <div className='mt-2 text-[9px] font-black px-2 py-1 w-full text-center rounded-lg transition-colors duration-300 text-emerald-700 bg-emerald-50 border border-emerald-100'>
+                            {countdownText}
+                          </div>
+                        )}
+
+                        {/* LABEL JIKA SUDAH LEWAT */}
+                        {isPassed && (
+                          <div className='absolute bottom-1 text-[8px] font-bold text-slate-300 uppercase tracking-widest'>
+                            Terlewat
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -381,7 +464,6 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
                       Jadwal Mendatang
                     </p>
                   </div>
-
                   <div className='space-y-2.5'>
                     {upcomingSchedules.map((day, index) => (
                       <div

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -8,6 +8,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
 import { supabase } from '@/lib/supabase';
 import useUser from '@/hook/useUser';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Import Icons
 import {
@@ -30,6 +31,8 @@ import {
   LogIn,
   LogOut,
   HandCoins,
+  Bell,
+  X,
 } from 'lucide-react';
 
 import TrackerDrawer from '@/components/TrackerDrawer';
@@ -40,43 +43,119 @@ dayjs.locale('id');
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
+// ─── Prayer Reminder Config ───────────────────────────────────────────────────
+// Window: reminder muncul di detik 0-59 setelah waktu sholat masuk
+const PRAYER_REMINDERS = [
+  {
+    key: 'Subuh',
+    label: 'Subuh',
+    icon: '🌅',
+    message: 'Waktunya sholat Subuh! Awali hari dengan mengingat Allah 🤍',
+  },
+  {
+    key: 'Dzuhur',
+    label: 'Dzuhur',
+    icon: '☀️',
+    message:
+      'Waktunya sholat Dzuhur! Semangat, masih ada sisa hari yang berkah 💪',
+  },
+  {
+    key: 'Ashar',
+    label: 'Ashar',
+    icon: '🌤️',
+    message: 'Waktunya sholat Ashar! Jangan sampai kelewat ya 🙏',
+  },
+  {
+    key: 'Maghrib',
+    label: 'Maghrib',
+    icon: '🌇',
+    message:
+      'Waktunya sholat Maghrib! Alhamdulillah, puasa hari ini selesai 🎉',
+  },
+  {
+    key: 'Isya',
+    label: 'Isya',
+    icon: '🌙',
+    message: 'Waktunya sholat Isya! Tutup malam dengan ibadah yang indah ✨',
+  },
+];
+
+// Key localStorage: unik per sholat per hari → auto reset besok
+const getReminderKey = (prayerKey) =>
+  `myRamadhan_reminder_${prayerKey}_${dayjs().format('YYYY-MM-DD')}`;
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function MyRamadhanHome() {
   const { user } = useUser();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(dayjs());
+  console.log(user);
 
-  // State Drawers
+  // Drawers
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
-  // State Data Dinamis
+  // Data
   const [taskProgress, setTaskProgress] = useState({ completed: 0, total: 9 });
   const [quoteOfTheDay, setQuoteOfTheDay] = useState(quotesData[0]);
   const [isSpinning, setIsSpinning] = useState(false);
 
-  // State Prayer Times
+  // Prayer
   const [prayerTimes, setPrayerTimes] = useState(null);
   const [userCity, setUserCity] = useState('Jakarta');
+
+  // Prayer Reminder
+  const [activeReminder, setActiveReminder] = useState(null);
+  // Ref untuk track sholat yang sudah di-trigger di sesi ini (hindari re-trigger dalam 1 menit)
+  const triggeredRef = useRef(new Set());
 
   useEffect(() => {
     setMounted(true);
     const timer = setInterval(() => setCurrentTime(dayjs()), 1000);
-
     randomizeQuote();
     fetchTrackerSummary();
     fetchPrayerTimes();
-
     return () => clearInterval(timer);
   }, []);
+
+  // ─── Cek reminder setiap detik ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!prayerTimes || activeReminder) return;
+
+    for (const prayer of PRAYER_REMINDERS) {
+      const timeStr = prayerTimes[prayer.key];
+      if (!timeStr) continue;
+
+      const [h, m] = timeStr.split(':').map(Number);
+      const prayerMoment = dayjs().hour(h).minute(m).second(0);
+      const diffSec = currentTime.diff(prayerMoment, 'second');
+
+      // Hanya trigger dalam window 0-59 detik setelah waktu sholat
+      if (diffSec < 0 || diffSec >= 60) continue;
+      // Sudah ditampilkan hari ini?
+      if (localStorage.getItem(getReminderKey(prayer.key))) continue;
+      // Sudah di-trigger sesi ini?
+      if (triggeredRef.current.has(prayer.key)) continue;
+
+      triggeredRef.current.add(prayer.key);
+      setActiveReminder(prayer);
+      break;
+    }
+  }, [currentTime, prayerTimes, activeReminder]);
+
+  const dismissReminder = () => {
+    if (!activeReminder) return;
+    // Simpan ke localStorage → tidak muncul lagi hari ini
+    localStorage.setItem(getReminderKey(activeReminder.key), 'true');
+    setActiveReminder(null);
+  };
 
   const fetchPrayerTimes = useCallback(async () => {
     try {
       const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-      const city = localUser?.location_city || 'Jakarta';
-
+      const city = localUser?.location_city || user?.location_city || 'Jakarta';
       setUserCity(city);
-
       const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
       const data = await res.json();
       const todayData = data.schedule.find((item) =>
@@ -92,7 +171,6 @@ export default function MyRamadhanHome() {
     const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
     if (!localUser) return;
 
-    // PERBAIKAN 1: Ambil juga custom_habits dari tabel users
     const { data: userData } = await supabase
       .from('users')
       .select('id, custom_habits')
@@ -101,7 +179,6 @@ export default function MyRamadhanHome() {
     if (!userData) return;
 
     const today = dayjs().format('YYYY-MM-DD');
-
     const { data } = await supabase
       .from('daily_trackers')
       .select('*')
@@ -120,21 +197,15 @@ export default function MyRamadhanHome() {
       'quran',
       'sedekah',
     ];
-
+    const customHabits = userData.custom_habits || [];
     let defaultCompleted = 0;
     let customCompleted = 0;
 
-    // Total target kustom yang dibuat user
-    const customHabits = userData.custom_habits || [];
-
     if (data) {
-      // Hitung progres target utama
       defaultCompleted = keysToCheck.reduce(
         (acc, key) => acc + (data[key] ? 1 : 0),
         0,
       );
-
-      // PERBAIKAN 2: Hitung progres target kustom (jika ada)
       const customProgress = data.custom_progress || {};
       customCompleted = customHabits.reduce(
         (acc, habit) => acc + (customProgress[habit.id] ? 1 : 0),
@@ -142,7 +213,6 @@ export default function MyRamadhanHome() {
       );
     }
 
-    // PERBAIKAN 3: Gabungkan total dan yang selesai
     setTaskProgress({
       completed: defaultCompleted + customCompleted,
       total: keysToCheck.length + customHabits.length,
@@ -152,8 +222,9 @@ export default function MyRamadhanHome() {
   const randomizeQuote = () => {
     setIsSpinning(true);
     setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * quotesData.length);
-      setQuoteOfTheDay(quotesData[randomIndex]);
+      setQuoteOfTheDay(
+        quotesData[Math.floor(Math.random() * quotesData.length)],
+      );
       setIsSpinning(false);
     }, 500);
   };
@@ -170,7 +241,6 @@ export default function MyRamadhanHome() {
           ? 'Selamat Sore'
           : 'Selamat Malam';
   const hijriDate = '1 Ramadhan 1447 H';
-
   const progressPercent = (taskProgress.completed / taskProgress.total) * 100;
   const dailyTopic = {
     day: 1,
@@ -179,7 +249,7 @@ export default function MyRamadhanHome() {
   };
 
   // =============================================
-  // HERO MODE LOGIC
+  // HERO MODE LOGIC — FIXED
   // =============================================
   const getHeroMode = () => {
     if (!prayerTimes) return null;
@@ -192,21 +262,18 @@ export default function MyRamadhanHome() {
     const subuh = parseTime(prayerTimes.Subuh);
     const maghrib = parseTime(prayerTimes.Maghrib);
     const isya = parseTime(prayerTimes.Isya);
-
     const isyaEnd = isya.add(10, 'minute');
-    const tarawihEnd = dayjs().hour(1).minute(0).second(0); // 01:00
-    const tahajudEnd = dayjs().hour(4).minute(0).second(0); // 04:00
     const subuhPlus5 = subuh.add(5, 'minute');
 
     const now = currentTime;
     const nowH = now.hour();
 
     const formatDur = (diff) => {
-      const dur = dayjs.duration(diff > 0 ? diff : 0);
-      return `${String(dur.hours()).padStart(2, '0')}:${String(dur.minutes()).padStart(2, '0')}:${String(dur.seconds()).padStart(2, '0')}`;
+      const d = dayjs.duration(diff > 0 ? diff : 0);
+      return `${String(d.hours()).padStart(2, '0')}:${String(d.minutes()).padStart(2, '0')}:${String(d.seconds()).padStart(2, '0')}`;
     };
 
-    // 1. Selamat Berbuka (Maghrib s/d Isya+10 menit)
+    // ── 1. Berbuka (Maghrib → Isya+10 menit) ──────────────────────────────────
     if (now.isAfter(maghrib) && now.isBefore(isyaEnd)) {
       return {
         mode: 'berbuka',
@@ -221,27 +288,29 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // 2. Waktu Tarawih (Isya+10 menit s/d 01:00)
-    // Catatan: tarawihEnd (01:00) ada di hari berikutnya secara jam,
-    // jadi kita pakai nowH untuk deteksi dini hari
-    if (now.isAfter(isyaEnd) || (nowH >= 0 && nowH < 1)) {
-      // Hanya masuk sini jika MALAM (setelah isya) ATAU dini hari sebelum jam 1
-      if (now.isAfter(isyaEnd) && (nowH >= isya.hour() || nowH < 1)) {
-        return {
-          mode: 'tarawih',
-          label: 'Waktu Tarawih 🕌',
-          sublabel: 'Semangat sholat tarawih malam ini 🤍',
-          gradient: 'from-violet-600 via-purple-600 to-fuchsia-700',
-          shadow: '0 25px 60px -15px rgba(147,51,234,0.5)',
-          accent: 'text-purple-200',
-          countdownLabel: 'Waktu Tarawih',
-          timeLeft: null,
-          progress: null,
-        };
-      }
+    // ── 2. Tarawih (Isya+10 menit → 01:00) ───────────────────────────────────
+    // BUG FIX: Kondisi lama gagal saat nowH = 0 (00:xx) karena isAfter(isyaEnd)
+    // bernilai false setelah tengah malam.
+    // Solusi: gunakan nowH saja sebagai gerbang utama.
+    //   - Jam 19-23 + sudah lewat isyaEnd → Tarawih
+    //   - Jam 00 (00:00-00:59) → selalu Tarawih (pasti sudah lewat isya)
+    const isLateEvening = nowH >= 19 && now.isAfter(isyaEnd); // 19:xx-23:xx setelah isya+10
+    const isMidnight = nowH === 0; // 00:00-00:59
+    if (isLateEvening || isMidnight) {
+      return {
+        mode: 'tarawih',
+        label: 'Waktu Tarawih 🕌',
+        sublabel: 'Semangat sholat tarawih malam ini 🤍',
+        gradient: 'from-violet-600 via-purple-600 to-fuchsia-700',
+        shadow: '0 25px 60px -15px rgba(147,51,234,0.5)',
+        accent: 'text-purple-200',
+        countdownLabel: 'Waktu Tarawih',
+        timeLeft: null,
+        progress: null,
+      };
     }
 
-    // 3. Waktu Tahajud (01:00 s/d 04:00)
+    // ── 3. Tahajud (01:00 → 04:00) ────────────────────────────────────────────
     if (nowH >= 1 && nowH < 4) {
       return {
         mode: 'tahajud',
@@ -256,7 +325,7 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // 4. Countdown Puasa Dimulai (04:00 s/d Subuh+5 menit)
+    // ── 4. Imsak / Puasa Dimulai (04:00 → Subuh+5 menit) ────────────────────
     if (nowH >= 4 && now.isBefore(subuhPlus5)) {
       return {
         mode: 'puasa-dimulai',
@@ -271,7 +340,7 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // 5. Default: Countdown ke Maghrib (Subuh+5 menit s/d Maghrib)
+    // ── 5. Default: Countdown ke Maghrib (Subuh+5 → Maghrib) ─────────────────
     const diff = maghrib.diff(now);
     const totalDur = maghrib.diff(subuh);
     const passed = now.diff(subuh);
@@ -296,10 +365,104 @@ export default function MyRamadhanHome() {
 
   return (
     <main className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-16 selection:bg-blue-200'>
+      {/* Ambient background */}
       <div className='fixed inset-0 -z-10 pointer-events-none overflow-hidden'>
         <div className='absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-3xl opacity-60' />
         <div className='absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-100/50 rounded-full blur-3xl opacity-60' />
       </div>
+
+      {/* ══════════════════════════════════════════
+          PRAYER REMINDER POPUP
+          - Muncul sebagai bottom sheet
+          - Backdrop bisa diklik untuk dismiss
+          - Tersimpan di localStorage → tidak muncul lagi hari ini
+      ══════════════════════════════════════════ */}
+      <AnimatePresence>
+        {activeReminder && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key='backdrop'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50'
+              onClick={dismissReminder}
+            />
+
+            {/* Bottom Sheet Card */}
+            <motion.div
+              key='reminder'
+              initial={{ opacity: 0, y: 80 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 80 }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className='fixed bottom-0 left-0 right-0 z-50 px-4 pb-8'
+            >
+              <div className='max-w-md mx-auto bg-white rounded-[2rem] overflow-hidden shadow-2xl'>
+                {/* Top accent strip */}
+                <div className='h-1.5 bg-gradient-to-r from-[#1e3a8a] via-indigo-500 to-purple-500' />
+
+                <div className='p-6'>
+                  {/* Header */}
+                  <div className='flex items-start justify-between mb-4'>
+                    <div className='flex items-center gap-3'>
+                      <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1e3a8a] to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-indigo-200'>
+                        {activeReminder.icon}
+                      </div>
+                      <div>
+                        <p className='text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400'>
+                          Pengingat Sholat
+                        </p>
+                        <p className='font-bold text-lg text-slate-800 leading-tight'>
+                          Waktu {activeReminder.label}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={dismissReminder}
+                      className='w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors'
+                    >
+                      <X size={15} className='text-slate-500' />
+                    </button>
+                  </div>
+
+                  {/* Message */}
+                  <p className='text-sm text-slate-600 leading-relaxed mb-5'>
+                    {activeReminder.message}
+                  </p>
+
+                  {/* Waktu sholat chip */}
+                  <div className='bg-slate-50 rounded-2xl px-4 py-3 flex items-center justify-between mb-5'>
+                    <div className='flex items-center gap-2'>
+                      <Bell size={13} className='text-[#1e3a8a]' />
+                      <span className='text-xs font-semibold text-slate-500'>
+                        Waktu sholat {activeReminder.label}
+                      </span>
+                    </div>
+                    <span className='text-sm font-black text-[#1e3a8a] tabular-nums'>
+                      {prayerTimes?.[activeReminder.key]}
+                    </span>
+                  </div>
+
+                  {/* CTA */}
+                  <button
+                    onClick={dismissReminder}
+                    className='w-full py-4 rounded-2xl bg-gradient-to-r from-[#1e3a8a] to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-200 hover:opacity-90 active:scale-95 transition-all'
+                  >
+                    Siap, segera sholat! 🙏
+                  </button>
+
+                  <p className='text-center text-[10px] text-slate-300 mt-3'>
+                    Pengingat ini tidak akan muncul lagi hari ini
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <div className='max-w-md mx-auto p-5'>
         {/* --- HEADER --- */}
@@ -339,13 +502,12 @@ export default function MyRamadhanHome() {
 
         {/* --- BENTO GRID LAYOUT --- */}
         <div className='grid grid-cols-2 gap-4 animate-fadeUp'>
-          {/* 1. HERO CARD (Dynamic Mode) */}
+          {/* 1. HERO CARD */}
           {hero ? (
             <div
               className={`col-span-2 relative min-h-[300px] rounded-[2.5rem] p-7 text-white overflow-hidden group bg-gradient-to-br ${hero.gradient} transition-all duration-500 hover:-translate-y-1`}
               style={{ boxShadow: hero.shadow }}
             >
-              {/* Background Effects */}
               <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.15),transparent_60%)]' />
               <div className='absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse' />
               <div className='absolute -bottom-24 -left-24 w-72 h-72 bg-white/10 rounded-full blur-3xl' />
@@ -354,7 +516,6 @@ export default function MyRamadhanHome() {
                 <div className='absolute w-1 h-1 bg-white rounded-full top-[35%] left-[75%] animate-pulse' />
               </div>
 
-              {/* Header Row */}
               <div className='relative z-10 flex justify-between items-center'>
                 <div className='flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10'>
                   <span
@@ -370,38 +531,26 @@ export default function MyRamadhanHome() {
                 />
               </div>
 
-              {/* Main Content */}
               <div className='relative z-10 text-center mt-8'>
                 <p
                   className={`text-[10px] uppercase tracking-[0.3em] ${hero.accent} mb-2`}
                 >
                   {hero.countdownLabel || hero.label}
                 </p>
-
                 {hero.timeLeft ? (
-                  <h2
-                    className='text-[4rem] font-black tracking-[-0.05em] tabular-nums
-                      bg-gradient-to-b from-white via-white/90 to-white/60
-                      bg-clip-text text-transparent drop-shadow-xl leading-none'
-                  >
+                  <h2 className='text-[4rem] font-black tracking-[-0.05em] tabular-nums bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-none'>
                     {hero.timeLeft}
                   </h2>
                 ) : (
-                  <h2
-                    className='text-[2.2rem] font-black
-                      bg-gradient-to-b from-white via-white/90 to-white/60
-                      bg-clip-text text-transparent drop-shadow-xl leading-tight mt-4'
-                  >
+                  <h2 className='text-[2.2rem] font-black bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-tight mt-4'>
                     {hero.label}
                   </h2>
                 )}
-
                 <p className={`mt-3 text-sm ${hero.accent} opacity-80`}>
                   {hero.sublabel}
                 </p>
               </div>
 
-              {/* Progress Bar*/}
               {hero.progress && (
                 <div className='relative z-10 mt-10'>
                   <div
@@ -426,25 +575,14 @@ export default function MyRamadhanHome() {
               />
             </div>
           ) : (
-            // Skeleton loading saat prayer times belum tersedia
-            <div className='relative'>
-              <div className='absolute inset-0 bg-blue-400/20 blur-xl rounded-full scale-150' />
-              <Moon
-                size={42}
-                className='text-white animate-spin [animation-duration:2.5s]'
-              />
-            </div>
+            <div className='col-span-2 min-h-[300px] rounded-[2.5rem] bg-slate-200 animate-pulse' />
           )}
 
           {/* 2. TRACKER CARD */}
           <div
-            onClick={() => {
-              if (!user) {
-                router.push('/auth/login');
-              } else {
-                setIsTrackerOpen(true);
-              }
-            }}
+            onClick={() =>
+              !user ? router.push('/auth/login') : setIsTrackerOpen(true)
+            }
             className='col-span-2 bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
           >
             <div className='flex justify-between items-center mb-3'>
@@ -455,7 +593,6 @@ export default function MyRamadhanHome() {
                 Daily Goal
               </span>
             </div>
-
             <div className='flex justify-between items-end'>
               <div>
                 <h3 className='font-bold text-lg leading-tight text-slate-800'>
@@ -491,9 +628,8 @@ export default function MyRamadhanHome() {
             </div>
           </div>
 
-          {/* 3. GRID MENU (8 ITEMS) */}
+          {/* 3. GRID MENU */}
           <div className='col-span-2 grid grid-cols-4 gap-3 mt-2'>
-            {/* Row 1 */}
             <ToolCard
               icon={BookOpen}
               title="Al-Qur'an"
@@ -522,8 +658,6 @@ export default function MyRamadhanHome() {
               bgClass='text-amber-100'
               onClick={() => router.push('/fiqih')}
             />
-
-            {/* Row 2 */}
             <ToolCard
               icon={Compass}
               title='Kiblat'
@@ -582,13 +716,9 @@ export default function MyRamadhanHome() {
 
           {/* 5. REFLECTION JOURNAL */}
           <div
-            onClick={() => {
-              if (!user) {
-                router.push('/auth/login');
-              } else {
-                router.push('/jurnal');
-              }
-            }}
+            onClick={() =>
+              !user ? router.push('/auth/login') : router.push('/jurnal')
+            }
             className='col-span-2 relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
           >
             <Moon
@@ -610,10 +740,7 @@ export default function MyRamadhanHome() {
           {/* 6. RAMATALK AI */}
           <div
             onClick={() => router.push('/ramatalk')}
-            className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white
-              bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95]
-              shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)]
-              transition-all duration-500 hover:-translate-y-1 group cursor-pointer'
+            className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group cursor-pointer'
           >
             <div className='absolute inset-0 bg-[radial-gradient(circle_at_60%_30%,rgba(255,255,255,0.12),transparent_65%)]' />
             <div className='absolute -bottom-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl' />
@@ -634,12 +761,7 @@ export default function MyRamadhanHome() {
           </div>
 
           {/* 7. QUOTE OF THE DAY */}
-          <div
-            className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white
-              bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95]
-              shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)]
-              transition-all duration-500 hover:-translate-y-1 group'
-          >
+          <div className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group'>
             <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.15),transparent_65%)]' />
             <div className='absolute -top-16 -left-16 w-60 h-60 bg-indigo-400/20 rounded-full blur-3xl animate-pulse' />
             <div className='relative z-10'>
@@ -657,13 +779,11 @@ export default function MyRamadhanHome() {
                   <RefreshCw size={14} />
                 </button>
               </div>
-
               <p className='text-lg leading-relaxed font-medium bg-gradient-to-b from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent min-h-[3.5rem]'>
                 {'"'}
                 {quoteOfTheDay.text}
                 {'"'}
               </p>
-
               <div className='mt-4 flex items-center justify-between'>
                 <p className='text-xs text-indigo-200/70'>
                   {quoteOfTheDay.source}
@@ -680,7 +800,6 @@ export default function MyRamadhanHome() {
         onClose={() => setIsTrackerOpen(false)}
         onUpdate={fetchTrackerSummary}
       />
-
       <ScheduleDrawer
         isOpen={isScheduleOpen}
         onClose={() => setIsScheduleOpen(false)}
