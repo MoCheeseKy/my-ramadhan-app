@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { motion, AnimatePresence } from 'framer-motion';
+// PERBAIKAN: Tambahkan Sparkles
 import {
   ArrowLeft,
   Heart,
@@ -10,6 +11,8 @@ import {
   PenLine,
   Lock,
   BookOpen,
+  X,
+  Sparkles,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { moods } from '@/data/journalPrompts';
@@ -17,7 +20,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 
-dayjs.locale('id'); // Pastikan format tanggal bahasa Indonesia
+dayjs.locale('id');
 
 const categories = [
   {
@@ -80,9 +83,10 @@ export default function JournalDashboard() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // STATE BARU: Untuk menyimpan nilai filter
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterDate, setFilterDate] = useState('all');
+
+  const [selectedEntry, setSelectedEntry] = useState(null);
 
   useEffect(() => {
     fetchEntries();
@@ -109,12 +113,10 @@ export default function JournalDashboard() {
   const getMood = (moodId) => moods.find((m) => m.id === moodId);
   const getCat = (catId) => categories.find((c) => c.id === catId);
 
-  // LOGIKA BARU: Mengambil daftar tanggal unik untuk dropdown filter
   const uniqueDates = Array.from(
     new Set(entries.map((e) => dayjs(e.created_at).format('YYYY-MM-DD'))),
   );
 
-  // LOGIKA BARU: Menyaring catatan berdasarkan filter yang dipilih
   const filteredEntries = entries.filter((entry) => {
     const matchCat =
       filterCategory === 'all' || entry.category === filterCategory;
@@ -124,13 +126,33 @@ export default function JournalDashboard() {
     return matchCat && matchDate;
   });
 
-  // LOGIKA BARU: Mengelompokkan catatan yang sudah difilter berdasarkan tanggal
   const groupedEntries = filteredEntries.reduce((acc, entry) => {
     const dateStr = dayjs(entry.created_at).format('dddd, DD MMMM YYYY');
     if (!acc[dateStr]) acc[dateStr] = [];
     acc[dateStr].push(entry);
     return acc;
   }, {});
+
+  // LOGIKA BARU: Kirim data ke Ramatalk
+  const handleDiscussWithRamatalk = () => {
+    if (!selectedEntry) return;
+
+    // Simpan konteks ke sessionStorage (akan hilang jika tab ditutup)
+    const contextData = {
+      title: selectedEntry.title,
+      content: selectedEntry.content,
+      mood: getMood(selectedEntry.mood)?.label || 'Netral',
+      category: getCat(selectedEntry.category)?.title || 'Jurnal',
+    };
+
+    sessionStorage.setItem(
+      'ramatalk_journal_context',
+      JSON.stringify(contextData),
+    );
+
+    // Pindah ke halaman Ramatalk
+    router.push('/ramatalk');
+  };
 
   return (
     <ProtectedRoute>
@@ -145,7 +167,6 @@ export default function JournalDashboard() {
           <div className='absolute bottom-0 left-0 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl' />
         </div>
 
-        {/* --- Header --- */}
         <header className='sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4'>
           <div className='flex items-center gap-4'>
             <button
@@ -163,7 +184,23 @@ export default function JournalDashboard() {
         </header>
 
         <main className='max-w-md mx-auto px-5 pt-6'>
-          {/* ── GREETING ── */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className='mb-6 bg-slate-100/80 border border-slate-200 rounded-xl p-3 flex items-center gap-3'
+          >
+            <div className='bg-white p-2 rounded-lg text-slate-500 shadow-sm'>
+              <Lock size={16} />
+            </div>
+            <p className='text-xs text-slate-500 font-medium leading-relaxed'>
+              Ruang amanmu. Jurnal ini tersimpan privat dan{' '}
+              <strong className='text-slate-700'>
+                hanya bisa dibaca olehmu
+              </strong>
+              .
+            </p>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -176,7 +213,6 @@ export default function JournalDashboard() {
             </h2>
           </motion.div>
 
-          {/* ── CATEGORY CARDS ── */}
           <div className='space-y-3 mb-12'>
             {categories.map((cat, i) => (
               <motion.button
@@ -210,7 +246,6 @@ export default function JournalDashboard() {
             ))}
           </div>
 
-          {/* ── ENTRIES SECTION ── */}
           <div>
             <div className='flex items-center justify-between mb-4'>
               <p className='text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]'>
@@ -218,12 +253,11 @@ export default function JournalDashboard() {
               </p>
               {entries.length > 0 && (
                 <span className='text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-full'>
-                  {entries.length} Catatan 🤍
+                  {entries.length} entri
                 </span>
               )}
             </div>
 
-            {/* UI BARU: FILTER DROPDOWN */}
             {entries.length > 0 && (
               <div className='flex items-center gap-2 mb-6'>
                 <select
@@ -254,7 +288,6 @@ export default function JournalDashboard() {
               </div>
             )}
 
-            {/* DAFTAR JURNAL GROUP BY DATE */}
             {loading ? (
               <div className='space-y-3'>
                 {[1, 2, 3].map((i) => (
@@ -292,11 +325,9 @@ export default function JournalDashboard() {
               </div>
             ) : (
               <div className='space-y-8'>
-                {/* LOOPING UNTUK PEMISAH TANGGAL */}
                 {Object.entries(groupedEntries).map(
-                  ([dateStr, dateEntries], groupIdx) => (
+                  ([dateStr, dateEntries]) => (
                     <div key={dateStr}>
-                      {/* UI BARU: PEMISAH TIPIS BERDASARKAN TANGGAL */}
                       <div className='flex items-center gap-3 mb-4'>
                         <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest'>
                           {dateStr}
@@ -313,12 +344,13 @@ export default function JournalDashboard() {
                             text: 'text-slate-600',
                           };
                           return (
-                            <motion.div
+                            <motion.button
                               key={entry.id}
                               initial={{ opacity: 0, y: 12 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: i * 0.05 }}
-                              className='bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all'
+                              onClick={() => setSelectedEntry(entry)}
+                              className='w-full text-left bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-all group'
                             >
                               {cat && (
                                 <div
@@ -343,8 +375,12 @@ export default function JournalDashboard() {
                                       </span>
                                     )}
                                   </div>
-                                  <span className='text-[10px] text-slate-400 font-semibold'>
+                                  <span className='text-[10px] text-slate-400 font-semibold flex items-center gap-1'>
                                     {dayjs(entry.created_at).format('HH:mm')}
+                                    <ChevronRight
+                                      size={12}
+                                      className='opacity-0 group-hover:opacity-100 transition-opacity'
+                                    />
                                   </span>
                                 </div>
 
@@ -355,35 +391,95 @@ export default function JournalDashboard() {
                                   {entry.content}
                                 </p>
                               </div>
-                            </motion.div>
+                            </motion.button>
                           );
                         })}
                       </div>
                     </div>
                   ),
                 )}
-                {/* ── PRIVACY BANNER ── */}
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='mb-6 bg-slate-100/80 border border-slate-200 rounded-xl p-3 flex items-center gap-3'
-                >
-                  <div className='bg-white p-2 rounded-lg text-slate-500 shadow-sm'>
-                    <Lock size={16} />
-                  </div>
-                  <p className='text-xs text-slate-500 font-medium leading-relaxed'>
-                    Ruang amanmu. Jurnal ini tersimpan privat dan{' '}
-                    <strong className='text-slate-700'>
-                      hanya bisa dibaca olehmu
-                    </strong>
-                    .
-                  </p>
-                </motion.div>
               </div>
             )}
           </div>
         </main>
       </div>
+
+      {/* ── DETAIL DRAWER DENGAN TOMBOL RAMATALK ── */}
+      <AnimatePresence>
+        {selectedEntry && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedEntry(null)}
+              className='fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50'
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className='fixed bottom-0 left-0 right-0 max-w-md mx-auto h-[85vh] bg-white rounded-t-[2.5rem] shadow-2xl z-50 flex flex-col overflow-hidden'
+            >
+              <div className='px-6 py-5 border-b border-slate-100 shrink-0 bg-slate-50/50'>
+                <div className='w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5' />
+                <div className='flex justify-between items-start mb-3'>
+                  <div className='flex items-center gap-2 flex-wrap'>
+                    {getCat(selectedEntry.category) && (
+                      <span
+                        className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${getCat(selectedEntry.category).bg} ${getCat(selectedEntry.category).text}`}
+                      >
+                        {getCat(selectedEntry.category).title}
+                      </span>
+                    )}
+                    {getMood(selectedEntry.mood) && (
+                      <span
+                        className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${moodColors[selectedEntry.mood]?.bg || 'bg-slate-100'} ${moodColors[selectedEntry.mood]?.text || 'text-slate-600'} flex items-center gap-1`}
+                      >
+                        {getMood(selectedEntry.mood).icon}{' '}
+                        {getMood(selectedEntry.mood).label}
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setSelectedEntry(null)}
+                    className='w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition-colors'
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <h2 className='text-xl font-extrabold text-slate-800 tracking-tight leading-snug'>
+                  {selectedEntry.title || 'Tanpa Judul'}
+                </h2>
+                <p className='text-xs text-slate-500 mt-2 font-medium'>
+                  {dayjs(selectedEntry.created_at).format(
+                    'dddd, DD MMMM YYYY • HH:mm',
+                  )}
+                </p>
+              </div>
+
+              <div className='flex-1 overflow-y-auto px-6 py-6 custom-scrollbar'>
+                <p className='text-sm text-slate-700 leading-relaxed whitespace-pre-wrap font-medium pb-4'>
+                  {selectedEntry.content}
+                </p>
+              </div>
+
+              {/* UI BARU: TOMBOL OPT-IN RAMATALK */}
+              <div className='px-6 pb-8 pt-4 bg-gradient-to-t from-white via-white to-transparent border-t border-slate-50 shrink-0'>
+                <button
+                  onClick={handleDiscussWithRamatalk}
+                  className='w-full py-4 bg-indigo-50 text-[#1e3a8a] border border-indigo-100 font-bold text-sm rounded-2xl flex items-center justify-center gap-2 hover:bg-indigo-100 transition-all shadow-sm'
+                >
+                  <Sparkles size={16} className='text-indigo-500' /> Diskusikan
+                  perasaan ini dengan Ramatalk
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </ProtectedRoute>
   );
 }

@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  const { timeString, greeting, day } = context || {};
+  // LOGIKA BARU: Ekstrak journalContext dari payload
+  const { timeString, greeting, day, journalContext } = context || {};
 
   const ramadhanContext =
     day > 0
@@ -22,12 +23,14 @@ export default async function handler(req, res) {
         }`
       : 'Ramadhan belum dimulai atau sudah selesai.';
 
+  // LOGIKA BARU: Menyisipkan Jurnal ke dalam instruksi AI (jika ada)
   const systemPrompt = `Kamu adalah Ramatalk, AI pendamping Ramadhan dari aplikasi MyRamadhan. 
 Kamu berperan sebagai sahabat yang hangat, empatik, dan penuh kasih sayang — bukan ustadz yang menggurui.
 
 KONTEKS SAAT INI:
 - Waktu: ${greeting} (${timeString} WIB)
 - ${ramadhanContext}
+${journalContext ? `\nINFO SANGAT PENTING (BACA INI):\n${journalContext}\nJadikan info di atas sebagai latar belakang utama untuk memahami perasaan user saat ini. Jangan sebutkan secara kaku bahwa kamu membaca "data jurnal", tapi bersikaplah seperti sahabat yang sudah tahu kondisinya. Berikan saran atau dukungan emosional yang relevan dengan isi curhatannya tersebut.` : ''}
 
 KEPRIBADIANMU:
 - Hangat, friendly, Gen-Z vibes tapi tetap sopan dan islami

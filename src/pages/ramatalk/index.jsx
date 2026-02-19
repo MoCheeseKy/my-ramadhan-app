@@ -10,19 +10,47 @@ dayjs.locale('id');
 
 export default function RamatalkPage() {
   const router = useRouter();
-  // Pesan awal dari bot
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: 'ai',
-      text: 'Assalamualaikum! 👋\nAku Ramatalk. Ada yang mau diceritain atau ditanyain seputar Ramadhan? Aku siap dengerin. 🤍',
-    },
-  ]);
+
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // STATE BARU: Untuk menyimpan data jurnal dari halaman sebelah
+  const [journalContext, setJournalContext] = useState(null);
+
   const messagesEndRef = useRef(null);
 
-  // Auto scroll ke pesan terbawah
+  // LOGIKA BARU: Cek sessionStorage saat halaman pertama kali dibuka
+  useEffect(() => {
+    const savedContext = sessionStorage.getItem('ramatalk_journal_context');
+
+    if (savedContext) {
+      const parsedContext = JSON.parse(savedContext);
+      setJournalContext(parsedContext);
+
+      // Ramatalk memulai percakapan secara empatik berdasarkan Jurnal
+      setMessages([
+        {
+          id: 1,
+          role: 'ai',
+          text: `Halo! 👋\nAku lihat kamu baru saja menulis catatan berjudul "${parsedContext.title}". Ada yang mau diceritakan lebih lanjut tentang perasaanmu? Aku di sini siap dengerin. 🤍`,
+        },
+      ]);
+
+      // Hapus data dari storage agar tidak muncul lagi saat di-refresh
+      sessionStorage.removeItem('ramatalk_journal_context');
+    } else {
+      // Sapaan normal jika user langsung membuka Ramatalk
+      setMessages([
+        {
+          id: 1,
+          role: 'ai',
+          text: 'Assalamualaikum! 👋\nAku Ramatalk. Ada yang mau diceritain atau ditanyain seputar Ramadhan? Aku siap dengerin. 🤍',
+        },
+      ]);
+    }
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -31,14 +59,12 @@ export default function RamatalkPage() {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // 1. Tampilkan pesan user di layar
     const userText = input;
     const userMessage = { id: Date.now(), role: 'user', text: userText };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
-    // 2. Siapkan data waktu untuk konteks AI
     const now = dayjs();
     const currentHour = now.hour();
     const greeting =
@@ -50,13 +76,11 @@ export default function RamatalkPage() {
             ? 'Sore'
             : 'Malam';
 
-    // Hitung hari ke-berapa Ramadhan (Asumsi mulai 19 Feb 2026)
     const ramadhanStart = dayjs('2026-02-19');
     const dayDiff = now.diff(ramadhanStart, 'day') + 1;
     const currentDay = dayDiff > 0 ? dayDiff : 0;
 
     try {
-      // 3. Kirim ke Backend API yang kita buat di Langkah 4
       const res = await fetch('/api/ramatalk', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,13 +90,16 @@ export default function RamatalkPage() {
             timeString: now.format('HH:mm'),
             greeting: greeting,
             day: currentDay,
+            // LOGIKA BARU: Kirim konteks jurnal ke API Groq jika ada
+            journalContext: journalContext
+              ? `User baru saja menulis Jurnal: "${journalContext.title}". Isinya: "${journalContext.content}". (Kategori: ${journalContext.category}, Mood: ${journalContext.mood}).`
+              : null,
           },
         }),
       });
 
       const data = await res.json();
 
-      // 4. Tampilkan balasan AI
       const aiMessage = {
         id: Date.now() + 1,
         role: 'ai',
@@ -137,7 +164,7 @@ export default function RamatalkPage() {
                 {msg.role === 'user' ? <User size={16} /> : <Bot size={18} />}
               </div>
               <div
-                className={`max-w-[80%] p-4 rounded-2xl text-[15px] leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-slate-800 text-white rounded-tr-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'}`}
+                className={`max-w-[80%] p-4 rounded-2xl text-[15px] leading-relaxed shadow-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-slate-800 text-white rounded-tr-none' : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'}`}
               >
                 {msg.text}
               </div>
