@@ -1,7 +1,14 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ArrowLeft, Search, HeartHandshake, Copy, Check } from 'lucide-react';
+import {
+  ArrowLeft,
+  Search,
+  HeartHandshake,
+  Copy,
+  Check,
+  Sparkles,
+} from 'lucide-react';
 import { doaRamadhanData } from '@/data/doa';
 
 export default function DoaPage() {
@@ -9,7 +16,6 @@ export default function DoaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedIndex, setCopiedIndex] = useState(null);
 
-  // Filter Logic
   const filteredData = doaRamadhanData.filter((item) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -18,11 +24,10 @@ export default function DoaPage() {
     );
   });
 
-  // Copy to Clipboard Function
   const handleCopy = (text, index) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000); // Reset icon setelah 2 detik
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   return (
@@ -31,7 +36,6 @@ export default function DoaPage() {
         <title>Kumpulan Doa - MyRamadhan</title>
       </Head>
 
-      {/* --- Sticky Header --- */}
       <header className='sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4'>
         <div className='flex items-center gap-4 mb-4'>
           <button
@@ -48,7 +52,6 @@ export default function DoaPage() {
           </div>
         </div>
 
-        {/* Search Bar */}
         <div className='relative'>
           <Search
             className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
@@ -64,7 +67,6 @@ export default function DoaPage() {
         </div>
       </header>
 
-      {/* --- Content List --- */}
       <main className='max-w-md mx-auto p-5 space-y-4'>
         {filteredData.length > 0 ? (
           filteredData.map((item, index) => (
@@ -72,7 +74,6 @@ export default function DoaPage() {
               key={index}
               className='bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group relative'
             >
-              {/* Judul & Copy Button */}
               <div className='flex justify-between items-start mb-4'>
                 <h3 className='font-bold text-slate-800 text-lg group-hover:text-rose-600 transition-colors'>
                   {item.title}
@@ -94,20 +95,14 @@ export default function DoaPage() {
                   )}
                 </button>
               </div>
-
-              {/* Arabic Text */}
               <div dir='rtl' className='mb-4 w-full'>
                 <p className='font-amiri text-2xl leading-[2.2] text-slate-800 text-right'>
                   {item.arabic}
                 </p>
               </div>
-
-              {/* Translation */}
               <p className='text-slate-600 text-sm leading-relaxed mb-3 italic'>
                 "{item.translation}"
               </p>
-
-              {/* Source Badge */}
               <div className='flex justify-end'>
                 <span className='text-[10px] font-bold bg-slate-50 text-slate-400 px-2 py-1 rounded-md uppercase tracking-wide'>
                   {item.source}
@@ -116,13 +111,28 @@ export default function DoaPage() {
             </div>
           ))
         ) : (
-          // Empty State
-          <div className='text-center py-20'>
+          // --- EMPTY STATE DENGAN RAMATALK ---
+          <div className='text-center py-20 px-4'>
             <div className='w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4'>
               <Search size={32} />
             </div>
-            <h3 className='font-bold text-slate-700'>Tidak ditemukan</h3>
-            <p className='text-sm text-slate-400'>Coba kata kunci lain.</p>
+            <h3 className='font-bold text-slate-700 mb-2'>
+              Doa tidak ditemukan
+            </h3>
+            <p className='text-sm text-slate-500 mb-6'>
+              Mungkin doa yang kamu cari tidak ada di daftar. Jangan khawatir,
+              Ramatalk bisa mencarikannya untukmu!
+            </p>
+            <button
+              onClick={() =>
+                router.push(
+                  `/ramatalk?mode=doa&q=${encodeURIComponent(searchQuery)}`,
+                )
+              }
+              className='px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full font-bold text-sm shadow-[0_10px_20px_-10px_rgba(99,102,241,0.5)] hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto'
+            >
+              <Sparkles size={16} /> Cari Doa Pakai Ramatalk
+            </button>
           </div>
         )}
 
