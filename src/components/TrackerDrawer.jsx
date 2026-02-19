@@ -10,10 +10,17 @@ import {
   BookOpen,
   Heart,
   CalendarDays,
+  Target,
 } from 'lucide-react';
 import dayjs from 'dayjs';
+import 'dayjs/locale/id';
 import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabase';
+
+dayjs.locale('id');
+
+const CURRENT_YEAR = dayjs().year();
+const RAMADHAN_START = dayjs(`${CURRENT_YEAR}-02-19`);
 
 const items = [
   {
@@ -84,6 +91,7 @@ const items = [
 export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
   const router = useRouter();
   const [trackerData, setTrackerData] = useState({});
+  const [customHabits, setCustomHabits] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -93,10 +101,13 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
 
     const { data: userData } = await supabase
       .from('users')
-      .select('id')
+      .select('id, custom_habits')
       .eq('personal_code', localUser.personal_code)
       .single();
     if (!userData) return;
+
+    // Tarik daftar target kustom
+    setCustomHabits(userData.custom_habits || []);
 
     const today = dayjs().format('YYYY-MM-DD');
 
@@ -110,7 +121,7 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
     if (!data) {
       const { data: newData } = await supabase
         .from('daily_trackers')
-        .insert({ user_id: userData.id, date: today })
+        .insert({ user_id: userData.id, date: today, custom_progress: {} })
         .select()
         .single();
       data = newData;
@@ -126,10 +137,7 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
     }
   }, [isOpen, fetchData]);
 
-  const toggleItem = async (key) => {
-    const newValue = !trackerData[key];
-    setTrackerData((prev) => ({ ...prev, [key]: newValue }));
-
+  const toggleItem = async (key, isCustom = false) => {
     const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
     const { data: userData } = await supabase
       .from('users')
@@ -138,10 +146,32 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
       .single();
     const today = dayjs().format('YYYY-MM-DD');
 
-    await supabase
-      .from('daily_trackers')
-      .update({ [key]: newValue })
-      .match({ user_id: userData.id, date: today });
+    if (isCustom) {
+      // Toggle Kolom JSONB untuk target tambahan
+      const currentCustomProgress = trackerData.custom_progress || {};
+      const newValue = !currentCustomProgress[key];
+      const updatedCustomProgress = {
+        ...currentCustomProgress,
+        [key]: newValue,
+      };
+
+      setTrackerData((prev) => ({
+        ...prev,
+        custom_progress: updatedCustomProgress,
+      }));
+      await supabase
+        .from('daily_trackers')
+        .update({ custom_progress: updatedCustomProgress })
+        .match({ user_id: userData.id, date: today });
+    } else {
+      // Toggle Kolom Biasa untuk target default
+      const newValue = !trackerData[key];
+      setTrackerData((prev) => ({ ...prev, [key]: newValue }));
+      await supabase
+        .from('daily_trackers')
+        .update({ [key]: newValue })
+        .match({ user_id: userData.id, date: today });
+    }
 
     if (onUpdate) onUpdate();
   };
@@ -155,7 +185,6 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -164,7 +193,6 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
             className='fixed inset-0 bg-black/40 z-50 backdrop-blur-sm'
           />
 
-          {/* Drawer Panel */}
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -172,7 +200,6 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className='fixed bottom-0 left-0 right-0 bg-[#F6F9FC] rounded-t-[2.5rem] z-50 max-h-[70vh] flex flex-col shadow-2xl'
           >
-            {/* Handle Bar */}
             <div
               className='w-full flex justify-center pt-4 pb-2 bg-white/50 rounded-t-[2.5rem] backdrop-blur-sm'
               onClick={onClose}
@@ -180,25 +207,32 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
               <div className='w-12 h-1.5 bg-slate-300 rounded-full cursor-pointer' />
             </div>
 
-            {/* Header */}
             <div className='px-6 pb-4 flex items-center justify-between border-b border-slate-100 bg-white/50 backdrop-blur-sm'>
               <div>
                 <h2 className='font-bold text-xl text-slate-800'>
-                  Target Hari Ini
+                  Target Harianmu
                 </h2>
-                <p className='text-xs text-slate-400'>
-                  {dayjs().format('dddd, DD MMMM YYYY')}
+                {/* LOGIKA FORMAT TANGGAL BARU */}
+                <p className='text-xs text-slate-400 capitalize'>
+                  {(() => {
+                    const today = dayjs();
+                    const ramadhanDay = today.diff(RAMADHAN_START, 'day') + 1;
+
+                    if (ramadhanDay > 0 && ramadhanDay <= 30) {
+                      return `${ramadhanDay} Ramadhan, ${today.format('DD-MM-YYYY')}`;
+                    }
+                    return today.format('dddd, DD MM YYYY');
+                  })()}
                 </p>
               </div>
               <div className='flex items-center gap-2'>
-                {/* Tombol Kalender */}
                 <button
                   type='button'
                   onClick={handleOpenCalendar}
                   className='flex items-center gap-1.5 px-3 py-2 bg-[#1e3a8a]/10 hover:bg-[#1e3a8a]/20 text-[#1e3a8a] rounded-xl transition-colors text-xs font-semibold'
                 >
                   <CalendarDays size={15} />
-                  Kalender
+                  Detail 30 Hari
                 </button>
                 <button
                   type='button'
@@ -210,29 +244,27 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
               </div>
             </div>
 
-            {/* Content List (Scrollable) */}
-            <div className='flex-1 overflow-y-auto p-6 space-y-3 pb-12'>
-              {loading
-                ? [...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className='h-16 bg-white rounded-2xl animate-pulse'
-                    />
-                  ))
-                : items.map((item) => {
+            <div className='flex-1 overflow-y-auto p-6 space-y-3 pb-12 custom-scrollbar'>
+              {loading ? (
+                [...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className='h-16 bg-white rounded-2xl animate-pulse'
+                  />
+                ))
+              ) : (
+                <>
+                  {/* --- MAPPING TARGET UTAMA (DEFAULT) --- */}
+                  {items.map((item) => {
                     const isActive = trackerData[item.key];
                     return (
                       <div
                         key={item.key}
-                        onClick={() => toggleItem(item.key)}
+                        onClick={() => toggleItem(item.key, false)}
                         className={`
-                          relative p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group overflow-hidden
-                          ${
-                            isActive
-                              ? 'bg-white border-emerald-200 shadow-sm'
-                              : 'bg-white border-slate-100 hover:border-slate-200'
-                          }
-                        `}
+                            relative p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group overflow-hidden
+                            ${isActive ? 'bg-white border-emerald-200 shadow-sm' : 'bg-white border-slate-100 hover:border-slate-200'}
+                          `}
                       >
                         <div
                           className={`absolute inset-0 bg-emerald-50 transition-transform duration-500 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0'}`}
@@ -252,10 +284,7 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
                         </div>
 
                         <div
-                          className={`
-                            relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
-                            ${isActive ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200 group-hover:border-emerald-300'}
-                          `}
+                          className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isActive ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200 group-hover:border-emerald-300'}`}
                         >
                           <Check
                             size={14}
@@ -265,6 +294,60 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
                       </div>
                     );
                   })}
+
+                  {/* --- MAPPING TARGET TAMBAHAN (CUSTOM) --- */}
+                  {customHabits.length > 0 && (
+                    <div className='pt-4 pb-1 flex items-center gap-3'>
+                      <div className='flex-1 h-px bg-slate-200' />
+                      <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest'>
+                        Target Tambahan
+                      </p>
+                      <div className='flex-1 h-px bg-slate-200' />
+                    </div>
+                  )}
+
+                  {customHabits.map((habit) => {
+                    const isActive =
+                      trackerData.custom_progress?.[habit.id] ?? false;
+                    return (
+                      <div
+                        key={habit.id}
+                        onClick={() => toggleItem(habit.id, true)}
+                        className={`
+                            relative p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group overflow-hidden
+                            ${isActive ? 'bg-white border-pink-200 shadow-sm' : 'bg-white border-slate-100 hover:border-slate-200'}
+                          `}
+                      >
+                        <div
+                          className={`absolute inset-0 bg-pink-50 transition-transform duration-500 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0'}`}
+                        />
+
+                        <div className='relative z-10 flex items-center gap-4'>
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isActive ? 'bg-pink-100 text-pink-600' : 'bg-slate-100 text-slate-400'}`}
+                          >
+                            <Target size={20} />
+                          </div>
+                          <span
+                            className={`font-bold text-sm transition-colors ${isActive ? 'text-pink-900' : 'text-slate-700'}`}
+                          >
+                            {habit.label}
+                          </span>
+                        </div>
+
+                        <div
+                          className={`relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isActive ? 'bg-pink-500 border-pink-500' : 'border-slate-200 group-hover:border-pink-300'}`}
+                        >
+                          <Check
+                            size={14}
+                            className={`text-white transition-transform ${isActive ? 'scale-100' : 'scale-0'}`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
             </div>
           </motion.div>
         </>

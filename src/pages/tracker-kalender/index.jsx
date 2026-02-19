@@ -4,12 +4,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Target, Plus, X, Trash2, Check } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { motion, AnimatePresence } from 'framer-motion';
 
 dayjs.locale('id');
 
-// Gunakan tahun sekarang agar tidak hardcode 2025
 const CURRENT_YEAR = dayjs().year();
 const RAMADHAN_START = dayjs(`${CURRENT_YEAR}-02-19`);
 const RAMADHAN_END = dayjs(`${CURRENT_YEAR}-03-21`);
@@ -39,7 +39,6 @@ const TRACKER_LABELS = {
   sedekah: 'Sedekah',
 };
 
-// All 30 Ramadhan dates
 const RAMADHAN_DATES = Array.from({ length: RAMADHAN_DAYS }, (_, i) =>
   RAMADHAN_START.add(i, 'day'),
 );
@@ -64,9 +63,16 @@ export default function TrackerKalender() {
   const router = useRouter();
   const [allData, setAllData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(
+    dayjs().format('YYYY-MM-DD'),
+  );
   const [userId, setUserId] = useState(null);
-  const [toggling, setToggling] = useState(null); // key yang sedang di-toggle
+  const [toggling, setToggling] = useState(null);
+
+  // STATE BARU: Target Kustom
+  const [customHabits, setCustomHabits] = useState([]);
+  const [showAddHabit, setShowAddHabit] = useState(false);
+  const [newHabitName, setNewHabitName] = useState('');
 
   const fetchAllData = useCallback(async () => {
     setLoading(true);
@@ -76,9 +82,10 @@ export default function TrackerKalender() {
       return;
     }
 
+    // Mengambil id dan custom_habits dari tabel users
     const { data: userData } = await supabase
       .from('users')
-      .select('id')
+      .select('id, custom_habits')
       .eq('personal_code', localUser.personal_code)
       .single();
 
@@ -88,6 +95,7 @@ export default function TrackerKalender() {
     }
 
     setUserId(userData.id);
+    setCustomHabits(userData.custom_habits || []);
 
     const { data } = await supabase
       .from('daily_trackers')
@@ -105,34 +113,86 @@ export default function TrackerKalender() {
     setLoading(false);
   }, []);
 
-  const toggleItem = useCallback(
-    async (dateKey, key) => {
-      if (!userId) return;
-      const currentRow = allData[dateKey];
-      const newValue = currentRow ? !currentRow[key] : true;
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
+  // FUNGSI BARU: Tambah Target ke DB
+  const handleAddCustomHabit = async (e) => {
+    e.preventDefault();
+    if (!newHabitName.trim()) return;
+
+    const newHabit = {
+      id: `custom_${Date.now()}`,
+      label: newHabitName.trim(),
+    };
+
+    const updatedHabits = [...customHabits, newHabit];
+
+    // Update State
+    setCustomHabits(updatedHabits);
+    setNewHabitName('');
+    setShowAddHabit(false);
+
+    // Update Supabase Users Table
+    await supabase
+      .from('users')
+      .update({ custom_habits: updatedHabits })
+      .eq('id', userId);
+  };
+
+  // FUNGSI BARU: Hapus Target dari DB
+  const handleDeleteCustomHabit = async (id) => {
+    if (!window.confirm('Hapus target tambahan ini?')) return;
+
+    const updatedHabits = customHabits.filter((h) => h.id !== id);
+    setCustomHabits(updatedHabits);
+
+    await supabase
+      .from('users')
+      .update({ custom_habits: updatedHabits })
+      .eq('id', userId);
+  };
+
+  const toggleItem = useCallback(
+    async (dateKey, key, isCustom = false) => {
+      if (!userId) return;
       setToggling(`${dateKey}-${key}`);
+
+      const currentRow = allData[dateKey] || { user_id: userId, date: dateKey };
+      let updatePayload = {};
+
+      if (isCustom) {
+        // Toggle untuk kolom JSONB (custom_progress)
+        const currentCustomProgress = currentRow.custom_progress || {};
+        const newValue = !currentCustomProgress[key];
+        const newCustomProgress = { ...currentCustomProgress, [key]: newValue };
+
+        updatePayload = { custom_progress: newCustomProgress };
+      } else {
+        // Toggle untuk kolom biasa
+        const newValue = currentRow ? !currentRow[key] : true;
+        updatePayload = { [key]: newValue };
+      }
 
       // Optimistic update
       setAllData((prev) => ({
         ...prev,
         [dateKey]: {
-          ...(prev[dateKey] || { user_id: userId, date: dateKey }),
-          [key]: newValue,
+          ...currentRow,
+          ...updatePayload,
         },
       }));
 
-      if (currentRow) {
-        // Update existing row
+      if (allData[dateKey]) {
         await supabase
           .from('daily_trackers')
-          .update({ [key]: newValue })
+          .update(updatePayload)
           .match({ user_id: userId, date: dateKey });
       } else {
-        // Insert new row
         const { data: newRow } = await supabase
           .from('daily_trackers')
-          .insert({ user_id: userId, date: dateKey, [key]: newValue })
+          .insert({ ...currentRow, ...updatePayload })
           .select()
           .single();
         if (newRow) {
@@ -145,48 +205,54 @@ export default function TrackerKalender() {
     [allData, userId],
   );
 
-  useEffect(() => {
-    fetchAllData();
-  }, [fetchAllData]);
-
   const getProgress = (dateKey) => {
     const row = allData[dateKey];
-    if (!row)
-      return {
-        completed: 0,
-        total: TRACKER_KEYS.length,
-        percent: 0,
-        row: null,
-      };
-    const completed = TRACKER_KEYS.reduce(
-      (acc, key) => acc + (row[key] ? 1 : 0),
+
+    // Progress Default
+    const defaultCompleted = TRACKER_KEYS.reduce(
+      (acc, key) => acc + (row?.[key] ? 1 : 0),
       0,
     );
+
+    // Progress Custom
+    const customProgress = row?.custom_progress || {};
+    const customCompleted = customHabits.reduce(
+      (acc, habit) => acc + (customProgress[habit.id] ? 1 : 0),
+      0,
+    );
+
+    const total = TRACKER_KEYS.length + customHabits.length;
+    const completed = defaultCompleted + customCompleted;
+
     return {
       completed,
-      total: TRACKER_KEYS.length,
-      percent: Math.round((completed / TRACKER_KEYS.length) * 100),
+      total,
+      percent: total === 0 ? 0 : Math.round((completed / total) * 100),
       row,
     };
   };
 
   const today = dayjs().format('YYYY-MM-DD');
 
-  // Stats
   const totalDaysPassed = RAMADHAN_DATES.filter(
     (d) => !d.isAfter(dayjs(), 'day'),
   ).length;
-  const totalCompleted = Object.values(allData).reduce(
-    (acc, row) => acc + TRACKER_KEYS.reduce((a, k) => a + (row[k] ? 1 : 0), 0),
-    0,
-  );
-  const perfectDays = Object.values(allData).filter(
-    (row) =>
-      TRACKER_KEYS.reduce((a, k) => a + (row[k] ? 1 : 0), 0) ===
-      TRACKER_KEYS.length,
-  ).length;
 
-  // Grid: offset by first weekday of Ramadhan start (19 Feb 2025 = Wednesday = 3)
+  const totalCompleted = Object.values(allData).reduce((acc, row) => {
+    const dComp = TRACKER_KEYS.reduce((a, k) => a + (row[k] ? 1 : 0), 0);
+    const cComp = customHabits.reduce(
+      (a, h) => a + (row.custom_progress?.[h.id] ? 1 : 0),
+      0,
+    );
+    return acc + dComp + cComp;
+  }, 0);
+
+  const perfectDays = RAMADHAN_DATES.filter((date) => {
+    if (date.isAfter(dayjs(), 'day')) return false;
+    const p = getProgress(date.format('YYYY-MM-DD'));
+    return p.total > 0 && p.percent === 100;
+  }).length;
+
   const firstDayOfWeek = RAMADHAN_START.day();
   const gridCells = [
     ...Array.from({ length: firstDayOfWeek }, () => null),
@@ -253,7 +319,6 @@ export default function TrackerKalender() {
             </p>
           </div>
 
-          {/* Day Labels */}
           <div className='grid grid-cols-7 mb-2'>
             {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((d) => (
               <div
@@ -265,7 +330,6 @@ export default function TrackerKalender() {
             ))}
           </div>
 
-          {/* Grid Cells */}
           {loading ? (
             <div className='grid grid-cols-7 gap-1.5'>
               {[...Array(35)].map((_, i) => (
@@ -302,15 +366,12 @@ export default function TrackerKalender() {
                       ${!isFuture ? getProgressColor(progress.percent) : 'bg-slate-50 text-slate-300'}
                     `}
                   >
-                    {/* Ramadhan day number */}
                     <span className='text-[8px] leading-none opacity-60 font-semibold'>
                       {ramadhanDay}
                     </span>
-                    {/* Gregorian date */}
                     <span className='leading-none text-[11px]'>
                       {date.date()}
                     </span>
-                    {/* Progress count */}
                     {!isFuture && progress.completed > 0 && (
                       <span className='text-[7px] leading-none mt-0.5 opacity-70'>
                         {progress.completed}/{progress.total}
@@ -340,106 +401,225 @@ export default function TrackerKalender() {
         </div>
 
         {/* Detail Panel */}
-        {selectedDate &&
-          (() => {
-            const progress = getProgress(selectedDate);
-            return (
-              <div className='bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100'>
-                <div className='flex items-start justify-between mb-3'>
-                  <div>
-                    <p className='text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-0.5'>
-                      Hari ke-
-                      {dayjs(selectedDate).diff(RAMADHAN_START, 'day') + 1}{' '}
-                      Ramadhan
-                    </p>
-                    <h3 className='font-bold text-slate-800 capitalize'>
-                      {dayjs(selectedDate).format('dddd, DD MMMM YYYY')}
-                    </h3>
-                    <p className='text-xs text-slate-400 mt-0.5'>
-                      {progress.completed} dari {progress.total} ibadah selesai
-                    </p>
+        <AnimatePresence>
+          {selectedDate &&
+            (() => {
+              const progress = getProgress(selectedDate);
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className='bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100'
+                >
+                  <div className='flex items-start justify-between mb-3'>
+                    <div>
+                      <p className='text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-0.5'>
+                        Hari ke-
+                        {dayjs(selectedDate).diff(RAMADHAN_START, 'day') +
+                          1}{' '}
+                        Ramadhan
+                      </p>
+                      <h3 className='font-bold text-slate-800 capitalize'>
+                        {dayjs(selectedDate).format('dddd, DD MMMM YYYY')}
+                      </h3>
+                      <p className='text-xs text-slate-400 mt-0.5'>
+                        {progress.completed} dari {progress.total} target
+                        selesai
+                      </p>
+                    </div>
+                    <span
+                      className={`text-2xl font-black ${
+                        progress.percent === 100
+                          ? 'text-emerald-500'
+                          : progress.percent >= 70
+                            ? 'text-blue-500'
+                            : progress.percent >= 40
+                              ? 'text-amber-500'
+                              : progress.percent > 0
+                                ? 'text-rose-400'
+                                : 'text-slate-300'
+                      }`}
+                    >
+                      {progress.percent}%
+                    </span>
                   </div>
-                  <span
-                    className={`text-2xl font-black ${
-                      progress.percent === 100
-                        ? 'text-emerald-500'
-                        : progress.percent >= 70
-                          ? 'text-blue-500'
-                          : progress.percent >= 40
-                            ? 'text-amber-500'
-                            : progress.percent > 0
-                              ? 'text-rose-400'
-                              : 'text-slate-300'
-                    }`}
-                  >
-                    {progress.percent}%
-                  </span>
-                </div>
 
-                {/* Overall progress bar */}
-                <div className='h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-4'>
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ${getBarColor(progress.percent)}`}
-                    style={{ width: `${progress.percent}%` }}
-                  />
-                </div>
+                  <div className='h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-5'>
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${getBarColor(progress.percent)}`}
+                      style={{ width: `${progress.percent}%` }}
+                    />
+                  </div>
 
-                {/* Ibadah list — interactive toggle */}
-                <div className='space-y-2'>
-                  {TRACKER_KEYS.map((key) => {
-                    const done = allData[selectedDate]?.[key] ?? false;
-                    const isItemLoading = toggling === `${selectedDate}-${key}`;
-                    return (
+                  {/* --- 1. TARGET UTAMA --- */}
+                  <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2'>
+                    Target Utama
+                  </p>
+                  <div className='space-y-2 mb-6'>
+                    {TRACKER_KEYS.map((key) => {
+                      const done = allData[selectedDate]?.[key] ?? false;
+                      const isItemLoading =
+                        toggling === `${selectedDate}-${key}`;
+                      return (
+                        <button
+                          type='button'
+                          key={key}
+                          onClick={() => toggleItem(selectedDate, key, false)}
+                          disabled={isItemLoading}
+                          className={`
+                          w-full relative flex items-center justify-between px-4 py-3 rounded-xl border
+                          transition-all duration-200 active:scale-[0.98] cursor-pointer overflow-hidden
+                          ${done ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 hover:border-slate-200'}
+                          ${isItemLoading ? 'opacity-60' : ''}
+                        `}
+                        >
+                          <div
+                            className={`absolute inset-0 bg-emerald-50 transition-transform duration-300 origin-left ${done ? 'scale-x-100' : 'scale-x-0'}`}
+                          />
+                          <span
+                            className={`relative z-10 text-sm font-semibold transition-colors ${done ? 'text-emerald-800' : 'text-slate-500'}`}
+                          >
+                            {TRACKER_LABELS[key]}
+                          </span>
+                          <div
+                            className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${done ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                          >
+                            <svg
+                              width='10'
+                              height='8'
+                              viewBox='0 0 10 8'
+                              fill='none'
+                              className={`transition-transform duration-200 ${done ? 'scale-100' : 'scale-0'}`}
+                            >
+                              <path
+                                d='M1 4L3.5 6.5L9 1'
+                                stroke='white'
+                                strokeWidth='1.5'
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                              />
+                            </svg>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* --- 2. TARGET TAMBAHAN --- */}
+                  <div className='flex items-center justify-between mb-2'>
+                    <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest'>
+                      Target Tambahan
+                    </p>
+                    {!showAddHabit && (
+                      <button
+                        onClick={() => setShowAddHabit(true)}
+                        className='text-[10px] font-bold text-pink-500 flex items-center gap-1 bg-pink-50 px-2 py-1 rounded-full hover:bg-pink-100 transition-colors'
+                      >
+                        <Plus size={12} /> Tambah
+                      </button>
+                    )}
+                  </div>
+
+                  <div className='space-y-2 mb-3'>
+                    {customHabits.map((habit) => {
+                      const done =
+                        allData[selectedDate]?.custom_progress?.[habit.id] ??
+                        false;
+                      const isItemLoading =
+                        toggling === `${selectedDate}-${habit.id}`;
+                      return (
+                        <div
+                          key={habit.id}
+                          className='flex items-center gap-2 group'
+                        >
+                          <button
+                            type='button'
+                            onClick={() =>
+                              toggleItem(selectedDate, habit.id, true)
+                            }
+                            disabled={isItemLoading}
+                            className={`
+                            flex-1 relative flex items-center justify-between px-4 py-3 rounded-xl border
+                            transition-all duration-200 active:scale-[0.98] cursor-pointer overflow-hidden
+                            ${done ? 'bg-pink-50 border-pink-100' : 'bg-white border-slate-100 hover:border-slate-200'}
+                            ${isItemLoading ? 'opacity-60' : ''}
+                          `}
+                          >
+                            <div
+                              className={`absolute inset-0 bg-pink-50 transition-transform duration-300 origin-left ${done ? 'scale-x-100' : 'scale-x-0'}`}
+                            />
+                            <div className='relative z-10 flex items-center gap-2'>
+                              <Target
+                                size={16}
+                                className={
+                                  done ? 'text-pink-600' : 'text-slate-400'
+                                }
+                              />
+                              <span
+                                className={`text-sm font-semibold transition-colors ${done ? 'text-pink-800' : 'text-slate-600'}`}
+                              >
+                                {habit.label}
+                              </span>
+                            </div>
+                            <div
+                              className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${done ? 'bg-pink-500' : 'bg-slate-200'}`}
+                            >
+                              <Check
+                                size={14}
+                                className={`text-white transition-transform ${done ? 'scale-100' : 'scale-0'}`}
+                              />
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCustomHabit(habit.id)}
+                            className='p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0'
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    {customHabits.length === 0 && !showAddHabit && (
+                      <p className='text-xs text-slate-400 italic py-2 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200'>
+                        Belum ada target tambahan.
+                      </p>
+                    )}
+                  </div>
+
+                  {showAddHabit && (
+                    <form
+                      onSubmit={handleAddCustomHabit}
+                      className='flex gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-inner'
+                    >
+                      <input
+                        type='text'
+                        value={newHabitName}
+                        onChange={(e) => setNewHabitName(e.target.value)}
+                        placeholder='Contoh: Hafal 1 Ayat'
+                        className='flex-1 bg-transparent text-sm font-semibold px-2 outline-none text-slate-700 placeholder:text-slate-400 placeholder:font-normal'
+                        autoFocus
+                      />
+                      <button
+                        type='submit'
+                        disabled={!newHabitName.trim()}
+                        className='p-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 transition-colors'
+                      >
+                        <Check size={16} />
+                      </button>
                       <button
                         type='button'
-                        key={key}
-                        onClick={() => toggleItem(selectedDate, key)}
-                        disabled={isItemLoading}
-                        className={`
-                        w-full relative flex items-center justify-between px-4 py-3 rounded-xl border
-                        transition-all duration-200 active:scale-[0.98] cursor-pointer overflow-hidden
-                        ${done ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 hover:border-slate-200'}
-                        ${isItemLoading ? 'opacity-60' : ''}
-                      `}
+                        onClick={() => setShowAddHabit(false)}
+                        className='p-2 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition-colors'
                       >
-                        <div
-                          className={`absolute inset-0 bg-emerald-50 transition-transform duration-300 origin-left ${done ? 'scale-x-100' : 'scale-x-0'}`}
-                        />
-                        <span
-                          className={`relative z-10 text-sm font-semibold transition-colors ${
-                            done ? 'text-emerald-800' : 'text-slate-500'
-                          }`}
-                        >
-                          {TRACKER_LABELS[key]}
-                        </span>
-                        <div
-                          className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all ${
-                            done ? 'bg-emerald-500' : 'bg-slate-200'
-                          }`}
-                        >
-                          <svg
-                            width='10'
-                            height='8'
-                            viewBox='0 0 10 8'
-                            fill='none'
-                            className={`transition-transform duration-200 ${done ? 'scale-100' : 'scale-0'}`}
-                          >
-                            <path
-                              d='M1 4L3.5 6.5L9 1'
-                              stroke='white'
-                              strokeWidth='1.5'
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                            />
-                          </svg>
-                        </div>
+                        <X size={16} />
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })()}
+                    </form>
+                  )}
+                </motion.div>
+              );
+            })()}
+        </AnimatePresence>
       </div>
     </main>
   );
