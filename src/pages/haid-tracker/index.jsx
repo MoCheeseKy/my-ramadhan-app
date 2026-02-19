@@ -16,6 +16,7 @@ import {
   Coffee,
   Sun,
   X,
+  Activity,
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -71,8 +72,6 @@ export default function HaidTrackerPage() {
   const [showNiatModal, setShowNiatModal] = useState(false);
   const [actionModal, setActionModal] = useState({ isOpen: false, type: null });
   const [inputDate, setInputDate] = useState(dayjs().format('YYYY-MM-DD'));
-
-  // STATE BARU: Modal konfirmasi hapus khusus
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   useEffect(() => {
@@ -146,7 +145,6 @@ export default function HaidTrackerPage() {
     setActionModal({ isOpen: false, type: null });
   };
 
-  // LOGIKA BARU: Fungsi konfirmasi hapus via Modal Kustom
   const confirmDelete = async () => {
     if (!deleteModal.id) return;
     const targetId = deleteModal.id;
@@ -164,14 +162,12 @@ export default function HaidTrackerPage() {
       }
 
       setLogs((prevLogs) => prevLogs.filter((l) => l.id !== targetId));
-
       if (activePeriod && activePeriod.id === targetId) {
         setActivePeriod(null);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
     } finally {
-      // Tutup modal setelah proses selesai
       setDeleteModal({ isOpen: false, id: null });
     }
   };
@@ -185,19 +181,90 @@ export default function HaidTrackerPage() {
   const getQadhaDays = (start, end) => {
     const s = dayjs(start);
     const e = end ? dayjs(end) : dayjs();
-
     if (e.isBefore(RAMADHAN_START, 'day') || s.isAfter(RAMADHAN_END, 'day'))
       return 0;
-
     const overlapStart = s.isAfter(RAMADHAN_START) ? s : RAMADHAN_START;
     const overlapEnd = e.isBefore(RAMADHAN_END) ? e : RAMADHAN_END;
-
     return overlapEnd.diff(overlapStart, 'day') + 1;
   };
 
   const totalMissedFasting = logs.reduce((acc, curr) => {
     return acc + getQadhaDays(curr.start_date, curr.end_date);
   }, 0);
+
+  // === LOGIKA BARU: MENGHITUNG FASE SIKLUS ===
+  const getCyclePhase = () => {
+    if (logs.length === 0) return null;
+
+    // Ambil siklus terakhir untuk patokan
+    const lastLog = logs[0];
+    const isOngoing = activePeriod !== null;
+
+    const start = dayjs(lastLog.start_date);
+    const today = dayjs();
+    const dayOfCycle = today.diff(start, 'day') + 1;
+
+    // Asumsi siklus rata-rata 28 hari
+    let phaseInfo = {
+      phase: '',
+      desc: '',
+      color: '',
+      bg: '',
+      bar: '',
+      progress: 0,
+    };
+
+    if (isOngoing || dayOfCycle <= 7) {
+      phaseInfo = {
+        phase: 'Fase Menstruasi',
+        desc: 'Tubuh sedang melepaskan dinding rahim. Perbanyak istirahat, wajar jika merasa lemas atau kram perut.',
+        color: 'text-rose-600',
+        bg: 'bg-rose-50',
+        bar: 'bg-rose-500',
+        progress: Math.min((dayOfCycle / 7) * 25, 25),
+      };
+    } else if (dayOfCycle > 7 && dayOfCycle <= 13) {
+      phaseInfo = {
+        phase: 'Fase Folikuler',
+        desc: 'Energi dan mood sedang meningkat drastis! Waktu yang sangat tepat untuk produktif beraktivitas dan ibadah ekstra.',
+        color: 'text-blue-600',
+        bg: 'bg-blue-50',
+        bar: 'bg-blue-500',
+        progress: 25 + ((dayOfCycle - 7) / 6) * 25,
+      };
+    } else if (dayOfCycle >= 14 && dayOfCycle <= 15) {
+      phaseInfo = {
+        phase: 'Fase Ovulasi',
+        desc: 'Puncak masa kesuburan. Terkadang disertai nyeri ringan di satu sisi perut bawah (mittelschmerz).',
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+        bar: 'bg-emerald-500',
+        progress: 50 + ((dayOfCycle - 13) / 2) * 25,
+      };
+    } else if (dayOfCycle > 15 && dayOfCycle <= 28) {
+      phaseInfo = {
+        phase: 'Fase Luteal (PMS)',
+        desc: 'Energi mulai perlahan menurun. Kamu mungkin rentan mood swing, lapar, dan sensitif. Perbanyak sabar ya!',
+        color: 'text-amber-600',
+        bg: 'bg-amber-50',
+        bar: 'bg-amber-500',
+        progress: 75 + ((dayOfCycle - 15) / 13) * 25,
+      };
+    } else {
+      phaseInfo = {
+        phase: 'Menunggu Siklus',
+        desc: 'Siklusmu sudah melewati rata-rata 28 hari. Jangan stres agar siklusmu segera datang.',
+        color: 'text-slate-600',
+        bg: 'bg-slate-50',
+        bar: 'bg-slate-400',
+        progress: 100,
+      };
+    }
+
+    return { ...phaseInfo, day: dayOfCycle };
+  };
+
+  const currentPhase = getCyclePhase();
 
   return (
     <ProtectedRoute>
@@ -283,6 +350,59 @@ export default function HaidTrackerPage() {
               )}
             </div>
           </div>
+
+          {/* === UI BARU: PREDIKSI FASE TUBUH === */}
+          {currentPhase && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className='bg-white rounded-3xl p-6 border border-pink-100 shadow-sm'
+            >
+              <div className='flex justify-between items-center mb-4'>
+                <div className='flex items-center gap-2'>
+                  <Activity size={18} className='text-pink-500' />
+                  <h3 className='font-bold text-slate-700'>
+                    Prediksi Fase Tubuh
+                  </h3>
+                </div>
+                <div
+                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${currentPhase.bg} ${currentPhase.color}`}
+                >
+                  Hari ke-{currentPhase.day}
+                </div>
+              </div>
+
+              <div className='mb-4'>
+                <div className='flex justify-between items-end mb-2'>
+                  <span className={`font-black text-lg ${currentPhase.color}`}>
+                    {currentPhase.phase}
+                  </span>
+                </div>
+
+                {/* Progress Bar Siklus */}
+                <div className='h-2 w-full bg-slate-100 rounded-full overflow-hidden flex'>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${currentPhase.progress}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className={`h-full ${currentPhase.bar} rounded-full relative`}
+                  >
+                    <div className='absolute top-0 right-0 bottom-0 w-4 bg-white/30 animate-pulse' />
+                  </motion.div>
+                </div>
+                <div className='flex justify-between text-[9px] text-slate-400 font-bold mt-1.5 px-1 uppercase tracking-widest'>
+                  <span>Haid</span>
+                  <span>Folikuler</span>
+                  <span>Ovulasi</span>
+                  <span>Luteal</span>
+                </div>
+              </div>
+
+              <p className='text-xs text-slate-500 leading-relaxed font-medium bg-slate-50 p-3 rounded-xl border border-slate-100'>
+                💡 {currentPhase.desc}
+              </p>
+            </motion.div>
+          )}
 
           {/* --- AMALAN SAAT HAID --- */}
           {activePeriod && (
@@ -405,7 +525,6 @@ export default function HaidTrackerPage() {
                         </div>
                       </div>
 
-                      {/* PERBAIKAN: Gunakan stopPropagation dan panggil Modal Hapus */}
                       <button
                         type='button'
                         onClick={(e) => {
