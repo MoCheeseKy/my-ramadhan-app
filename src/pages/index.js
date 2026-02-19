@@ -29,6 +29,7 @@ import {
   Droplets,
   LogIn,
   LogOut,
+  HandCoins,
 } from 'lucide-react';
 
 import TrackerDrawer from '@/components/TrackerDrawer';
@@ -538,10 +539,10 @@ export default function MyRamadhanHome() {
               onClick={() => router.push('/tasbih')}
             />
             <ToolCard
-              icon={Moon}
+              icon={HandCoins}
               title='Zakat'
-              colorClass='text-teal-500'
-              bgClass='text-teal-100'
+              colorClass='text-yellow-500'
+              bgClass='text-yellow-100'
               onClick={() => router.push('/zakat')}
             />
             <ToolCard
