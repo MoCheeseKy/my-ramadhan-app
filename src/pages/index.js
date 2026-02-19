@@ -91,9 +91,10 @@ export default function MyRamadhanHome() {
     const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
     if (!localUser) return;
 
+    // PERBAIKAN 1: Ambil juga custom_habits dari tabel users
     const { data: userData } = await supabase
       .from('users')
-      .select('id')
+      .select('id, custom_habits')
       .eq('personal_code', localUser.personal_code)
       .single();
     if (!userData) return;
@@ -107,24 +108,44 @@ export default function MyRamadhanHome() {
       .eq('date', today)
       .single();
 
+    const keysToCheck = [
+      'is_puasa',
+      'subuh',
+      'dzuhur',
+      'ashar',
+      'maghrib',
+      'isya',
+      'tarawih',
+      'quran',
+      'sedekah',
+    ];
+
+    let defaultCompleted = 0;
+    let customCompleted = 0;
+
+    // Total target kustom yang dibuat user
+    const customHabits = userData.custom_habits || [];
+
     if (data) {
-      const keysToCheck = [
-        'is_puasa',
-        'subuh',
-        'dzuhur',
-        'ashar',
-        'maghrib',
-        'isya',
-        'tarawih',
-        'quran',
-        'sedekah',
-      ];
-      const completed = keysToCheck.reduce(
+      // Hitung progres target utama
+      defaultCompleted = keysToCheck.reduce(
         (acc, key) => acc + (data[key] ? 1 : 0),
         0,
       );
-      setTaskProgress({ completed, total: keysToCheck.length });
+
+      // PERBAIKAN 2: Hitung progres target kustom (jika ada)
+      const customProgress = data.custom_progress || {};
+      customCompleted = customHabits.reduce(
+        (acc, habit) => acc + (customProgress[habit.id] ? 1 : 0),
+        0,
+      );
     }
+
+    // PERBAIKAN 3: Gabungkan total dan yang selesai
+    setTaskProgress({
+      completed: defaultCompleted + customCompleted,
+      total: keysToCheck.length + customHabits.length,
+    });
   };
 
   const randomizeQuote = () => {
