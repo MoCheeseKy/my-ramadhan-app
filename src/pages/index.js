@@ -56,6 +56,7 @@ export default function MyRamadhanHome() {
 
   // State Prayer Times
   const [prayerTimes, setPrayerTimes] = useState(null);
+  const [userCity, setUserCity] = useState('Jakarta'); // <--- TAMBAHKAN INI
 
   useEffect(() => {
     setMounted(true);
@@ -72,6 +73,8 @@ export default function MyRamadhanHome() {
     try {
       const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
       const city = localUser?.location_city || 'Jakarta';
+
+      setUserCity(city); // <--- TAMBAHKAN INI (simpan ke state)
 
       const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
       const data = await res.json();
@@ -337,7 +340,7 @@ export default function MyRamadhanHome() {
                   <span
                     className={`text-[10px] uppercase tracking-widest font-bold ${hero.accent}`}
                   >
-                    Jakarta WIB
+                    {userCity}
                   </span>
                 </div>
                 <CalendarDays
@@ -649,6 +652,7 @@ export default function MyRamadhanHome() {
       <ScheduleDrawer
         isOpen={isScheduleOpen}
         onClose={() => setIsScheduleOpen(false)}
+        onUpdate={fetchPrayerTimes}
       />
 
       <p className='w-full text-center text-sm text-[#1e3a8a] pt-16'>
