@@ -658,6 +658,12 @@ export default function MyRamadhanHome() {
       <p className='w-full text-center text-sm text-[#1e3a8a] pt-16'>
         By @mocheeseky for every muslim 🤍
       </p>
+      <p className='w-full text-center text-sm text-[#1e3a8a] pt-1'>
+        Partnership hit{' '}
+        <a href='mailto:rifky.muhammadprayudhi@gmail.com' className='underline'>
+          rifky.muhammadprayudhi@gmail.com
+        </a>
+      </p>
     </main>
   );
 }

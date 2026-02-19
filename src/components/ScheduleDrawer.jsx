@@ -146,7 +146,7 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
       const now = dayjs();
 
       // 1. Ambil jadwal hari ini
-      const todayData = data.schedule.find((item) =>
+      const todayData = data?.schedule?.find((item) =>
         dayjs(item.isoDate).isSame(now, 'day'),
       );
       if (todayData) setTodaySchedule(todayData.timings);
@@ -213,7 +213,7 @@ export default function ScheduleDrawer({ isOpen, onClose, onUpdate }) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className='fixed bottom-0 left-0 right-0 max-w-md mx-auto h-[90vh] bg-[#F6F9FC] rounded-t-[2.5rem] shadow-2xl z-50 overflow-hidden flex flex-col'
+            className='fixed bottom-0 left-0 right-0 max-w-[100%] mx-auto h-[70vh] bg-[#F6F9FC] rounded-t-[2.5rem] shadow-2xl z-50 overflow-hidden flex flex-col'
           >
             {/* Header */}
             <div className='bg-white px-6 py-4 rounded-t-[2.5rem] border-b border-slate-100 shrink-0 relative z-10'>
