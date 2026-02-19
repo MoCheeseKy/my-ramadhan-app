@@ -517,11 +517,17 @@ export default function MyRamadhanHome() {
               onClick={() => router.push('/tasbih')}
             />
             <ToolCard
+              icon={Moon}
+              title='Zakat'
+              colorClass='text-teal-500'
+              bgClass='text-teal-100'
+              onClick={() => router.push('/zakat')}
+            />
+            <ToolCard
               icon={Droplets}
               title='Haid'
               colorClass='text-pink-500'
               bgClass='text-pink-100'
-              className='col-span-2'
               onClick={() => router.push('/haid-tracker')}
             />
           </div>
