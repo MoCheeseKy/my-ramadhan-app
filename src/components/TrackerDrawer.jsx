@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -9,10 +9,11 @@ import {
   Star,
   BookOpen,
   Heart,
+  CalendarDays,
 } from 'lucide-react';
 import dayjs from 'dayjs';
+import { useRouter } from 'next/router';
 import { supabase } from '@/lib/supabase';
-import ProtectedRoute from './ProtectedRoute';
 
 const items = [
   {
@@ -81,16 +82,11 @@ const items = [
 ];
 
 export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
+  const router = useRouter();
   const [trackerData, setTrackerData] = useState({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchData();
-    }
-  }, [isOpen]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
     if (!localUser) return;
@@ -122,7 +118,13 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
 
     setTrackerData(data || {});
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchData();
+    }
+  }, [isOpen, fetchData]);
 
   const toggleItem = async (key) => {
     const newValue = !trackerData[key];
@@ -144,11 +146,16 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
     if (onUpdate) onUpdate();
   };
 
+  const handleOpenCalendar = () => {
+    onClose();
+    router.push('/tracker-kalender');
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop Gelap */}
+          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -163,7 +170,6 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            // UPDATE DI SINI: max-h-[70vh] membatasi tinggi maksimal 70% layar
             className='fixed bottom-0 left-0 right-0 bg-[#F6F9FC] rounded-t-[2.5rem] z-50 max-h-[70vh] flex flex-col shadow-2xl'
           >
             {/* Handle Bar */}
@@ -174,7 +180,7 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
               <div className='w-12 h-1.5 bg-slate-300 rounded-full cursor-pointer' />
             </div>
 
-            {/* Header Sticky */}
+            {/* Header */}
             <div className='px-6 pb-4 flex items-center justify-between border-b border-slate-100 bg-white/50 backdrop-blur-sm'>
               <div>
                 <h2 className='font-bold text-xl text-slate-800'>
@@ -184,16 +190,27 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
                   {dayjs().format('dddd, DD MMMM YYYY')}
                 </p>
               </div>
-              <button
-                onClick={onClose}
-                className='p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors'
-              >
-                <X size={20} className='text-slate-500' />
-              </button>
+              <div className='flex items-center gap-2'>
+                {/* Tombol Kalender */}
+                <button
+                  type='button'
+                  onClick={handleOpenCalendar}
+                  className='flex items-center gap-1.5 px-3 py-2 bg-[#1e3a8a]/10 hover:bg-[#1e3a8a]/20 text-[#1e3a8a] rounded-xl transition-colors text-xs font-semibold'
+                >
+                  <CalendarDays size={15} />
+                  Kalender
+                </button>
+                <button
+                  type='button'
+                  onClick={onClose}
+                  className='p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors'
+                >
+                  <X size={20} className='text-slate-500' />
+                </button>
+              </div>
             </div>
 
             {/* Content List (Scrollable) */}
-            {/* UPDATE DI SINI: overflow-y-auto memungkinkan scroll jika konten panjang */}
             <div className='flex-1 overflow-y-auto p-6 space-y-3 pb-12'>
               {loading
                 ? [...Array(5)].map((_, i) => (
@@ -209,13 +226,13 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
                         key={item.key}
                         onClick={() => toggleItem(item.key)}
                         className={`
-                        relative p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group overflow-hidden
-                        ${
-                          isActive
-                            ? 'bg-white border-emerald-200 shadow-sm'
-                            : 'bg-white border-slate-100 hover:border-slate-200'
-                        }
-                      `}
+                          relative p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group overflow-hidden
+                          ${
+                            isActive
+                              ? 'bg-white border-emerald-200 shadow-sm'
+                              : 'bg-white border-slate-100 hover:border-slate-200'
+                          }
+                        `}
                       >
                         <div
                           className={`absolute inset-0 bg-emerald-50 transition-transform duration-500 origin-left ${isActive ? 'scale-x-100' : 'scale-x-0'}`}
@@ -236,9 +253,9 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
 
                         <div
                           className={`
-                        relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
-                        ${isActive ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200 group-hover:border-emerald-300'}
-                      `}
+                            relative z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                            ${isActive ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200 group-hover:border-emerald-300'}
+                          `}
                         >
                           <Check
                             size={14}

@@ -4,16 +4,16 @@ export default async function handler(req, res) {
   if (req.method !== 'POST')
     return res.status(405).json({ message: 'Method not allowed' });
 
-  const { personalCode } = req.body;
+  const { personalCode, city } = req.body;
 
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .update({ location_city: city })
     .eq('personal_code', personalCode)
+    .select()
     .single();
 
-  if (error || !data)
-    return res.status(404).json({ message: 'Kode tidak valid.' });
+  if (error) return res.status(400).json({ error: error.message });
 
   res.status(200).json(data);
 }

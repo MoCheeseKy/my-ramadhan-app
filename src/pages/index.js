@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
@@ -68,9 +68,12 @@ export default function MyRamadhanHome() {
     return () => clearInterval(timer);
   }, []);
 
-  const fetchPrayerTimes = async () => {
+  const fetchPrayerTimes = useCallback(async () => {
     try {
-      const res = await fetch('/api/schedule');
+      const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
+      const city = localUser?.location_city || 'Jakarta';
+
+      const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
       const data = await res.json();
       const todayData = data.schedule.find((item) =>
         dayjs(item.isoDate).isSame(dayjs(), 'day'),
@@ -79,7 +82,7 @@ export default function MyRamadhanHome() {
     } catch (e) {
       console.error('Gagal fetch jadwal:', e);
     }
-  };
+  }, []);
 
   const fetchTrackerSummary = async () => {
     const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
@@ -669,9 +672,9 @@ const ToolCard = ({
   >
     <Icon
       size={80}
-      className={`absolute -bottom-6 -right-6 ${bgClass} opacity-50`}
+      className={`absolute -bottom-6 -right-6 ${bgClass} opacity-50 z-1`}
     />
     <Icon size={24} className={colorClass} />
-    <span className='text-xs font-bold text-slate-700'>{title}</span>
+    <span className='text-xs font-bold text-slate-700 z-2'>{title}</span>
   </div>
 );
