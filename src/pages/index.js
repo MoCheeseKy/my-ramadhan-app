@@ -56,7 +56,7 @@ export default function MyRamadhanHome() {
 
   // State Prayer Times
   const [prayerTimes, setPrayerTimes] = useState(null);
-  const [userCity, setUserCity] = useState('Jakarta'); // <--- TAMBAHKAN INI
+  const [userCity, setUserCity] = useState('Jakarta');
 
   useEffect(() => {
     setMounted(true);
@@ -74,7 +74,7 @@ export default function MyRamadhanHome() {
       const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
       const city = localUser?.location_city || 'Jakarta';
 
-      setUserCity(city); // <--- TAMBAHKAN INI (simpan ke state)
+      setUserCity(city);
 
       const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
       const data = await res.json();
@@ -272,8 +272,6 @@ export default function MyRamadhanHome() {
 
   const hero = getHeroMode();
 
-  // Helper Component untuk Card Tools Kecil
-
   return (
     <main className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-16 selection:bg-blue-200'>
       <div className='fixed inset-0 -z-10 pointer-events-none overflow-hidden'>
@@ -381,7 +379,7 @@ export default function MyRamadhanHome() {
                 </p>
               </div>
 
-              {/* Progress Bar — hanya tampil jika ada data progress */}
+              {/* Progress Bar*/}
               {hero.progress && (
                 <div className='relative z-10 mt-10'>
                   <div
@@ -407,7 +405,13 @@ export default function MyRamadhanHome() {
             </div>
           ) : (
             // Skeleton loading saat prayer times belum tersedia
-            <div className='col-span-2 min-h-[300px] rounded-[2.5rem] bg-slate-200 animate-pulse' />
+            <div className='relative'>
+              <div className='absolute inset-0 bg-blue-400/20 blur-xl rounded-full scale-150' />
+              <Moon
+                size={42}
+                className='text-white animate-spin [animation-duration:2.5s]'
+              />
+            </div>
           )}
 
           {/* 2. TRACKER CARD */}
