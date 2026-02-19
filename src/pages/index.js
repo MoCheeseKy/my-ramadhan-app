@@ -9,6 +9,7 @@ import 'dayjs/locale/id';
 import { supabase } from '@/lib/supabase';
 import useUser from '@/hook/useUser';
 import { motion, AnimatePresence } from 'framer-motion';
+import { studyMaterials } from '@/data/studyMaterials';
 
 // Import Icons
 import {
@@ -90,7 +91,6 @@ export default function MyRamadhanHome() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(dayjs());
-  console.log(user);
 
   // Drawers
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
@@ -154,7 +154,7 @@ export default function MyRamadhanHome() {
   const fetchPrayerTimes = useCallback(async () => {
     try {
       const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-      const city = localUser?.location_city || user?.location_city || 'Jakarta';
+      const city = localUser?.location_city || 'Jakarta';
       setUserCity(city);
       const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
       const data = await res.json();
@@ -240,13 +240,35 @@ export default function MyRamadhanHome() {
         : hour < 18
           ? 'Selamat Sore'
           : 'Selamat Malam';
-  const hijriDate = '1 Ramadhan 1447 H';
-  const progressPercent = (taskProgress.completed / taskProgress.total) * 100;
-  const dailyTopic = {
-    day: 1,
-    title: 'Niat: Fondasi Ibadah Puasa',
-    readTime: '2 min',
+  // ─── Tanggal Hijriah dinamis ──────────────────────────────────────────────────
+  // islamic-umalqura di browser konsisten +1 dari kalender resmi Indonesia (Kemenag/rukyat hilal)
+  // Fix: input tanggal kemarin → hasil hijriah akurat untuk Indonesia
+  const getHijriDate = () => {
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      });
+      const parts = formatter.formatToParts(yesterday);
+      const day = parts.find((p) => p.type === 'day')?.value || '';
+      const month = parts.find((p) => p.type === 'month')?.value || '';
+      const year = parts.find((p) => p.type === 'year')?.value || '';
+      const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+      return `${day} ${monthCapitalized} ${year} H`;
+    } catch {
+      return 'Ramadhan 1447 H';
+    }
   };
+  const hijriDate = getHijriDate();
+  const progressPercent = (taskProgress.completed / taskProgress.total) * 100;
+  const hijriDay = parseInt(getHijriDate().split(' ')[0], 10);
+  const dailyTopic =
+    studyMaterials.find((m) => m.day === hijriDay) || studyMaterials[0];
 
   // =============================================
   // HERO MODE LOGIC — FIXED
@@ -690,7 +712,7 @@ export default function MyRamadhanHome() {
 
           {/* 4. STUDY TIME */}
           <div
-            onClick={() => router.push(`/study/${dailyTopic.day}`)}
+            onClick={() => router.push(`/study/${hijriDay}`)}
             className='col-span-2 bg-white rounded-[2rem] p-5 group shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer flex items-center justify-between'
           >
             <div>
