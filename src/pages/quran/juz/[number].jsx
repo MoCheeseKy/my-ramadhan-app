@@ -576,6 +576,19 @@ export default function JuzReader() {
       });
   };
 
+  // --- AUTO SCROLL KE AYAT TERAKHIR DIBACA ---
+  useEffect(() => {
+    if (juzSurahs.length > 0 && window.location.hash) {
+      const hashId = window.location.hash.replace('#', '');
+      // Beri jeda sedikit untuk memastikan DOM benar-benar selesai digambar
+      setTimeout(() => {
+        const element = document.getElementById(hashId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+  }, [juzSurahs]);
   const firstSurah = juzSurahs[0];
   const lastSurah = juzSurahs[juzSurahs.length - 1];
 

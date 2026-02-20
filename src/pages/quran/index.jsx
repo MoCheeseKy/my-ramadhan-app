@@ -106,11 +106,20 @@ export default function QuranIndex() {
     }
   };
 
+  // --- LOGIC PERBAIKAN NAVIGASI JUZ ---
   const handleLanjutkan = () => {
     if (!lastRead) return;
-    const targetUrl = lastRead.isJuz
-      ? `/quran/juz/${lastRead.surahId}#ayat-${lastRead.ayahNumber}`
-      : `/quran/surah/${lastRead.surahId}#ayat-${lastRead.ayahNumber}`;
+
+    let targetUrl;
+    if (lastRead.isJuz) {
+      // Arahkan ke rute juzNumber, dan Scroll ke ID: #ayat-[surahId]-[ayahNumber]
+      const targetJuz = lastRead.juzNumber || 1; // Fallback untuk mencegah data usang
+      targetUrl = `/quran/juz/${targetJuz}#ayat-${lastRead.surahId}-${lastRead.ayahNumber}`;
+    } else {
+      // Untuk baca surah, formatnya tetap
+      targetUrl = `/quran/surah/${lastRead.surahId}#ayat-${lastRead.ayahNumber}`;
+    }
+
     router.push(targetUrl);
   };
 
@@ -200,7 +209,10 @@ export default function QuranIndex() {
                   {lastRead.surahName}
                 </h3>
                 <p className='text-sm text-indigo-100 mb-4'>
-                  Ayat {lastRead.ayahNumber}
+                  Ayat {lastRead.ayahNumber}{' '}
+                  {lastRead.isJuz && lastRead.juzNumber
+                    ? `• Juz ${lastRead.juzNumber}`
+                    : ''}
                 </p>
 
                 <button
