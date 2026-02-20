@@ -9,15 +9,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/logo-myramadhan.jpeg",
+      "src": "/myramadhan-app-logo.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/logo-myramadhan.jpeg",
+      "src": "/myramadhan-app-logo.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "maskable any"
     }
   ]

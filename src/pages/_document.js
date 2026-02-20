@@ -5,8 +5,8 @@ export default function Document() {
     <Html lang='id'>
       <Head>
         {/* Favicon untuk Tab Browser */}
-        <link rel='icon' type='image/jpeg' href='/logo-myramadhan.jpeg' />
-        <link rel='apple-touch-icon' href='/logo-myramadhan.jpeg' />
+        <link rel='icon' type='image/png' href='/myramadhan-app-logo.png' />
+        <link rel='apple-touch-icon' href='/myramadhan-app-logo.png' />
 
         {/* Kode PWA */}
         <link rel='manifest' href='/manifest.json' />
