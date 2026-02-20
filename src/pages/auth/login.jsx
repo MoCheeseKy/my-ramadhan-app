@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Moon, ShieldAlert, ArrowRight } from 'lucide-react';
+import useAppMode from '@/hook/useAppMode'; // <-- TAMBAHAN: Import detektor PWA
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -8,6 +9,22 @@ export default function Login() {
   const [step, setStep] = useState('choice');
   const [userData, setUserData] = useState(null);
   const router = useRouter();
+
+  // <-- TAMBAHAN: Ambil status PWA
+  const { isPWA } = useAppMode();
+
+  // <-- TAMBAHAN: Effect untuk Bypass (Langsung tendang ke Beranda jika PWA / Sudah Login)
+  useEffect(() => {
+    if (isPWA) {
+      router.replace('/');
+      return;
+    }
+
+    const localUser = localStorage.getItem('myRamadhan_user');
+    if (localUser) {
+      router.replace('/');
+    }
+  }, [isPWA, router]);
 
   // ================= REGISTER =================
   const handleRegister = async () => {
@@ -52,6 +69,13 @@ export default function Login() {
     localStorage.setItem('myRamadhan_user', JSON.stringify(dataToSave));
     router.push('/');
   };
+
+  // <-- TAMBAHAN KECIL: Tampilkan layar kosong sewarna background saat proses dilempar ke beranda agar UI form tidak berkedip (flash)
+  if (isPWA) {
+    return (
+      <div className='min-h-screen bg-[#1e3a8a] flex items-center justify-center' />
+    );
+  }
 
   return (
     <div className='min-h-screen bg-[#1e3a8a] text-white relative overflow-hidden flex items-center justify-center px-6'>

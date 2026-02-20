@@ -31,6 +31,10 @@ import {
 import { supabase } from '@/lib/supabase';
 import useUser from '@/hook/useUser';
 
+// --- TAMBAHAN: Import Hook dan StorageService ---
+import useAppMode from '@/hook/useAppMode';
+import { StorageService } from '@/lib/storageService';
+
 // ─── KOMPONEN BOTTOM SHEET DRAWER ──────────────────────────────────────────────
 function DrawerPanel({
   open,
@@ -93,19 +97,20 @@ function DrawerPanel({
 // ─── HALAMAN UTAMA USER PROFILE ───────────────────────────────────────────────
 export default function UserProfile() {
   const router = useRouter();
+
+  // --- TAMBAHAN: Gunakan hooks ---
   const { user, loading } = useUser();
+  const { isPWA } = useAppMode();
 
   const [theme, setTheme] = useState('light');
   const [locationName, setLocationName] = useState('Memuat lokasi...');
 
-  // State Profil Pengguna
   const [profileData, setProfileData] = useState({
     name: 'Tamu Allah',
     personalCode: 'Mode Tamu',
     avatar: null,
   });
 
-  // State untuk form edit profil
   const [editName, setEditName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -113,7 +118,6 @@ export default function UserProfile() {
 
   const [activeDrawer, setActiveDrawer] = useState(null);
 
-  // Fungsi menyensor Personal Code agar aman (contoh: 123456 -> 12***6)
   const maskPersonalCode = (code) => {
     if (!code || code.length < 4) return code;
     const firstTwo = code.substring(0, 2);
@@ -122,17 +126,13 @@ export default function UserProfile() {
     return `${firstTwo}${masked}${lastOne}`;
   };
 
-  // Load Data User saat halaman dimuat
+  // --- PERUBAHAN: Mengambil data profil via StorageService ---
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('app_theme, username, avatar_url, location_city')
-          .eq('personal_code', user.personal_code)
-          .single();
+        const data = await StorageService.getProfile(user.personal_code, isPWA);
 
-        if (data && !error) {
+        if (data) {
           setTheme(data.app_theme || localStorage.getItem('theme') || 'light');
 
           const cityFromDB = data.location_city;
@@ -172,8 +172,9 @@ export default function UserProfile() {
         );
       }
     }
-  }, [user, loading]);
+  }, [user, loading, isPWA]);
 
+  // --- PERUBAHAN: Simpan preferensi tema via StorageService ---
   const toggleTheme = async (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
@@ -185,41 +186,58 @@ export default function UserProfile() {
     }
 
     if (user) {
-      await supabase
-        .from('users')
-        .update({ app_theme: newTheme })
-        .eq('personal_code', user.personal_code);
+      await StorageService.saveProfile(
+        user.personal_code,
+        { app_theme: newTheme },
+        isPWA,
+      );
     }
 
     setActiveDrawer(null);
   };
 
+  // --- PERUBAHAN: Logika Upload (Cloud Supabase vs Lokal Base64) ---
   const handleUploadPhoto = async (e) => {
     if (!e.target.files || e.target.files.length === 0 || !user) return;
 
     const file = e.target.files[0];
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.personal_code}-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
     setIsUploading(true);
 
     try {
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-      if (uploadError) throw uploadError;
+      let publicUrl = null;
 
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-      const publicUrl = publicUrlData.publicUrl;
+      if (isPWA) {
+        // MODE LOKAL: Ubah gambar menjadi text (Base64) agar bisa disimpan di IndexedDB
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            publicUrl = reader.result;
+            resolve();
+          };
+          reader.onerror = (err) => reject(err);
+        });
+      } else {
+        // MODE WEB: Upload ke Supabase
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.personal_code}-${Math.random()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+        publicUrl = publicUrlData.publicUrl;
+      }
 
       setProfileData((prev) => ({ ...prev, avatar: publicUrl }));
-      await supabase
-        .from('users')
-        .update({ avatar_url: publicUrl })
-        .eq('personal_code', user.personal_code);
+      await StorageService.saveProfile(
+        user.personal_code,
+        { avatar_url: publicUrl },
+        isPWA,
+      );
     } catch (error) {
       alert('Gagal mengunggah foto: ' + error.message);
     } finally {
@@ -227,14 +245,16 @@ export default function UserProfile() {
     }
   };
 
+  // --- PERUBAHAN: Simpan username via StorageService ---
   const handleSaveProfile = async () => {
     if (!user) return alert('Silakan login terlebih dahulu!');
     setIsSaving(true);
     try {
-      await supabase
-        .from('users')
-        .update({ username: editName })
-        .eq('personal_code', user.personal_code);
+      await StorageService.saveProfile(
+        user.personal_code,
+        { username: editName },
+        isPWA,
+      );
       setProfileData((prev) => ({ ...prev, name: editName }));
       setActiveDrawer(null);
     } catch (error) {
@@ -244,14 +264,22 @@ export default function UserProfile() {
     }
   };
 
+  // --- PERUBAHAN: Logout membedakan PWA dan Web ---
   const handleLogout = async () => {
     const confirm = window.confirm('Apakah Anda yakin ingin keluar?');
     if (!confirm) return;
-    if (user) await supabase.auth.signOut();
-    localStorage.removeItem('supabase.auth.token');
-    router.push('/auth/login');
+
+    if (!isPWA && user) await supabase.auth.signOut();
+    localStorage.removeItem('myRamadhan_user');
+
+    if (!isPWA) {
+      router.push('/auth/login');
+    } else {
+      window.location.reload();
+    }
   };
 
+  // --- PERUBAHAN: Reset data via StorageService ---
   const handleResetData = async () => {
     const confirm = window.confirm(
       'PERINGATAN!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA progres Anda?',
@@ -276,20 +304,7 @@ export default function UserProfile() {
     keysToRemove.forEach((key) => localStorage.removeItem(key));
 
     if (user) {
-      await supabase
-        .from('users')
-        .update({
-          quran_bookmarks: [],
-          quran_last_read: null,
-          doa_bookmarks: [],
-          doa_last_read: null,
-          doa_custom: [],
-          hadits_bookmarks: [],
-          hadits_last_read: null,
-          fiqih_bookmarks: [],
-          fiqih_last_read: null,
-        })
-        .eq('personal_code', user.personal_code);
+      await StorageService.clearAllData(user.personal_code, isPWA);
     }
     alert('Semua data progres berhasil direset.');
     router.reload();
@@ -694,7 +709,8 @@ export default function UserProfile() {
             </h4>
             <p className='text-[13px] mt-1.5'>
               Seluruh progres ibadah akan disimpan secara otomatis. Jika Anda
-              login, data akan aman tersimpan di <i>cloud database</i>.
+              login, data akan aman tersimpan di <i>cloud database</i>. Saat
+              diakses via PWA, data tersimpan aman di memori HP Anda.
             </p>
           </div>
           <div className='bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl'>
@@ -732,8 +748,9 @@ export default function UserProfile() {
                 Penyimpanan Transparan
               </h4>
               <p className='text-[13px] mt-0.5'>
-                Semua data pribadi berada di dalam memori penyimpanan perangkat
-                Anda sendiri saat mode tamu.
+                Saat Anda menginstal aplikasi ini (PWA mode), semua data ibadah
+                dan privasi (seperti Jurnal dan Haid Tracker) disimpan 100% di
+                memori perangkat Anda.
               </p>
             </div>
           </div>
@@ -746,9 +763,9 @@ export default function UserProfile() {
                 Keamanan Data
               </h4>
               <p className='text-[13px] mt-0.5'>
-                Saat menggunakan <i>Personal Code</i>, data preferensi ibadah
-                disimpan di database ber-enkripsi tinggi agar progres tidak
-                hilang.
+                Saat menggunakan web browser dan <i>Personal Code</i>, data
+                preferensi ibadah disimpan di database ber-enkripsi tinggi agar
+                progres tidak hilang antar perangkat.
               </p>
             </div>
           </div>

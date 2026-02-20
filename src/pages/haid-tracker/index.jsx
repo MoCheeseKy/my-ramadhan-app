@@ -26,6 +26,11 @@ import 'dayjs/locale/id';
 import { supabase } from '@/lib/supabase';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
+// --- TAMBAHAN IMPORT LOKAL ---
+import useUser from '@/hook/useUser';
+import useAppMode from '@/hook/useAppMode';
+import localforage from 'localforage';
+
 dayjs.locale('id');
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
@@ -63,10 +68,14 @@ const AMALAN_HAID = [
 
 export default function HaidTrackerPage() {
   const router = useRouter();
+
+  // --- INTEGRASI HOOK ---
+  const { user, loading: userLoading } = useUser();
+  const { isPWA } = useAppMode();
+
   const [loading, setLoading] = useState(true);
   const [logs, setLogs] = useState([]);
   const [activePeriod, setActivePeriod] = useState(null);
-  const [user, setUser] = useState(null);
 
   // Modal States
   const [showNiatModal, setShowNiatModal] = useState(false);
@@ -75,32 +84,41 @@ export default function HaidTrackerPage() {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, id: null });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (!userLoading) {
+      if (!user) router.push('/auth/login');
+      else fetchData();
+    }
+  }, [user, userLoading, isPWA]);
 
+  // --- PERUBAHAN LOGIKA PWA & WEB ---
   const fetchData = async () => {
     setLoading(true);
-    const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-    if (!localUser) return router.push('/auth/login');
-    setUser(localUser);
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('personal_code', localUser.personal_code)
-      .single();
-    if (!userData) return;
-
-    const { data, error } = await supabase
-      .from('haid_logs')
-      .select('*')
-      .eq('user_id', userData.id)
-      .order('start_date', { ascending: false });
-
-    if (!error && data) {
-      setLogs(data);
-      const active = data.find((item) => item.end_date === null);
+    if (isPWA) {
+      const localHaid = (await localforage.getItem('pwa_haid_logs')) || [];
+      setLogs(localHaid);
+      const active = localHaid.find((item) => item.end_date === null);
       setActivePeriod(active || null);
+    } else {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('personal_code', user.personal_code)
+        .single();
+      if (!userData) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('haid_logs')
+        .select('*')
+        .eq('user_id', userData.id)
+        .order('start_date', { ascending: false });
+      if (!error && data) {
+        setLogs(data);
+        const active = data.find((item) => item.end_date === null);
+        setActivePeriod(active || null);
+      }
     }
     setLoading(false);
   };
@@ -108,40 +126,62 @@ export default function HaidTrackerPage() {
   const handleSaveDate = async () => {
     if (!user) return;
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('personal_code', user.personal_code)
-      .single();
-
-    if (actionModal.type === 'start') {
-      const { data, error } = await supabase
-        .from('haid_logs')
-        .insert({ user_id: userData.id, start_date: inputDate, end_date: null })
-        .select()
-        .single();
-
-      if (!error) {
-        setActivePeriod(data);
-        setLogs([data, ...logs]);
-      }
-    } else if (actionModal.type === 'end' && activePeriod) {
-      const { error } = await supabase
-        .from('haid_logs')
-        .update({ end_date: inputDate })
-        .eq('id', activePeriod.id);
-
-      if (!error) {
-        const updatedLogs = logs.map((l) =>
+    if (isPWA) {
+      const localHaid = (await localforage.getItem('pwa_haid_logs')) || [];
+      if (actionModal.type === 'start') {
+        const newLog = {
+          id: Date.now().toString(),
+          start_date: inputDate,
+          end_date: null,
+        };
+        const updated = [newLog, ...localHaid];
+        await localforage.setItem('pwa_haid_logs', updated);
+        setActivePeriod(newLog);
+        setLogs(updated);
+      } else if (actionModal.type === 'end' && activePeriod) {
+        const updated = localHaid.map((l) =>
           l.id === activePeriod.id ? { ...l, end_date: inputDate } : l,
         );
-        setLogs(updatedLogs);
+        await localforage.setItem('pwa_haid_logs', updated);
+        setLogs(updated);
         setActivePeriod(null);
-
         setTimeout(() => setShowNiatModal(true), 500);
       }
+    } else {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('personal_code', user.personal_code)
+        .single();
+      if (actionModal.type === 'start') {
+        const { data, error } = await supabase
+          .from('haid_logs')
+          .insert({
+            user_id: userData.id,
+            start_date: inputDate,
+            end_date: null,
+          })
+          .select()
+          .single();
+        if (!error) {
+          setActivePeriod(data);
+          setLogs([data, ...logs]);
+        }
+      } else if (actionModal.type === 'end' && activePeriod) {
+        const { error } = await supabase
+          .from('haid_logs')
+          .update({ end_date: inputDate })
+          .eq('id', activePeriod.id);
+        if (!error) {
+          const updatedLogs = logs.map((l) =>
+            l.id === activePeriod.id ? { ...l, end_date: inputDate } : l,
+          );
+          setLogs(updatedLogs);
+          setActivePeriod(null);
+          setTimeout(() => setShowNiatModal(true), 500);
+        }
+      }
     }
-
     setActionModal({ isOpen: false, type: null });
   };
 
@@ -149,27 +189,32 @@ export default function HaidTrackerPage() {
     if (!deleteModal.id) return;
     const targetId = deleteModal.id;
 
-    try {
-      const { error } = await supabase
-        .from('haid_logs')
-        .delete()
-        .eq('id', targetId);
+    if (isPWA) {
+      const localHaid = (await localforage.getItem('pwa_haid_logs')) || [];
+      const updated = localHaid.filter((l) => l.id !== targetId);
+      await localforage.setItem('pwa_haid_logs', updated);
+      setLogs(updated);
+      if (activePeriod && activePeriod.id === targetId) setActivePeriod(null);
+    } else {
+      try {
+        const { error } = await supabase
+          .from('haid_logs')
+          .delete()
+          .eq('id', targetId);
+        if (error) {
+          alert(`Gagal menghapus: ${error.message}`);
+          return;
+        }
 
-      if (error) {
-        console.error('Error hapus data:', error);
-        alert(`Gagal menghapus: ${error.message}`);
-        return;
+        setLogs((prevLogs) => prevLogs.filter((l) => l.id !== targetId));
+        if (activePeriod && activePeriod.id === targetId) {
+          setActivePeriod(null);
+        }
+      } catch (err) {
+        console.error('Unexpected error:', err);
       }
-
-      setLogs((prevLogs) => prevLogs.filter((l) => l.id !== targetId));
-      if (activePeriod && activePeriod.id === targetId) {
-        setActivePeriod(null);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    } finally {
-      setDeleteModal({ isOpen: false, id: null });
     }
+    setDeleteModal({ isOpen: false, id: null });
   };
 
   const getDuration = (start, end) => {
@@ -192,19 +237,16 @@ export default function HaidTrackerPage() {
     return acc + getQadhaDays(curr.start_date, curr.end_date);
   }, 0);
 
-  // === LOGIKA BARU: MENGHITUNG FASE SIKLUS ===
+  // === MENGHITUNG FASE SIKLUS ===
   const getCyclePhase = () => {
     if (logs.length === 0) return null;
 
-    // Ambil siklus terakhir untuk patokan
     const lastLog = logs[0];
     const isOngoing = activePeriod !== null;
-
     const start = dayjs(lastLog.start_date);
     const today = dayjs();
     const dayOfCycle = today.diff(start, 'day') + 1;
 
-    // Asumsi siklus rata-rata 28 hari
     let phaseInfo = {
       phase: '',
       desc: '',

@@ -15,7 +15,11 @@ import {
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import { useRouter } from 'next/router';
-import { supabase } from '@/lib/supabase';
+
+// --- TAMBAHAN: Import Hook dan StorageService ---
+import useUser from '@/hook/useUser';
+import useAppMode from '@/hook/useAppMode';
+import { StorageService } from '@/lib/storageService';
 
 dayjs.locale('id');
 
@@ -90,57 +94,63 @@ const items = [
 
 export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
   const router = useRouter();
+
+  // --- TAMBAHAN: Gunakan hooks ---
+  const { user } = useUser();
+  const { isPWA } = useAppMode();
+
   const [trackerData, setTrackerData] = useState({});
   const [customHabits, setCustomHabits] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // --- PERUBAHAN: Mengambil data lewat StorageService ---
   const fetchData = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
-    const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-    if (!localUser) return;
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id, custom_habits')
-      .eq('personal_code', localUser.personal_code)
-      .single();
-    if (!userData) return;
+    try {
+      // Ambil custom habits dari profil user
+      const userData = await StorageService.getProfile(
+        user.personal_code,
+        isPWA,
+      );
+      setCustomHabits(userData?.custom_habits || []);
 
-    setCustomHabits(userData.custom_habits || []);
+      // Ambil data tracker hari ini
+      const today = dayjs().format('YYYY-MM-DD');
+      let data = await StorageService.getDailyTracker(
+        user.personal_code,
+        today,
+        isPWA,
+      );
 
-    const today = dayjs().format('YYYY-MM-DD');
-    let { data } = await supabase
-      .from('daily_trackers')
-      .select('*')
-      .eq('user_id', userData.id)
-      .eq('date', today)
-      .single();
+      // Jika belum ada data tracker hari ini, buat baru
+      if (!data) {
+        data = await StorageService.saveDailyTracker(
+          user.personal_code,
+          today,
+          { custom_progress: {} },
+          isPWA,
+        );
+      }
 
-    if (!data) {
-      const { data: newData } = await supabase
-        .from('daily_trackers')
-        .insert({ user_id: userData.id, date: today, custom_progress: {} })
-        .select()
-        .single();
-      data = newData;
+      setTrackerData(data || {});
+    } catch (error) {
+      console.error('Gagal memuat tracker drawer:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setTrackerData(data || {});
-    setLoading(false);
-  }, []);
+  }, [user, isPWA]);
 
   useEffect(() => {
     if (isOpen) fetchData();
   }, [isOpen, fetchData]);
 
+  // --- PERUBAHAN: Menyimpan data lewat StorageService ---
   const toggleItem = async (key, isCustom = false) => {
-    const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('personal_code', localUser.personal_code)
-      .single();
+    if (!user) return;
     const today = dayjs().format('YYYY-MM-DD');
+    let updatedTrackerData = {};
 
     if (isCustom) {
       const currentCustomProgress = trackerData.custom_progress || {};
@@ -148,24 +158,34 @@ export default function TrackerDrawer({ isOpen, onClose, onUpdate }) {
         ...currentCustomProgress,
         [key]: !currentCustomProgress[key],
       };
+
+      updatedTrackerData = { custom_progress: updatedCustomProgress };
+
+      // Update state lokal dulu biar UI cepat merespon
       setTrackerData((prev) => ({
         ...prev,
         custom_progress: updatedCustomProgress,
       }));
-      await supabase
-        .from('daily_trackers')
-        .update({ custom_progress: updatedCustomProgress })
-        .match({ user_id: userData.id, date: today });
     } else {
       const newValue = !trackerData[key];
+      updatedTrackerData = { [key]: newValue };
+
+      // Update state lokal dulu biar UI cepat merespon
       setTrackerData((prev) => ({ ...prev, [key]: newValue }));
-      await supabase
-        .from('daily_trackers')
-        .update({ [key]: newValue })
-        .match({ user_id: userData.id, date: today });
     }
 
-    if (onUpdate) onUpdate();
+    try {
+      // Simpan ke DB/Lokal sesuai mode
+      await StorageService.saveDailyTracker(
+        user.personal_code,
+        today,
+        updatedTrackerData,
+        isPWA,
+      );
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Gagal memperbarui tracker:', error);
+    }
   };
 
   const handleOpenCalendar = () => {

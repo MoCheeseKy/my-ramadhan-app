@@ -12,6 +12,11 @@ import {
 import { supabase } from '@/lib/supabase';
 import { journalPrompts, moods } from '@/data/journalPrompts';
 
+// --- TAMBAHAN IMPORT LOKAL ---
+import useUser from '@/hook/useUser';
+import useAppMode from '@/hook/useAppMode';
+import localforage from 'localforage';
+
 const catStyles = {
   daily: {
     gradient: 'from-[#1e3a8a] to-indigo-700',
@@ -64,19 +69,20 @@ export default function WriteJournal() {
   const { type } = router.query;
   const textareaRef = useRef(null);
 
+  // --- INTEGRASI HOOK ---
+  const { user } = useUser();
+  const { isPWA } = useAppMode();
+
   const [prompt, setPrompt] = useState('');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedMood, setSelectedMood] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [user, setUser] = useState(null);
   const [wordCount, setWordCount] = useState(0);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (type && journalPrompts[type]) randomizePrompt();
-    const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-    setUser(localUser);
   }, [type]);
 
   useEffect(() => {
@@ -93,31 +99,47 @@ export default function WriteJournal() {
     textareaRef.current?.focus();
   };
 
+  // --- PERUBAHAN LOGIKA SIMPAN ---
   const handleSave = async () => {
     if (!content.trim() || !user || isSubmitting) return;
     setIsSubmitting(true);
-
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('personal_code', user.personal_code)
-      .single();
-
     const finalTitle = title.trim() ? title : 'Catatan Harian';
 
-    const { error } = await supabase.from('journal_entries').insert({
-      user_id: userData.id,
-      category: type,
-      title: finalTitle,
-      content,
-      mood: selectedMood,
-    });
+    if (isPWA) {
+      const newEntry = {
+        id: Date.now().toString(),
+        category: type,
+        title: finalTitle,
+        content,
+        mood: selectedMood,
+        created_at: new Date().toISOString(),
+      };
+      const journals = (await localforage.getItem('pwa_journals')) || [];
+      journals.unshift(newEntry);
+      await localforage.setItem('pwa_journals', journals);
 
-    if (!error) {
       setSaved(true);
       setTimeout(() => router.push('/jurnal'), 800);
     } else {
-      setIsSubmitting(false);
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('personal_code', user.personal_code)
+        .single();
+      const { error } = await supabase.from('journal_entries').insert({
+        user_id: userData.id,
+        category: type,
+        title: finalTitle,
+        content,
+        mood: selectedMood,
+      });
+
+      if (!error) {
+        setSaved(true);
+        setTimeout(() => router.push('/jurnal'), 800);
+      } else {
+        setIsSubmitting(false);
+      }
     }
   };
 

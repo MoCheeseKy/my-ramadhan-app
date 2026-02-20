@@ -19,6 +19,11 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 
+// --- TAMBAHAN IMPORT LOKAL ---
+import useUser from '@/hook/useUser';
+import useAppMode from '@/hook/useAppMode';
+import localforage from 'localforage';
+
 dayjs.locale('id');
 
 const categories = [
@@ -97,33 +102,48 @@ const moodColors = {
 
 export default function JournalDashboard() {
   const router = useRouter();
+
+  // --- INTEGRASI HOOK ---
+  const { user, loading: userLoading } = useUser();
+  const { isPWA } = useAppMode();
+
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterDate, setFilterDate] = useState('all');
-
   const [selectedEntry, setSelectedEntry] = useState(null);
 
   useEffect(() => {
-    fetchEntries();
-  }, []);
+    if (!userLoading) {
+      if (!user) router.push('/auth/login');
+      else fetchEntries();
+    }
+  }, [user, userLoading, isPWA]);
 
+  // --- PERUBAHAN LOGIKA PWA & WEB ---
   const fetchEntries = async () => {
-    const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-    if (!localUser) return router.push('/auth/login');
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id')
-      .eq('personal_code', localUser.personal_code)
-      .single();
-    if (!userData) return;
-    const { data, error } = await supabase
-      .from('journal_entries')
-      .select('*')
-      .eq('user_id', userData.id)
-      .order('created_at', { ascending: false });
-    if (!error) setEntries(data);
+    setLoading(true);
+    if (isPWA) {
+      const localJournals = (await localforage.getItem('pwa_journals')) || [];
+      setEntries(localJournals);
+    } else {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id')
+        .eq('personal_code', user.personal_code)
+        .single();
+      if (!userData) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('user_id', userData.id)
+        .order('created_at', { ascending: false });
+      if (!error && data) setEntries(data);
+    }
     setLoading(false);
   };
 
@@ -150,24 +170,18 @@ export default function JournalDashboard() {
     return acc;
   }, {});
 
-  // LOGIKA BARU: Kirim data ke Ramatalk
   const handleDiscussWithRamatalk = () => {
     if (!selectedEntry) return;
-
-    // Simpan konteks ke sessionStorage (akan hilang jika tab ditutup)
     const contextData = {
       title: selectedEntry.title,
       content: selectedEntry.content,
       mood: getMood(selectedEntry.mood)?.label || 'Netral',
       category: getCat(selectedEntry.category)?.title || 'Jurnal',
     };
-
     sessionStorage.setItem(
       'ramatalk_journal_context',
       JSON.stringify(contextData),
     );
-
-    // Pindah ke halaman Ramatalk
     router.push('/ramatalk');
   };
 

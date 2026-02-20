@@ -11,6 +11,10 @@ import useUser from '@/hook/useUser';
 import { motion, AnimatePresence } from 'framer-motion';
 import { studyMaterials } from '@/data/studyMaterials';
 
+// --- TAMBAHAN: Import StorageService & useAppMode ---
+import useAppMode from '@/hook/useAppMode';
+import { StorageService } from '@/lib/storageService';
+
 import {
   BookOpen,
   ChevronRight,
@@ -84,6 +88,10 @@ const getReminderKey = (prayerKey) =>
 export default function MyRamadhanHome() {
   const { user } = useUser();
   const router = useRouter();
+
+  // --- TAMBAHAN: Deteksi PWA ---
+  const { isPWA } = useAppMode();
+
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(dayjs());
 
@@ -104,10 +112,16 @@ export default function MyRamadhanHome() {
     setMounted(true);
     const timer = setInterval(() => setCurrentTime(dayjs()), 1000);
     randomizeQuote();
-    fetchTrackerSummary();
     fetchPrayerTimes();
     return () => clearInterval(timer);
   }, []);
+
+  // --- TAMBAHAN LOGIKA: Fetch Tracker dipanggil ketika data `user` sudah tersedia ---
+  useEffect(() => {
+    if (user) {
+      fetchTrackerSummary();
+    }
+  }, [user, isPWA]);
 
   useEffect(() => {
     if (!prayerTimes || activeReminder) return;
@@ -138,7 +152,9 @@ export default function MyRamadhanHome() {
 
   const fetchPrayerTimes = useCallback(async () => {
     try {
-      const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
+      const localUserStr = localStorage.getItem('myRamadhan_user');
+      const localUser = localUserStr ? JSON.parse(localUserStr) : null;
+      // Gunakan localUser city, jika tidak ada fallback ke Jakarta
       const city = localUser?.location_city || 'Jakarta';
       setUserCity(city);
       const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
@@ -152,56 +168,61 @@ export default function MyRamadhanHome() {
     }
   }, []);
 
+  // --- PERUBAHAN LOGIKA: Menggunakan StorageService ---
   const fetchTrackerSummary = async () => {
-    const localUser = JSON.parse(localStorage.getItem('myRamadhan_user'));
-    if (!localUser) return;
+    if (!user) return;
 
-    const { data: userData } = await supabase
-      .from('users')
-      .select('id, custom_habits')
-      .eq('personal_code', localUser.personal_code)
-      .single();
-    if (!userData) return;
+    try {
+      const today = dayjs().format('YYYY-MM-DD');
 
-    const today = dayjs().format('YYYY-MM-DD');
-    const { data } = await supabase
-      .from('daily_trackers')
-      .select('*')
-      .eq('user_id', userData.id)
-      .eq('date', today)
-      .single();
-
-    const keysToCheck = [
-      'is_puasa',
-      'subuh',
-      'dzuhur',
-      'ashar',
-      'maghrib',
-      'isya',
-      'tarawih',
-      'quran',
-      'sedekah',
-    ];
-    const customHabits = userData.custom_habits || [];
-    let defaultCompleted = 0;
-    let customCompleted = 0;
-
-    if (data) {
-      defaultCompleted = keysToCheck.reduce(
-        (acc, key) => acc + (data[key] ? 1 : 0),
-        0,
+      // 1. Ambil data user (untuk melihat custom_habits) via StorageService
+      const userData = await StorageService.getProfile(
+        user.personal_code,
+        isPWA,
       );
-      const customProgress = data.custom_progress || {};
-      customCompleted = customHabits.reduce(
-        (acc, habit) => acc + (customProgress[habit.id] ? 1 : 0),
-        0,
+      const customHabits = userData?.custom_habits || [];
+
+      // 2. Ambil progres hari ini via StorageService
+      const data = await StorageService.getDailyTracker(
+        user.personal_code,
+        today,
+        isPWA,
       );
+
+      const keysToCheck = [
+        'is_puasa',
+        'subuh',
+        'dzuhur',
+        'ashar',
+        'maghrib',
+        'isya',
+        'tarawih',
+        'quran',
+        'sedekah',
+      ];
+
+      let defaultCompleted = 0;
+      let customCompleted = 0;
+
+      if (data) {
+        defaultCompleted = keysToCheck.reduce(
+          (acc, key) => acc + (data[key] ? 1 : 0),
+          0,
+        );
+        const customProgress = data.custom_progress || {};
+        customCompleted = customHabits.reduce(
+          (acc, habit) => acc + (customProgress[habit.id] ? 1 : 0),
+          0,
+        );
+      }
+
+      setTaskProgress({
+        completed: defaultCompleted + customCompleted,
+        total: keysToCheck.length + customHabits.length,
+      });
+    } catch (err) {
+      console.error('Gagal memuat ringkasan tracker:', err);
     }
-
-    setTaskProgress({
-      completed: defaultCompleted + customCompleted,
-      total: keysToCheck.length + customHabits.length,
-    });
   };
 
   const randomizeQuote = () => {
@@ -219,12 +240,12 @@ export default function MyRamadhanHome() {
   const hour = currentTime.hour();
   const greeting =
     hour < 11
-      ? "Assalamu'alaikum"
+      ? 'Selamat Pagi'
       : hour < 15
-        ? "Assalamu'alaikum"
+        ? 'Selamat Siang'
         : hour < 18
-          ? "Assalamu'alaikum"
-          : "Assalamu'alaikum";
+          ? 'Selamat Sore'
+          : 'Selamat Malam';
 
   const getHijriDate = () => {
     try {
@@ -248,7 +269,10 @@ export default function MyRamadhanHome() {
   };
 
   const hijriDate = getHijriDate();
-  const progressPercent = (taskProgress.completed / taskProgress.total) * 100;
+  const progressPercent =
+    taskProgress.total === 0
+      ? 0
+      : (taskProgress.completed / taskProgress.total) * 100;
   const hijriDay = parseInt(getHijriDate().split(' ')[0], 10);
   const dailyTopic =
     studyMaterials.find((m) => m.day === hijriDay) || studyMaterials[0];
@@ -356,13 +380,11 @@ export default function MyRamadhanHome() {
 
   return (
     <main className='min-h-screen bg-[#F6F9FC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-16 selection:bg-blue-200 dark:selection:bg-blue-800 transition-colors duration-300'>
-      {/* Ambient background */}
       <div className='fixed inset-0 -z-10 pointer-events-none overflow-hidden'>
         <div className='absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/50 dark:bg-blue-900/20 rounded-full blur-3xl opacity-60' />
         <div className='absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-100/50 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-60' />
       </div>
 
-      {/* ── PRAYER REMINDER POPUP ── */}
       <AnimatePresence>
         {activeReminder && (
           <>
@@ -375,7 +397,6 @@ export default function MyRamadhanHome() {
               className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50'
               onClick={dismissReminder}
             />
-
             <motion.div
               key='reminder'
               initial={{ opacity: 0, y: 80 }}
@@ -445,7 +466,6 @@ export default function MyRamadhanHome() {
       </AnimatePresence>
 
       <div className='max-w-md mx-auto p-5'>
-        {/* ── HEADER ── */}
         <header className='flex justify-between items-center mb-8 mt-2'>
           <div>
             <span className='px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-[#1e3a8a] dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-md'>
@@ -465,9 +485,13 @@ export default function MyRamadhanHome() {
                 size={20}
                 className='text-rose-500 cursor-pointer'
                 onClick={() => {
-                  supabase.auth.signOut();
+                  if (!isPWA) supabase.auth.signOut();
                   localStorage.removeItem('myRamadhan_user');
-                  router.push('/auth/login');
+                  if (!isPWA) {
+                    router.push('/auth/login');
+                  } else {
+                    window.location.reload();
+                  }
                 }}
               />
             ) : (
@@ -480,9 +504,7 @@ export default function MyRamadhanHome() {
           </div>
         </header>
 
-        {/* ── BENTO GRID ── */}
         <div className='grid grid-cols-2 gap-4 animate-fadeUp'>
-          {/* 1. HERO CARD — gradien tetap, tidak perlu dark variant */}
           {hero ? (
             <div
               className={`col-span-2 relative min-h-[300px] rounded-[2.5rem] p-7 text-white overflow-hidden group bg-gradient-to-br ${hero.gradient} transition-all duration-500 hover:-translate-y-1`}
@@ -557,7 +579,6 @@ export default function MyRamadhanHome() {
             <div className='col-span-2 min-h-[300px] rounded-[2.5rem] bg-slate-200 dark:bg-slate-800 animate-pulse' />
           )}
 
-          {/* 2. TRACKER CARD */}
           <div
             onClick={() =>
               !user ? router.push('/auth/login') : setIsTrackerOpen(true)
@@ -607,7 +628,6 @@ export default function MyRamadhanHome() {
             </div>
           </div>
 
-          {/* 3. GRID MENU */}
           <div className='col-span-2 grid grid-cols-4 gap-3 mt-2'>
             <ToolCard
               icon={BookOpen}
@@ -667,7 +687,6 @@ export default function MyRamadhanHome() {
             />
           </div>
 
-          {/* 4. STUDY TIME */}
           <div
             onClick={() => router.push(`/study/${hijriDay}`)}
             className='col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-5 group shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer flex items-center justify-between'
@@ -693,7 +712,6 @@ export default function MyRamadhanHome() {
             </div>
           </div>
 
-          {/* 5. REFLECTION JOURNAL */}
           <div
             onClick={() =>
               !user ? router.push('/auth/login') : router.push('/jurnal')
@@ -721,7 +739,6 @@ export default function MyRamadhanHome() {
             </div>
           </div>
 
-          {/* 6. RAMATALK AI — gradien tetap */}
           <div
             onClick={() => router.push('/ramatalk')}
             className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group cursor-pointer'
@@ -744,7 +761,6 @@ export default function MyRamadhanHome() {
             </div>
           </div>
 
-          {/* 7. QUOTE OF THE DAY — gradien tetap */}
           <div className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group'>
             <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.15),transparent_65%)]' />
             <div className='absolute -top-16 -left-16 w-60 h-60 bg-indigo-400/20 rounded-full blur-3xl animate-pulse' />
