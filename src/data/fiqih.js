@@ -324,4 +324,242 @@ export const fiqihRamadhanData = [
       'Tujuan utama puasa Ramadhan adalah agar menjadi orang yang bertakwa.',
     source: 'QS. Al-Baqarah: 183',
   },
+  {
+    title: 'Puasa Orang yang Safar di Siang Hari',
+    content:
+      'Jika seseorang berniat puasa lalu melakukan safar di siang hari, ia boleh berbuka menurut mayoritas ulama.',
+    source: 'Pendapat Jumhur Ulama',
+  },
+  {
+    title: 'Berniat Puasa Sunnah di Siang Hari',
+    content:
+      'Puasa sunnah boleh diniatkan di siang hari selama belum melakukan hal yang membatalkan sejak fajar.',
+    source: 'HR. Muslim',
+  },
+  {
+    title: 'Orang yang Lupa Makan atau Minum',
+    content:
+      'Jika seseorang makan atau minum karena lupa saat puasa, maka puasanya tetap sah.',
+    source: 'HR. Bukhari & Muslim',
+  },
+  {
+    title: 'Menggunakan Inhaler Asma',
+    content:
+      'Penggunaan inhaler diperselisihkan; sebagian ulama membolehkan karena darurat dan bukan makanan.',
+    source: 'Fatwa Ulama Kontemporer',
+  },
+  {
+    title: 'Donor Darah Saat Puasa',
+    content:
+      'Donor darah tidak membatalkan puasa menurut mayoritas ulama, namun jika menyebabkan lemah berat dianjurkan berbuka.',
+    source: 'Pendapat Mayoritas Ulama',
+  },
+  {
+    title: 'Puasa Orang yang Bekerja Berat',
+    content:
+      'Orang dengan pekerjaan berat tetap wajib berniat puasa; jika sangat darurat dan membahayakan, boleh berbuka lalu qadha.',
+    source: 'Kaidah Dharurat',
+  },
+  {
+    title: 'Menggunakan Krim atau Salep',
+    content:
+      'Menggunakan krim, minyak, atau salep pada kulit tidak membatalkan puasa.',
+    source: 'Fatwa Ulama',
+  },
+  {
+    title: 'Mencium Bau Makanan',
+    content:
+      'Mencium aroma makanan tidak membatalkan puasa selama tidak ada zat yang masuk ke tenggorokan.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Berenang Saat Puasa',
+    content:
+      'Berenang diperbolehkan selama menjaga agar air tidak masuk ke dalam tubuh.',
+    source: 'Kaidah Fiqih',
+  },
+  {
+    title: 'Menggunakan Obat Semprot Hidung',
+    content:
+      'Obat semprot hidung yang masuk hingga tenggorokan dapat membatalkan puasa.',
+    source: 'Qiyas kepada Makan dan Minum',
+  },
+  {
+    title: 'Puasa Orang yang Baru Masuk Islam',
+    content:
+      'Orang yang masuk Islam di siang hari Ramadhan tidak wajib mengganti hari sebelumnya.',
+    source: 'Pendapat Fiqih',
+  },
+  {
+    title: 'Puasa Orang yang Baru Baligh',
+    content:
+      'Anak yang baligh di siang Ramadhan wajib meneruskan puasa hari itu namun tidak wajib qadha menurut sebagian ulama.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Menggunakan Oksigen',
+    content:
+      'Menggunakan oksigen murni tanpa zat tambahan tidak membatalkan puasa.',
+    source: 'Fatwa Ulama Kontemporer',
+  },
+  {
+    title: 'Puasa Orang yang Gila Sementara',
+    content:
+      'Jika seseorang kehilangan akal sementara di siang hari, puasanya tidak sah selama hilang akal tersebut.',
+    source: 'Kaidah Taklif',
+  },
+  {
+    title: 'Menggunakan Lip Balm',
+    content:
+      'Menggunakan pelembap bibir tidak membatalkan puasa selama tidak tertelan.',
+    source: 'Fatwa Ulama',
+  },
+  {
+    title: 'Menunda Mandi Wajib Hingga Siang',
+    content:
+      'Menunda mandi wajib setelah fajar tidak membatalkan puasa selama tidak meninggalkan shalat.',
+    source: 'HR. Bukhari & Muslim',
+  },
+  {
+    title: 'Puasa Nazar di Bulan Ramadhan',
+    content:
+      'Puasa nazar tidak boleh menggantikan puasa Ramadhan dan harus dilakukan terpisah.',
+    source: 'Kaidah Fiqih',
+  },
+  {
+    title: 'Menggunakan Suntik Vaksin',
+    content:
+      'Suntik vaksin yang tidak bersifat nutrisi tidak membatalkan puasa menurut mayoritas ulama.',
+    source: 'Fatwa Ulama Kontemporer',
+  },
+  {
+    title: 'Menyikat Gigi dengan Pasta',
+    content:
+      'Menggunakan pasta gigi diperbolehkan selama berhati-hati agar tidak tertelan.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Puasa Orang yang Ragu Masuk Waktu Subuh',
+    content:
+      'Jika ragu apakah sudah masuk Subuh, maka hukum asalnya belum masuk hingga yakin.',
+    source: 'Kaidah Yaqin La Yazulu bisy-Syakk',
+  },
+
+  {
+    title: 'Mengakhirkan Qadha Hingga Mendekati Ramadhan',
+    content:
+      'Diperbolehkan menunda qadha selama masih sebelum Ramadhan berikutnya, namun lebih utama untuk segera menggantinya.',
+    source: 'HR. Muslim',
+  },
+  {
+    title: 'Puasa Orang yang Tidak Tahu Masuk Ramadhan',
+    content:
+      'Jika seseorang tidak mengetahui telah masuk Ramadhan, maka ia berpuasa ketika mengetahuinya dan tidak berdosa atas ketidaktahuannya.',
+    source: 'Kaidah Tidak Dibebani Kecuali Setelah Tahu',
+  },
+  {
+    title: 'Menggunakan Obat Kumur',
+    content:
+      'Obat kumur diperbolehkan selama tidak ditelan dan tidak berlebihan.',
+    source: 'Qiyas kepada Berkumur',
+  },
+  {
+    title: 'Puasa Orang yang Dipaksa Berbuka',
+    content:
+      'Jika seseorang dipaksa berbuka dengan ancaman serius, maka puasanya tidak batal menurut sebagian ulama.',
+    source: 'Kaidah Ikrah (Paksaan)',
+  },
+  {
+    title: 'Berbuka Karena Salah Perkiraan Waktu',
+    content:
+      'Jika berbuka karena mengira matahari sudah terbenam lalu ternyata belum, maka wajib qadha.',
+    source: 'Pendapat Jumhur Ulama',
+  },
+  {
+    title: 'Makan Karena Mengira Masih Malam',
+    content:
+      'Jika makan karena mengira masih malam lalu ternyata sudah Subuh, maka wajib qadha.',
+    source: 'Pendapat Jumhur Ulama',
+  },
+  {
+    title: 'Puasa Orang yang Tidak Sadar Sejak Malam',
+    content:
+      'Jika seseorang tidak sadar sejak sebelum fajar hingga terbenam matahari, puasanya tidak sah.',
+    source: 'Pendapat Mayoritas Ulama',
+  },
+  {
+    title: 'Puasa dalam Keadaan Marah',
+    content:
+      'Marah tidak membatalkan puasa, namun mengurangi pahala jika disertai ucapan buruk.',
+    source: 'HR. Bukhari',
+  },
+  {
+    title: 'Bersin Saat Puasa',
+    content:
+      'Bersin tidak membatalkan puasa dan tidak mempengaruhi keabsahannya.',
+    source: 'Kesepakatan Ulama',
+  },
+  {
+    title: 'Menggunakan Obat Tetes Telinga',
+    content:
+      'Obat tetes telinga tidak membatalkan puasa selama tidak sampai ke tenggorokan.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Puasa Orang yang Terluka dan Keluar Darah',
+    content: 'Keluar darah karena luka tidak membatalkan puasa.',
+    source: 'Kaidah Fiqih',
+  },
+  {
+    title: 'Puasa Orang yang Murtad Lalu Kembali Islam',
+    content:
+      'Jika seseorang murtad di siang hari, puasanya batal dan wajib qadha setelah kembali Islam.',
+    source: 'Ijma Ulama',
+  },
+  {
+    title: 'Puasa Orang yang Terlambat Niat Karena Lupa',
+    content:
+      'Jika lupa berniat puasa wajib di malam hari, maka puasanya tidak sah menurut mayoritas ulama.',
+    source: 'Pendapat Jumhur',
+  },
+  {
+    title: 'Menyentuh Lawan Jenis',
+    content:
+      'Menyentuh lawan jenis tidak membatalkan puasa kecuali jika menyebabkan keluarnya mani.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Puasa Saat Cuaca Sangat Panas',
+    content:
+      'Boleh mendinginkan badan dengan air saat sangat panas selama tidak menelan air.',
+    source: 'Atsar Sahabat',
+  },
+  {
+    title: 'Puasa Orang yang Sedang Haid Lalu Suci Siang Hari',
+    content:
+      'Wanita yang suci dari haid di siang hari Ramadhan wajib menahan diri hingga Maghrib dan mengganti puasanya.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Puasa Orang yang Masuk Islam di Siang Hari',
+    content:
+      'Orang yang masuk Islam di siang hari dianjurkan menahan diri hingga Maghrib dan tidak wajib qadha hari tersebut.',
+    source: 'Pendapat Ulama',
+  },
+  {
+    title: 'Mencicipi Garam atau Gula',
+    content: 'Boleh mencicipi sedikit bahan makanan selama tidak ditelan.',
+    source: 'Atsar Sahabat',
+  },
+  {
+    title: 'Menggunakan Obat Tablet di Bawah Lidah',
+    content: 'Tablet yang larut dan masuk ke tenggorokan membatalkan puasa.',
+    source: 'Qiyas kepada Makan dan Minum',
+  },
+  {
+    title: 'Puasa Orang yang Ragu Telah Makan',
+    content:
+      'Jika ragu apakah telah makan atau belum, maka hukum asalnya belum makan dan puasanya tetap sah.',
+    source: 'Kaidah Yakin Tidak Hilang Karena Ragu',
+  },
 ];

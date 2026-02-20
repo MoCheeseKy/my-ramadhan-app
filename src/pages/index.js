@@ -219,12 +219,12 @@ export default function MyRamadhanHome() {
   const hour = currentTime.hour();
   const greeting =
     hour < 11
-      ? 'Selamat Pagi'
+      ? "Assalamu'alaikum"
       : hour < 15
-        ? 'Selamat Siang'
+        ? "Assalamu'alaikum"
         : hour < 18
-          ? 'Selamat Sore'
-          : 'Selamat Malam';
+          ? "Assalamu'alaikum"
+          : "Assalamu'alaikum";
 
   const getHijriDate = () => {
     try {
