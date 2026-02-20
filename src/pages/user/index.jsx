@@ -485,7 +485,7 @@ export default function UserProfile() {
                   <Coffee size={18} />
                 </div>
                 <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-orange-600 dark:group-hover:text-orange-400'>
-                  Traktir Saya Kopi
+                  Traktir Kopi
                 </span>
               </div>
               <ChevronRight
@@ -806,7 +806,7 @@ export default function UserProfile() {
           <p>
             Kalau aplikasi ini ngebantu ibadah, hafalan, atau nemenin Ramadhan
             kamu jadi lebih bermakna, kamu bisa traktir kopi sebagai bentuk
-            support kecil biar kami makin semangat ngembanginnya.
+            support kecil biar saya semakin semangat ngembanginnya.
           </p>
         </div>
 
