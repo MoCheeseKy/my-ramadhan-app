@@ -11,7 +11,6 @@ import useUser from '@/hook/useUser';
 import { motion, AnimatePresence } from 'framer-motion';
 import { studyMaterials } from '@/data/studyMaterials';
 
-// Import Icons
 import {
   BookOpen,
   ChevronRight,
@@ -44,8 +43,6 @@ dayjs.locale('id');
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
-// ─── Prayer Reminder Config ───────────────────────────────────────────────────
-// Window: reminder muncul di detik 0-59 setelah waktu sholat masuk
 const PRAYER_REMINDERS = [
   {
     key: 'Subuh',
@@ -81,33 +78,26 @@ const PRAYER_REMINDERS = [
   },
 ];
 
-// Key localStorage: unik per sholat per hari → auto reset besok
 const getReminderKey = (prayerKey) =>
   `myRamadhan_reminder_${prayerKey}_${dayjs().format('YYYY-MM-DD')}`;
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 export default function MyRamadhanHome() {
   const { user } = useUser();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(dayjs());
 
-  // Drawers
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
-  // Data
   const [taskProgress, setTaskProgress] = useState({ completed: 0, total: 9 });
   const [quoteOfTheDay, setQuoteOfTheDay] = useState(quotesData[0]);
   const [isSpinning, setIsSpinning] = useState(false);
 
-  // Prayer
   const [prayerTimes, setPrayerTimes] = useState(null);
   const [userCity, setUserCity] = useState('Jakarta');
 
-  // Prayer Reminder
   const [activeReminder, setActiveReminder] = useState(null);
-  // Ref untuk track sholat yang sudah di-trigger di sesi ini (hindari re-trigger dalam 1 menit)
   const triggeredRef = useRef(new Set());
 
   useEffect(() => {
@@ -119,7 +109,6 @@ export default function MyRamadhanHome() {
     return () => clearInterval(timer);
   }, []);
 
-  // ─── Cek reminder setiap detik ─────────────────────────────────────────────
   useEffect(() => {
     if (!prayerTimes || activeReminder) return;
 
@@ -131,11 +120,8 @@ export default function MyRamadhanHome() {
       const prayerMoment = dayjs().hour(h).minute(m).second(0);
       const diffSec = currentTime.diff(prayerMoment, 'second');
 
-      // Hanya trigger dalam window 0-59 detik setelah waktu sholat
       if (diffSec < 0 || diffSec >= 60) continue;
-      // Sudah ditampilkan hari ini?
       if (localStorage.getItem(getReminderKey(prayer.key))) continue;
-      // Sudah di-trigger sesi ini?
       if (triggeredRef.current.has(prayer.key)) continue;
 
       triggeredRef.current.add(prayer.key);
@@ -146,7 +132,6 @@ export default function MyRamadhanHome() {
 
   const dismissReminder = () => {
     if (!activeReminder) return;
-    // Simpan ke localStorage → tidak muncul lagi hari ini
     localStorage.setItem(getReminderKey(activeReminder.key), 'true');
     setActiveReminder(null);
   };
@@ -240,14 +225,11 @@ export default function MyRamadhanHome() {
         : hour < 18
           ? 'Selamat Sore'
           : 'Selamat Malam';
-  // ─── Tanggal Hijriah dinamis ──────────────────────────────────────────────────
-  // islamic-umalqura di browser konsisten +1 dari kalender resmi Indonesia (Kemenag/rukyat hilal)
-  // Fix: input tanggal kemarin → hasil hijriah akurat untuk Indonesia
+
   const getHijriDate = () => {
     try {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-
       const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
         day: 'numeric',
         month: 'long',
@@ -264,15 +246,13 @@ export default function MyRamadhanHome() {
       return 'Ramadhan 1447 H';
     }
   };
+
   const hijriDate = getHijriDate();
   const progressPercent = (taskProgress.completed / taskProgress.total) * 100;
   const hijriDay = parseInt(getHijriDate().split(' ')[0], 10);
   const dailyTopic =
     studyMaterials.find((m) => m.day === hijriDay) || studyMaterials[0];
 
-  // =============================================
-  // HERO MODE LOGIC — FIXED
-  // =============================================
   const getHeroMode = () => {
     if (!prayerTimes) return null;
 
@@ -286,7 +266,6 @@ export default function MyRamadhanHome() {
     const isya = parseTime(prayerTimes.Isya);
     const isyaEnd = isya.add(10, 'minute');
     const subuhPlus5 = subuh.add(5, 'minute');
-
     const now = currentTime;
     const nowH = now.hour();
 
@@ -295,7 +274,6 @@ export default function MyRamadhanHome() {
       return `${String(d.hours()).padStart(2, '0')}:${String(d.minutes()).padStart(2, '0')}:${String(d.seconds()).padStart(2, '0')}`;
     };
 
-    // ── 1. Berbuka (Maghrib → Isya+10 menit) ──────────────────────────────────
     if (now.isAfter(maghrib) && now.isBefore(isyaEnd)) {
       return {
         mode: 'berbuka',
@@ -310,14 +288,8 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // ── 2. Tarawih (Isya+10 menit → 01:00) ───────────────────────────────────
-    // BUG FIX: Kondisi lama gagal saat nowH = 0 (00:xx) karena isAfter(isyaEnd)
-    // bernilai false setelah tengah malam.
-    // Solusi: gunakan nowH saja sebagai gerbang utama.
-    //   - Jam 19-23 + sudah lewat isyaEnd → Tarawih
-    //   - Jam 00 (00:00-00:59) → selalu Tarawih (pasti sudah lewat isya)
-    const isLateEvening = nowH >= 19 && now.isAfter(isyaEnd); // 19:xx-23:xx setelah isya+10
-    const isMidnight = nowH === 0; // 00:00-00:59
+    const isLateEvening = nowH >= 19 && now.isAfter(isyaEnd);
+    const isMidnight = nowH === 0;
     if (isLateEvening || isMidnight) {
       return {
         mode: 'tarawih',
@@ -332,7 +304,6 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // ── 3. Tahajud (01:00 → 04:00) ────────────────────────────────────────────
     if (nowH >= 1 && nowH < 4) {
       return {
         mode: 'tahajud',
@@ -347,7 +318,6 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // ── 4. Imsak / Puasa Dimulai (04:00 → Subuh+5 menit) ────────────────────
     if (nowH >= 4 && now.isBefore(subuhPlus5)) {
       return {
         mode: 'puasa-dimulai',
@@ -362,7 +332,6 @@ export default function MyRamadhanHome() {
       };
     }
 
-    // ── 5. Default: Countdown ke Maghrib (Subuh+5 → Maghrib) ─────────────────
     const diff = maghrib.diff(now);
     const totalDur = maghrib.diff(subuh);
     const passed = now.diff(subuh);
@@ -386,23 +355,17 @@ export default function MyRamadhanHome() {
   const hero = getHeroMode();
 
   return (
-    <main className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-16 selection:bg-blue-200'>
+    <main className='min-h-screen bg-[#F6F9FC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-16 selection:bg-blue-200 dark:selection:bg-blue-800 transition-colors duration-300'>
       {/* Ambient background */}
       <div className='fixed inset-0 -z-10 pointer-events-none overflow-hidden'>
-        <div className='absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/50 rounded-full blur-3xl opacity-60' />
-        <div className='absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-100/50 rounded-full blur-3xl opacity-60' />
+        <div className='absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/50 dark:bg-blue-900/20 rounded-full blur-3xl opacity-60' />
+        <div className='absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-100/50 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-60' />
       </div>
 
-      {/* ══════════════════════════════════════════
-          PRAYER REMINDER POPUP
-          - Muncul sebagai bottom sheet
-          - Backdrop bisa diklik untuk dismiss
-          - Tersimpan di localStorage → tidak muncul lagi hari ini
-      ══════════════════════════════════════════ */}
+      {/* ── PRAYER REMINDER POPUP ── */}
       <AnimatePresence>
         {activeReminder && (
           <>
-            {/* Backdrop */}
             <motion.div
               key='backdrop'
               initial={{ opacity: 0 }}
@@ -413,7 +376,6 @@ export default function MyRamadhanHome() {
               onClick={dismissReminder}
             />
 
-            {/* Bottom Sheet Card */}
             <motion.div
               key='reminder'
               initial={{ opacity: 0, y: 80 }}
@@ -422,61 +384,57 @@ export default function MyRamadhanHome() {
               transition={{ type: 'spring', damping: 28, stiffness: 320 }}
               className='fixed bottom-0 left-0 right-0 z-50 px-4 pb-8'
             >
-              <div className='max-w-md mx-auto bg-white rounded-[2rem] overflow-hidden shadow-2xl'>
-                {/* Top accent strip */}
+              <div className='max-w-md mx-auto bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800'>
                 <div className='h-1.5 bg-gradient-to-r from-[#1e3a8a] via-indigo-500 to-purple-500' />
-
                 <div className='p-6'>
-                  {/* Header */}
                   <div className='flex items-start justify-between mb-4'>
                     <div className='flex items-center gap-3'>
-                      <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1e3a8a] to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-indigo-200'>
+                      <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1e3a8a] to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50'>
                         {activeReminder.icon}
                       </div>
                       <div>
-                        <p className='text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400'>
+                        <p className='text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500'>
                           Pengingat Sholat
                         </p>
-                        <p className='font-bold text-lg text-slate-800 leading-tight'>
+                        <p className='font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight'>
                           Waktu {activeReminder.label}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={dismissReminder}
-                      className='w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors'
+                      className='w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors'
                     >
-                      <X size={15} className='text-slate-500' />
+                      <X
+                        size={15}
+                        className='text-slate-500 dark:text-slate-400'
+                      />
                     </button>
                   </div>
-
-                  {/* Message */}
-                  <p className='text-sm text-slate-600 leading-relaxed mb-5'>
+                  <p className='text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-5'>
                     {activeReminder.message}
                   </p>
-
-                  {/* Waktu sholat chip */}
-                  <div className='bg-slate-50 rounded-2xl px-4 py-3 flex items-center justify-between mb-5'>
+                  <div className='bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between mb-5'>
                     <div className='flex items-center gap-2'>
-                      <Bell size={13} className='text-[#1e3a8a]' />
-                      <span className='text-xs font-semibold text-slate-500'>
+                      <Bell
+                        size={13}
+                        className='text-[#1e3a8a] dark:text-blue-400'
+                      />
+                      <span className='text-xs font-semibold text-slate-500 dark:text-slate-400'>
                         Waktu sholat {activeReminder.label}
                       </span>
                     </div>
-                    <span className='text-sm font-black text-[#1e3a8a] tabular-nums'>
+                    <span className='text-sm font-black text-[#1e3a8a] dark:text-blue-400 tabular-nums'>
                       {prayerTimes?.[activeReminder.key]}
                     </span>
                   </div>
-
-                  {/* CTA */}
                   <button
                     onClick={dismissReminder}
-                    className='w-full py-4 rounded-2xl bg-gradient-to-r from-[#1e3a8a] to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-200 hover:opacity-90 active:scale-95 transition-all'
+                    className='w-full py-4 rounded-2xl bg-gradient-to-r from-[#1e3a8a] to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 hover:opacity-90 active:scale-95 transition-all'
                   >
                     Siap, segera sholat! 🙏
                   </button>
-
-                  <p className='text-center text-[10px] text-slate-300 mt-3'>
+                  <p className='text-center text-[10px] text-slate-300 dark:text-slate-600 mt-3'>
                     Pengingat ini tidak akan muncul lagi hari ini
                   </p>
                 </div>
@@ -487,21 +445,21 @@ export default function MyRamadhanHome() {
       </AnimatePresence>
 
       <div className='max-w-md mx-auto p-5'>
-        {/* --- HEADER --- */}
+        {/* ── HEADER ── */}
         <header className='flex justify-between items-center mb-8 mt-2'>
           <div>
-            <span className='px-2 py-0.5 bg-blue-100 text-[#1e3a8a] text-[10px] font-bold uppercase tracking-wider rounded-md'>
+            <span className='px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-[#1e3a8a] dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-md'>
               {hijriDate}
             </span>
             <h1 className='text-2xl font-extrabold tracking-tight mt-2 leading-tight'>
               {greeting}, <br />
-              <span className='text-[#1e3a8a]'>
+              <span className='text-[#1e3a8a] dark:text-blue-400'>
                 {user?.username || 'Pendatang!'}
               </span>{' '}
               👋
             </h1>
           </div>
-          <div className='w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-xl hover:scale-105 transition-transform'>
+          <div className='w-12 h-12 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
             {user ? (
               <LogOut
                 size={20}
@@ -522,9 +480,9 @@ export default function MyRamadhanHome() {
           </div>
         </header>
 
-        {/* --- BENTO GRID LAYOUT --- */}
+        {/* ── BENTO GRID ── */}
         <div className='grid grid-cols-2 gap-4 animate-fadeUp'>
-          {/* 1. HERO CARD */}
+          {/* 1. HERO CARD — gradien tetap, tidak perlu dark variant */}
           {hero ? (
             <div
               className={`col-span-2 relative min-h-[300px] rounded-[2.5rem] p-7 text-white overflow-hidden group bg-gradient-to-br ${hero.gradient} transition-all duration-500 hover:-translate-y-1`}
@@ -590,14 +548,13 @@ export default function MyRamadhanHome() {
                   </div>
                 </div>
               )}
-
               <Moon
                 size={214}
                 className='absolute -bottom-14 -right-14 text-white/10 rotate-12'
               />
             </div>
           ) : (
-            <div className='col-span-2 min-h-[300px] rounded-[2.5rem] bg-slate-200 animate-pulse' />
+            <div className='col-span-2 min-h-[300px] rounded-[2.5rem] bg-slate-200 dark:bg-slate-800 animate-pulse' />
           )}
 
           {/* 2. TRACKER CARD */}
@@ -605,22 +562,22 @@ export default function MyRamadhanHome() {
             onClick={() =>
               !user ? router.push('/auth/login') : setIsTrackerOpen(true)
             }
-            className='col-span-2 bg-white rounded-[2rem] p-5 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
+            className='col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
           >
             <div className='flex justify-between items-center mb-3'>
-              <div className='bg-emerald-100 p-2 rounded-xl w-fit text-emerald-600'>
+              <div className='bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl w-fit text-emerald-600 dark:text-emerald-400'>
                 <CheckSquare size={18} />
               </div>
-              <span className='text-xs font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-lg'>
+              <span className='text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-lg'>
                 Daily Goal
               </span>
             </div>
             <div className='flex justify-between items-end'>
               <div>
-                <h3 className='font-bold text-lg leading-tight text-slate-800'>
+                <h3 className='font-bold text-lg leading-tight text-slate-800 dark:text-slate-100'>
                   Ibadah Harian
                 </h3>
-                <p className='text-xs text-slate-500 mt-1'>
+                <p className='text-xs text-slate-500 dark:text-slate-400 mt-1'>
                   Sudah {taskProgress.completed} dari {taskProgress.total}{' '}
                   target!
                 </p>
@@ -628,7 +585,7 @@ export default function MyRamadhanHome() {
               <div className='w-12 h-12 relative flex items-center justify-center'>
                 <svg className='w-full h-full -rotate-90' viewBox='0 0 36 36'>
                   <path
-                    className='text-slate-100'
+                    className='text-slate-100 dark:text-slate-700'
                     d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
                     fill='none'
                     stroke='currentColor'
@@ -643,7 +600,7 @@ export default function MyRamadhanHome() {
                     strokeWidth='4'
                   />
                 </svg>
-                <span className='absolute text-[10px] font-bold text-emerald-600'>
+                <span className='absolute text-[10px] font-bold text-emerald-600 dark:text-emerald-400'>
                   {Math.round(progressPercent)}%
                 </span>
               </div>
@@ -655,57 +612,57 @@ export default function MyRamadhanHome() {
             <ToolCard
               icon={BookOpen}
               title="Al-Qur'an"
-              colorClass='text-[#1e3a8a]'
-              bgClass='text-blue-100'
+              colorClass='text-[#1e3a8a] dark:text-blue-400'
+              bgClass='text-blue-100 dark:text-blue-900/60'
               onClick={() => router.push('/quran')}
             />
             <ToolCard
               icon={HeartHandshake}
               title='Doa'
-              colorClass='text-rose-500'
-              bgClass='text-rose-100'
+              colorClass='text-rose-500 dark:text-rose-400'
+              bgClass='text-rose-100 dark:text-rose-900/60'
               onClick={() => router.push('/doa')}
             />
             <ToolCard
               icon={ScrollText}
               title='Hadits'
-              colorClass='text-emerald-600'
-              bgClass='text-emerald-100'
+              colorClass='text-emerald-600 dark:text-emerald-400'
+              bgClass='text-emerald-100 dark:text-emerald-900/60'
               onClick={() => router.push('/hadits')}
             />
             <ToolCard
               icon={Scale}
               title='Fiqih'
-              colorClass='text-amber-600'
-              bgClass='text-amber-100'
+              colorClass='text-amber-600 dark:text-amber-400'
+              bgClass='text-amber-100 dark:text-amber-900/60'
               onClick={() => router.push('/fiqih')}
             />
             <ToolCard
               icon={Compass}
               title='Kiblat'
-              colorClass='text-indigo-600'
-              bgClass='text-indigo-100'
+              colorClass='text-indigo-600 dark:text-indigo-400'
+              bgClass='text-indigo-100 dark:text-indigo-900/60'
               onClick={() => router.push('/kompas')}
             />
             <ToolCard
               icon={Fingerprint}
               title='Tasbih'
-              colorClass='text-teal-600'
-              bgClass='text-teal-100'
+              colorClass='text-teal-600 dark:text-teal-400'
+              bgClass='text-teal-100 dark:text-teal-900/60'
               onClick={() => router.push('/tasbih')}
             />
             <ToolCard
               icon={HandCoins}
               title='Zakat'
-              colorClass='text-yellow-500'
-              bgClass='text-yellow-100'
+              colorClass='text-yellow-500 dark:text-yellow-400'
+              bgClass='text-yellow-100 dark:text-yellow-900/60'
               onClick={() => router.push('/zakat')}
             />
             <ToolCard
               icon={Droplets}
               title='Haid'
-              colorClass='text-pink-500'
-              bgClass='text-pink-100'
+              colorClass='text-pink-500 dark:text-pink-400'
+              bgClass='text-pink-100 dark:text-pink-900/60'
               onClick={() => router.push('/haid-tracker')}
             />
           </div>
@@ -713,25 +670,25 @@ export default function MyRamadhanHome() {
           {/* 4. STUDY TIME */}
           <div
             onClick={() => router.push(`/study/${hijriDay}`)}
-            className='col-span-2 bg-white rounded-[2rem] p-5 group shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer flex items-center justify-between'
+            className='col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-5 group shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer flex items-center justify-between'
           >
             <div>
               <div className='flex items-center gap-2 mb-1'>
-                <span className='bg-amber-100 text-amber-600 p-1.5 rounded-lg'>
+                <span className='bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 p-1.5 rounded-lg'>
                   <Lightbulb size={16} />
                 </span>
-                <span className='text-[10px] font-bold text-slate-400 uppercase tracking-wider'>
+                <span className='text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider'>
                   Daily Knowledge
                 </span>
               </div>
-              <h3 className='font-bold text-slate-800 text-sm group-hover:text-amber-600 transition-colors'>
+              <h3 className='font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors'>
                 {dailyTopic.title}
               </h3>
             </div>
-            <div className='bg-slate-50 p-3 rounded-full group-hover:bg-amber-50 transition-colors'>
+            <div className='bg-slate-50 dark:bg-slate-800 p-3 rounded-full group-hover:bg-amber-50 dark:group-hover:bg-amber-900/30 transition-colors'>
               <ChevronRight
                 size={20}
-                className='text-slate-400 group-hover:text-amber-500'
+                className='text-slate-400 dark:text-slate-500 group-hover:text-amber-500 dark:group-hover:text-amber-400'
               />
             </div>
           </div>
@@ -741,25 +698,30 @@ export default function MyRamadhanHome() {
             onClick={() =>
               !user ? router.push('/auth/login') : router.push('/jurnal')
             }
-            className='col-span-2 relative bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
+            className='col-span-2 relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
           >
             <Moon
               size={120}
-              className='absolute -bottom-8 -right-8 text-[#1e3a8a] opacity-10'
+              className='absolute -bottom-8 -right-8 text-[#1e3a8a] dark:text-blue-700 opacity-10'
             />
             <div className='flex items-center gap-2 mb-3'>
-              <PenLine size={18} className='text-[#1e3a8a]' />
-              <h3 className='font-bold text-slate-800'>Jurnal Refleksi</h3>
+              <PenLine
+                size={18}
+                className='text-[#1e3a8a] dark:text-blue-400'
+              />
+              <h3 className='font-bold text-slate-800 dark:text-slate-100'>
+                Jurnal Refleksi
+              </h3>
             </div>
-            <p className='text-sm text-slate-500'>
+            <p className='text-sm text-slate-500 dark:text-slate-400'>
               Bagaimana perasaanmu hari ini?
             </p>
-            <div className='mt-3 text-xs font-semibold text-[#1e3a8a] flex items-center gap-1'>
+            <div className='mt-3 text-xs font-semibold text-[#1e3a8a] dark:text-blue-400 flex items-center gap-1'>
               Mulai menulis <ChevronRight size={14} />
             </div>
           </div>
 
-          {/* 6. RAMATALK AI */}
+          {/* 6. RAMATALK AI — gradien tetap */}
           <div
             onClick={() => router.push('/ramatalk')}
             className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group cursor-pointer'
@@ -782,7 +744,7 @@ export default function MyRamadhanHome() {
             </div>
           </div>
 
-          {/* 7. QUOTE OF THE DAY */}
+          {/* 7. QUOTE OF THE DAY — gradien tetap */}
           <div className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group'>
             <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.15),transparent_65%)]' />
             <div className='absolute -top-16 -left-16 w-60 h-60 bg-indigo-400/20 rounded-full blur-3xl animate-pulse' />
@@ -828,10 +790,10 @@ export default function MyRamadhanHome() {
         onUpdate={fetchPrayerTimes}
       />
 
-      <p className='w-full text-center text-sm text-[#1e3a8a] pt-16'>
+      <p className='w-full text-center text-sm text-[#1e3a8a] dark:text-blue-400 pt-16'>
         By @mocheeseky for every muslim 🤍
       </p>
-      <p className='w-full text-center text-sm text-[#1e3a8a] pt-1'>
+      <p className='w-full text-center text-sm text-[#1e3a8a] dark:text-blue-400 pt-1'>
         Partnership hit{' '}
         <a href='mailto:rifky.muhammadprayudhi@gmail.com' className='underline'>
           rifky.muhammadprayudhi@gmail.com
@@ -851,13 +813,15 @@ const ToolCard = ({
 }) => (
   <div
     onClick={onClick}
-    className={`relative bg-white rounded-[2rem] p-4 border border-slate-100 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer h-32 ${className}`}
+    className={`relative bg-white dark:bg-slate-900 rounded-[2rem] p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer h-32 ${className}`}
   >
     <Icon
       size={80}
       className={`absolute -bottom-6 -right-6 ${bgClass} opacity-50 z-1`}
     />
     <Icon size={24} className={colorClass} />
-    <span className='text-xs font-bold text-slate-700 z-2'>{title}</span>
+    <span className='text-xs font-bold text-slate-700 dark:text-slate-200 z-2'>
+      {title}
+    </span>
   </div>
 );

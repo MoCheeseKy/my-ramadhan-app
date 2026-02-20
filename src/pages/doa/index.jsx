@@ -34,7 +34,6 @@ import { doaCollections } from '@/data/doa';
 
 const ICONS = { Sun, Moon, BookOpen, Users, Heart, Sunrise, Sunset, Star };
 
-// ─── Ukuran Teks Arab ─────────────────────────────────────────────────────────
 const ARAB_SIZES = [
   { key: 'sm', label: 'S', size: '22px', leading: '2.1' },
   { key: 'md', label: 'M', size: '26px', leading: '2.4' },
@@ -42,7 +41,7 @@ const ARAB_SIZES = [
   { key: 'xl', label: 'XL', size: '36px', leading: '2.6' },
 ];
 
-// ─── Komponen Item Asmaul Husna (Grid 2 Kolom) ────────────────────────────────
+// ─── AsmaulHusnaItem ──────────────────────────────────────────────────────────
 function AsmaulHusnaItem({
   doa,
   index,
@@ -59,18 +58,18 @@ function AsmaulHusnaItem({
   return (
     <div
       id={`doa-${doa.id}`}
-      className='bg-white border border-slate-100 hover:border-rose-200 shadow-sm rounded-3xl p-4 flex flex-col items-center text-center relative transition-all duration-300'
+      className='bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 hover:border-rose-200 dark:hover:border-rose-700 shadow-sm rounded-3xl p-4 flex flex-col items-center text-center relative transition-all duration-300'
     >
       <div className='absolute top-3 right-3'>
         <button
           onClick={() => onBookmark(doa)}
-          className={`p-1.5 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-300 hover:bg-slate-100'}`}
+          className={`p-1.5 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30' : 'text-slate-300 dark:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
         >
           {isBookmarked ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
         </button>
       </div>
       <div className='absolute top-3 left-3'>
-        <span className='w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-[10px] font-black text-slate-400'>
+        <span className='w-6 h-6 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 text-[10px] font-black text-slate-400 dark:text-slate-400'>
           {doa.index || index}
         </span>
       </div>
@@ -82,20 +81,20 @@ function AsmaulHusnaItem({
         {hafalanMode && !revealed ? (
           <div className='relative py-4'>
             <div className='blur-[6px] select-none pointer-events-none opacity-40'>
-              <p className='font-amiri text-2xl text-slate-800 mb-1'>
+              <p className='font-amiri text-2xl text-slate-800 dark:text-slate-200 mb-1'>
                 {doa.arab || 'اللَّهُ'}
               </p>
               <p className='text-rose-600 font-bold text-xs'>{doa.title}</p>
             </div>
             <div className='absolute inset-0 flex items-center justify-center'>
-              <Eye size={20} className='text-slate-400' />
+              <Eye size={20} className='text-slate-400 dark:text-slate-500' />
             </div>
           </div>
         ) : (
           <>
             {settings.arab && doa.arab && (
               <p
-                className='font-amiri text-slate-800 mb-2 leading-loose'
+                className='font-amiri text-slate-800 dark:text-slate-100 mb-2 leading-loose'
                 dir='rtl'
                 style={{ fontSize: arabSizeConfig.size }}
               >
@@ -103,12 +102,12 @@ function AsmaulHusnaItem({
               </p>
             )}
             {settings.latin && (
-              <h3 className='font-bold text-rose-600 text-sm mb-1'>
+              <h3 className='font-bold text-rose-600 dark:text-rose-400 text-sm mb-1'>
                 {doa.title || doa.latin}
               </h3>
             )}
             {settings.terjemahan && doa.arti && (
-              <p className='text-slate-500 text-[11px] leading-snug'>
+              <p className='text-slate-500 dark:text-slate-400 text-[11px] leading-snug'>
                 "{doa.arti}"
               </p>
             )}
@@ -118,7 +117,7 @@ function AsmaulHusnaItem({
                   e.stopPropagation();
                   setRevealed(false);
                 }}
-                className='mt-3 text-[10px] text-slate-400 flex items-center justify-center gap-1 mx-auto hover:text-slate-600'
+                className='mt-3 text-[10px] text-slate-400 dark:text-slate-500 flex items-center justify-center gap-1 mx-auto hover:text-slate-600 dark:hover:text-slate-300'
               >
                 <EyeOff size={10} /> Sembunyikan
               </button>
@@ -130,7 +129,7 @@ function AsmaulHusnaItem({
   );
 }
 
-// ─── Komponen Item Doa Biasa (List) ───────────────────────────────────────────
+// ─── DoaItem ─────────────────────────────────────────────────────────────────
 function DoaItem({
   doa,
   isBookmarked,
@@ -143,7 +142,6 @@ function DoaItem({
   onCopy,
 }) {
   const [revealed, setRevealed] = useState(false);
-
   useEffect(() => {
     setRevealed(false);
   }, [hafalanMode]);
@@ -152,7 +150,6 @@ function DoaItem({
     ARAB_SIZES.find((s) => s.key === settings.arabSize) || ARAB_SIZES[1];
   const isBilal = doa.role === 'bilal';
   const isJamaah = doa.role === 'jamaah';
-
   const arabText = doa.arab || '';
   const latinText = doa.latin || '';
   const artiText = doa.arti || '';
@@ -160,17 +157,21 @@ function DoaItem({
   return (
     <div
       id={`doa-${doa.id}`}
-      className={`rounded-3xl border transition-all duration-300 overflow-hidden ${isJamaah ? 'bg-blue-50/30 border-blue-100 shadow-sm' : 'bg-white border-slate-100 hover:border-rose-100 shadow-sm'}`}
+      className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
+        isJamaah
+          ? 'bg-blue-50/30 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900 shadow-sm'
+          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-rose-100 dark:hover:border-rose-800 shadow-sm'
+      }`}
     >
       {/* HEADER */}
-      <div className='flex items-center justify-between px-5 py-3 border-b border-slate-50'>
+      <div className='flex items-center justify-between px-5 py-3 border-b border-slate-50 dark:border-slate-700/50'>
         <div className='flex-1 pr-4'>
-          <h3 className='font-bold text-slate-800 text-[15px] leading-snug'>
+          <h3 className='font-bold text-slate-800 dark:text-slate-100 text-[15px] leading-snug'>
             {doa.title || 'Judul Doa'}
           </h3>
           <div className='flex flex-wrap gap-1 mt-1.5'>
             {doa.group && (
-              <span className='inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-500'>
+              <span className='inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 dark:text-indigo-400'>
                 {doa.group}
               </span>
             )}
@@ -178,19 +179,19 @@ function DoaItem({
               doa.tags.map((tag, i) => (
                 <span
                   key={`tag-${i}`}
-                  className='inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-500'
+                  className='inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-rose-50 dark:bg-rose-950/50 text-rose-500 dark:text-rose-400'
                 >
                   {tag}
                 </span>
               ))}
             {doa.source && (
-              <span className='inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500'>
+              <span className='inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'>
                 Sumber: {doa.source}
               </span>
             )}
             {doa.role && (
               <span
-                className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${isBilal ? 'bg-rose-100 text-rose-600' : 'bg-blue-100 text-blue-600'}`}
+                className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${isBilal ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400' : 'bg-blue-100 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'}`}
               >
                 {isBilal ? 'Bilal' : 'Jamaah'}
               </span>
@@ -200,7 +201,7 @@ function DoaItem({
         <div className='flex items-center gap-1 shrink-0'>
           <button
             onClick={() => onCopy(doa)}
-            className='p-2 rounded-full text-slate-400 hover:bg-slate-100 transition-colors'
+            className='p-2 rounded-full text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
           >
             {copiedId === doa.id ? (
               <Check size={15} className='text-emerald-500' />
@@ -211,14 +212,14 @@ function DoaItem({
           {isCustom ? (
             <button
               onClick={() => onDelete(doa.id)}
-              className='p-2 text-rose-400 hover:bg-rose-50 rounded-full'
+              className='p-2 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-full'
             >
               <Trash2 size={15} />
             </button>
           ) : (
             <button
               onClick={() => onBookmark(doa)}
-              className={`p-2 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50' : 'text-slate-400 hover:bg-slate-100'}`}
+              className={`p-2 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
             >
               {isBookmarked ? (
                 <BookmarkCheck size={15} />
@@ -230,18 +231,17 @@ function DoaItem({
         </div>
       </div>
 
-      {/* BODY / CONTENT */}
+      {/* BODY */}
       <div
         className={`px-5 py-4 ${hafalanMode && !revealed ? 'cursor-pointer' : ''}`}
         onClick={() => hafalanMode && !revealed && setRevealed(true)}
       >
-        {/* HAFALAN MODE BLUR */}
         {hafalanMode && !revealed ? (
           <div className='relative'>
             <div className='blur-[6px] select-none pointer-events-none opacity-50'>
               {settings.arab && arabText && (
                 <p
-                  className='font-amiri text-slate-800 text-right leading-[2.4] mb-3'
+                  className='font-amiri text-slate-800 dark:text-slate-200 text-right leading-[2.4] mb-3'
                   dir='rtl'
                   style={{ fontSize: arabSizeConfig.size }}
                 >
@@ -249,27 +249,26 @@ function DoaItem({
                 </p>
               )}
               {settings.latin && latinText && (
-                <p className='text-slate-500 text-[13px] leading-relaxed italic mt-2'>
+                <p className='text-slate-500 dark:text-slate-400 text-[13px] leading-relaxed italic mt-2'>
                   {latinText}
                 </p>
               )}
               {settings.terjemahan && artiText && (
-                <p className='text-slate-700 text-sm leading-relaxed mt-3'>
+                <p className='text-slate-700 dark:text-slate-300 text-sm leading-relaxed mt-3'>
                   "{artiText}"
                 </p>
               )}
             </div>
-            <button className='absolute inset-0 flex items-center justify-center gap-2 text-rose-600 font-bold text-sm'>
+            <button className='absolute inset-0 flex items-center justify-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-sm'>
               <Eye size={18} /> Intip Doa
             </button>
           </div>
         ) : (
-          /* TAMPILAN NORMAL */
           <>
             {settings.arab && arabText && (
               <div className='mb-3'>
                 <p
-                  className='font-amiri text-slate-800 text-right leading-[2.4]'
+                  className='font-amiri text-slate-800 dark:text-slate-100 text-right leading-[2.4]'
                   dir='rtl'
                   style={{ fontSize: arabSizeConfig.size }}
                 >
@@ -278,12 +277,12 @@ function DoaItem({
               </div>
             )}
             {settings.latin && latinText && (
-              <p className='text-slate-500 text-[13px] leading-relaxed italic mt-1 mb-2'>
+              <p className='text-slate-500 dark:text-slate-400 text-[13px] leading-relaxed italic mt-1 mb-2'>
                 {latinText}
               </p>
             )}
             {settings.terjemahan && artiText && (
-              <p className='text-slate-700 text-sm leading-relaxed mt-2 pb-1'>
+              <p className='text-slate-700 dark:text-slate-300 text-sm leading-relaxed mt-2 pb-1'>
                 "{artiText}"
               </p>
             )}
@@ -293,7 +292,7 @@ function DoaItem({
                   e.stopPropagation();
                   setRevealed(false);
                 }}
-                className='mt-3 text-xs text-slate-400 flex items-center gap-1 hover:text-slate-600 transition-colors'
+                className='mt-3 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-300 transition-colors'
               >
                 <EyeOff size={12} /> Sembunyikan lagi
               </button>
@@ -305,7 +304,7 @@ function DoaItem({
   );
 }
 
-// ─── Filter Bottom Sheet Component ────────────────────────────────────────────
+// ─── FilterPanel ──────────────────────────────────────────────────────────────
 function FilterPanel({
   open,
   onClose,
@@ -333,27 +332,25 @@ function FilterPanel({
     <div className='fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-sm'>
       <div
         ref={panelRef}
-        className='bg-white w-full rounded-t-[2rem] p-6 shadow-2xl animate-in slide-in-from-bottom-5 duration-200'
+        className='bg-white dark:bg-slate-800 w-full rounded-t-[2rem] p-6 shadow-2xl animate-in slide-in-from-bottom-5 duration-200'
       >
-        <div className='w-10 h-1 bg-slate-200 rounded-full mx-auto mb-5' />
-
+        <div className='w-10 h-1 bg-slate-200 dark:bg-slate-600 rounded-full mx-auto mb-5' />
         <div className='flex items-center justify-between mb-4'>
-          <h2 className='font-bold text-slate-800 text-base flex items-center gap-2'>
+          <h2 className='font-bold text-slate-800 dark:text-slate-100 text-base flex items-center gap-2'>
             <Filter size={18} className='text-rose-500' /> Filter Doa
           </h2>
           <button
             onClick={onClose}
-            className='p-1.5 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200'
+            className='p-1.5 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
           >
             <X size={15} />
           </button>
         </div>
 
-        <div className='max-h-[60vh] overflow-y-auto custom-scrollbar pr-2 pb-4'>
-          {/* Filter Group */}
+        <div className='max-h-[60vh] overflow-y-auto pr-2 pb-4'>
           {availableGroups.length > 1 && (
             <div className='mb-6'>
-              <p className='text-xs font-bold text-slate-700 mb-3'>
+              <p className='text-xs font-bold text-slate-700 dark:text-slate-300 mb-3'>
                 Berdasarkan Grup
               </p>
               <div className='flex flex-wrap gap-2'>
@@ -364,7 +361,7 @@ function FilterPanel({
                     className={`px-4 py-2 rounded-xl text-[13px] font-medium transition-all border ${
                       activeGroup === g
                         ? 'bg-indigo-500 text-white border-indigo-500 shadow-md'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-indigo-300'
+                        : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-indigo-300'
                     }`}
                   >
                     {g === 'Semua' ? 'Semua Grup' : g}
@@ -373,11 +370,9 @@ function FilterPanel({
               </div>
             </div>
           )}
-
-          {/* Filter Tags */}
           {availableTags.length > 1 && (
             <div>
-              <p className='text-xs font-bold text-slate-700 mb-3'>
+              <p className='text-xs font-bold text-slate-700 dark:text-slate-300 mb-3'>
                 Berdasarkan Tag / Label
               </p>
               <div className='flex flex-wrap gap-2'>
@@ -388,7 +383,7 @@ function FilterPanel({
                     className={`px-4 py-2 rounded-xl text-[13px] font-medium transition-all border ${
                       activeTag === tag
                         ? 'bg-rose-500 text-white border-rose-500 shadow-md'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-rose-300'
+                        : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600 hover:border-rose-300'
                     }`}
                   >
                     {tag === 'Semua' ? 'Semua Tag' : tag}
@@ -397,21 +392,20 @@ function FilterPanel({
               </div>
             </div>
           )}
-
           {availableGroups.length <= 1 && availableTags.length <= 1 && (
-            <div className='text-center py-8 text-slate-400 text-sm'>
+            <div className='text-center py-8 text-slate-400 dark:text-slate-500 text-sm'>
               Tidak ada opsi filter untuk kategori ini.
             </div>
           )}
         </div>
 
-        <div className='flex gap-3 mt-4 pt-4 border-t border-slate-100'>
+        <div className='flex gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-700'>
           <button
             onClick={() => {
               setActiveGroup('Semua');
               setActiveTag('Semua');
             }}
-            className='flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors'
+            className='flex-1 py-3.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors'
           >
             Reset Filter
           </button>
@@ -437,9 +431,8 @@ export default function DoaPage() {
   const [activeSubTab, setActiveSubTab] = useState(null);
   const [activeDoasList, setActiveDoasList] = useState([]);
 
-  // ── Search & Filter State ──
-  const [searchQuery, setSearchQuery] = useState(''); // Home category search
-  const [searchDoaQuery, setSearchDoaQuery] = useState(''); // Inside category search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchDoaQuery, setSearchDoaQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState('Semua');
   const [activeTag, setActiveTag] = useState('Semua');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -448,7 +441,6 @@ export default function DoaPage() {
   const [bookmarks, setBookmarks] = useState([]);
   const [copiedId, setCopiedId] = useState(null);
 
-  // Settings UI
   const [settings, setSettings] = useState({
     arab: true,
     latin: true,
@@ -458,7 +450,6 @@ export default function DoaPage() {
   const [hafalanMode, setHafalanMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Custom Doa
   const [customDoas, setCustomDoas] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newDoa, setNewDoa] = useState({
@@ -468,7 +459,6 @@ export default function DoaPage() {
     arti: '',
   });
 
-  // Load Data
   useEffect(() => {
     const loadUserData = async () => {
       if (user) {
@@ -498,7 +488,6 @@ export default function DoaPage() {
     loadUserData();
   }, [user]);
 
-  // Persist Settings
   useEffect(() => {
     localStorage.setItem('myRamadhan_doa_settings', JSON.stringify(settings));
     if (user)
@@ -518,8 +507,6 @@ export default function DoaPage() {
     const res = await fetch(url);
     const json = await res.json();
     const dataArray = Array.isArray(json) ? json : json.data || [];
-
-    // Gunakan fungsi mapData bawaan kategori tersebut
     const mapper =
       selectedCategory?.mapData ||
       doaCollections.find((c) => c.api === url)?.mapData;
@@ -529,8 +516,6 @@ export default function DoaPage() {
 
   const handleOpenCategory = async (cat, targetSubTab = null) => {
     setSelectedCategory(cat);
-
-    // Reset filters
     setSearchDoaQuery('');
     setActiveGroup('Semua');
     setActiveTag('Semua');
@@ -632,7 +617,6 @@ export default function DoaPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // ── PENGOLAHAN DATA FILTERING ──
   const availableGroups = [
     'Semua',
     ...new Set(activeDoasList.map((d) => d.group).filter(Boolean)),
@@ -654,35 +638,35 @@ export default function DoaPage() {
     return matchSearch && matchGroup && matchTag;
   });
 
-  // Indikator apakah ada filter (Group/Tag) yang sedang aktif
   const hasActiveFilter = activeGroup !== 'Semua' || activeTag !== 'Semua';
 
-  // ==========================================
-  // VIEW: HOME
-  // ==========================================
+  // ── HOME ──────────────────────────────────────────────────────────────────────
   if (view === 'home') {
     return (
-      <div className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-20 selection:bg-rose-200'>
+      <div className='min-h-screen bg-[#F6F9FC] dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-20 selection:bg-rose-200 dark:selection:bg-rose-900'>
         <Head>
           <title>Kumpulan Doa - MyRamadhan</title>
         </Head>
 
-        <header className='sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-4'>
+        <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 px-6 py-4'>
           <div className='flex items-center justify-between mb-5'>
             <div className='flex items-center gap-4'>
               <button
                 onClick={() => router.push('/')}
-                className='p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors'
+                className='p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
               >
-                <ArrowLeft size={20} className='text-slate-600' />
+                <ArrowLeft
+                  size={20}
+                  className='text-slate-600 dark:text-slate-400'
+                />
               </button>
-              <h1 className='font-bold text-xl flex items-center gap-2 text-rose-600'>
+              <h1 className='font-bold text-xl flex items-center gap-2 text-rose-600 dark:text-rose-400'>
                 <Heart size={24} /> Kumpulan Doa
               </h1>
             </div>
             <button
               onClick={() => setView('bookmarks')}
-              className='p-2 bg-rose-50 text-rose-600 rounded-full hover:bg-rose-100 transition-colors'
+              className='p-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-full hover:bg-rose-100 dark:hover:bg-rose-950/60 transition-colors'
             >
               <Bookmark size={20} />
             </button>
@@ -690,13 +674,13 @@ export default function DoaPage() {
 
           <div className='relative'>
             <Search
-              className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
+              className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500'
               size={18}
             />
             <input
               type='text'
               placeholder='Cari kategori...'
-              className='w-full pl-12 pr-4 py-3 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-rose-500 outline-none text-sm transition-all'
+              className='w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-700 rounded-2xl border-none focus:ring-2 focus:ring-rose-500 outline-none text-sm transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
               onChange={(e) => setSearchQuery(e.target.value)}
               value={searchQuery}
             />
@@ -708,15 +692,22 @@ export default function DoaPage() {
             {filteredCollections.map((cat) => {
               const IconComponent = ICONS[cat.icon] || BookOpen;
               const isThisLoading = loading && selectedCategory?.id === cat.id;
-
               return (
                 <div
                   key={cat.id}
                   onClick={() => !loading && handleOpenCategory(cat)}
-                  className={`bg-white p-5 rounded-3xl border shadow-sm transition-all cursor-pointer flex flex-col justify-between min-h-[120px] group ${isThisLoading ? 'border-rose-300 ring-2 ring-rose-400/20 opacity-70' : 'border-slate-100 hover:shadow-md hover:border-rose-300'}`}
+                  className={`bg-white dark:bg-slate-800 p-5 rounded-3xl border shadow-sm transition-all cursor-pointer flex flex-col justify-between min-h-[120px] group ${
+                    isThisLoading
+                      ? 'border-rose-300 dark:border-rose-700 ring-2 ring-rose-400/20 opacity-70'
+                      : 'border-slate-100 dark:border-slate-700 hover:shadow-md hover:border-rose-300 dark:hover:border-rose-700'
+                  }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-3 transition-colors ${cat.isCustom ? 'bg-rose-500 text-white shadow-md group-hover:bg-rose-600' : 'bg-rose-50 text-rose-500 group-hover:bg-rose-500 group-hover:text-white'}`}
+                    className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-3 transition-colors ${
+                      cat.isCustom
+                        ? 'bg-rose-500 text-white shadow-md group-hover:bg-rose-600'
+                        : 'bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white'
+                    }`}
                   >
                     {isThisLoading ? (
                       <RefreshCw size={20} className='animate-spin' />
@@ -725,10 +716,10 @@ export default function DoaPage() {
                     )}
                   </div>
                   <div>
-                    <h3 className='font-bold text-slate-800 text-sm group-hover:text-rose-600 leading-tight mb-1'>
+                    <h3 className='font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-rose-600 dark:group-hover:text-rose-400 leading-tight mb-1'>
                       {cat.title}
                     </h3>
-                    <p className='text-[10px] text-slate-400 line-clamp-1'>
+                    <p className='text-[10px] text-slate-400 dark:text-slate-500 line-clamp-1'>
                       {cat.description}
                     </p>
                   </div>
@@ -741,17 +732,15 @@ export default function DoaPage() {
     );
   }
 
-  // ==========================================
-  // VIEW: KATEGORI
-  // ==========================================
+  // ── KATEGORI ──────────────────────────────────────────────────────────────────
   if (view === 'category' && selectedCategory) {
     return (
-      <div className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-24 selection:bg-rose-200'>
+      <div className='min-h-screen bg-[#F6F9FC] dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-24 selection:bg-rose-200 dark:selection:bg-rose-900'>
         <Head>
           <title>{selectedCategory.title} - MyRamadhan</title>
         </Head>
 
-        <header className='sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 px-5 py-3 shadow-sm'>
+        <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 px-5 py-3 shadow-sm'>
           <div className='max-w-md mx-auto flex items-center justify-between'>
             <div className='flex items-center gap-3'>
               <button
@@ -765,15 +754,18 @@ export default function DoaPage() {
                   setActiveGroup('Semua');
                   window.location.hash = '';
                 }}
-                className='p-2 -ml-1 rounded-full hover:bg-slate-100 transition-colors'
+                className='p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
               >
-                <ArrowLeft size={20} className='text-slate-600' />
+                <ArrowLeft
+                  size={20}
+                  className='text-slate-600 dark:text-slate-400'
+                />
               </button>
               <div>
-                <h1 className='font-bold text-base text-slate-800 leading-tight'>
+                <h1 className='font-bold text-base text-slate-800 dark:text-slate-100 leading-tight'>
                   {selectedCategory.title}
                 </h1>
-                <p className='text-[10px] text-slate-400'>
+                <p className='text-[10px] text-slate-400 dark:text-slate-500'>
                   {filteredDoasList.length} Data Tersedia
                 </p>
               </div>
@@ -782,13 +774,17 @@ export default function DoaPage() {
             <div className='flex items-center gap-1'>
               <button
                 onClick={() => setHafalanMode(!hafalanMode)}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${hafalanMode ? 'bg-rose-500 text-white border-rose-500' : 'text-slate-500 border-slate-200 hover:border-rose-200'}`}
+                className={`px-3 py-1.5 rounded-full text-[11px] font-bold transition-all border ${
+                  hafalanMode
+                    ? 'bg-rose-500 text-white border-rose-500'
+                    : 'text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-rose-200 dark:hover:border-rose-700'
+                }`}
               >
                 {hafalanMode ? <Eye size={14} /> : <EyeOff size={14} />}
               </button>
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-rose-500 text-white' : 'text-slate-500 hover:bg-slate-100'}`}
+                className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-rose-500 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
               >
                 <Settings2 size={18} />
               </button>
@@ -803,9 +799,9 @@ export default function DoaPage() {
             </div>
           </div>
 
-          {/* ── SETTINGS PANEL (DROPDOWN ATAS) ── */}
+          {/* SETTINGS PANEL */}
           {showSettings && (
-            <div className='max-w-md mx-auto mt-3 pt-3 border-t border-slate-100'>
+            <div className='max-w-md mx-auto mt-3 pt-3 border-t border-slate-100 dark:border-slate-700'>
               <div className='grid grid-cols-3 gap-2 mb-3'>
                 {[
                   { key: 'arab', label: 'Arab' },
@@ -817,14 +813,18 @@ export default function DoaPage() {
                     onClick={() =>
                       setSettings((s) => ({ ...s, [key]: !s[key] }))
                     }
-                    className={`py-2 rounded-xl text-[11px] font-bold transition-all border ${settings[key] ? 'bg-rose-500 text-white border-rose-500' : 'bg-slate-50 text-slate-500 border-slate-200'}`}
+                    className={`py-2 rounded-xl text-[11px] font-bold transition-all border ${
+                      settings[key]
+                        ? 'bg-rose-500 text-white border-rose-500'
+                        : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600'
+                    }`}
                   >
                     {label}
                   </button>
                 ))}
               </div>
               <div className='mt-4 mb-2'>
-                <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5'>
+                <p className='text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5'>
                   <Type size={11} /> Ukuran Teks Arab
                 </p>
               </div>
@@ -837,8 +837,8 @@ export default function DoaPage() {
                     }
                     className={`flex flex-col items-center justify-center py-2 rounded-xl border-2 transition-all ${
                       settings.arabSize === s.key
-                        ? 'border-rose-500 bg-rose-50 text-rose-600'
-                        : 'border-slate-100 bg-white text-slate-500 hover:border-slate-300'
+                        ? 'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400'
+                        : 'border-slate-100 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-500'
                     }`}
                   >
                     <span
@@ -854,14 +854,18 @@ export default function DoaPage() {
             </div>
           )}
 
-          {/* ── TABS WIRID/TAHLIL ── */}
+          {/* TABS */}
           {selectedCategory.hasTabs && (
-            <div className='max-w-md mx-auto flex p-1 bg-slate-100 rounded-xl mt-3'>
+            <div className='max-w-md mx-auto flex p-1 bg-slate-100 dark:bg-slate-700 rounded-xl mt-3'>
               {selectedCategory.tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => handleSwitchTab(tab.id)}
-                  className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all ${activeSubTab === tab.id ? 'bg-white text-rose-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all ${
+                    activeSubTab === tab.id
+                      ? 'bg-white dark:bg-slate-600 text-rose-600 dark:text-rose-400 shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
                 >
                   {tab.label}
                 </button>
@@ -869,38 +873,36 @@ export default function DoaPage() {
             </div>
           )}
 
-          {/* ── SEARCH BAR DENGAN TOMBOL FILTER ── */}
+          {/* SEARCH BAR */}
           {!loading &&
             activeDoasList.length > 0 &&
             selectedCategory.id !== 'asmaul-husna' && (
               <div className='max-w-md mx-auto pt-4 flex gap-2'>
                 <div className='relative flex-1'>
                   <Search
-                    className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
+                    className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500'
                     size={16}
                   />
                   <input
                     type='text'
                     placeholder='Cari doa di sini...'
-                    className='w-full pl-10 pr-4 py-3 bg-slate-100/80 rounded-2xl border-none focus:ring-2 focus:ring-rose-500 outline-none text-[13px] transition-all'
+                    className='w-full pl-10 pr-4 py-3 bg-slate-100/80 dark:bg-slate-700 rounded-2xl border-none focus:ring-2 focus:ring-rose-500 outline-none text-[13px] transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
                     value={searchDoaQuery}
                     onChange={(e) => setSearchDoaQuery(e.target.value)}
                   />
                 </div>
-
-                {/* Tombol Pemicu Filter Bottom Sheet */}
                 {(availableGroups.length > 1 || availableTags.length > 1) && (
                   <button
                     onClick={() => setShowFilterPanel(true)}
                     className={`relative p-3 rounded-2xl flex items-center justify-center transition-all ${
                       hasActiveFilter
                         ? 'bg-rose-500 text-white shadow-md'
-                        : 'bg-slate-100/80 text-slate-500 hover:bg-slate-200'
+                        : 'bg-slate-100/80 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                     }`}
                   >
                     <Filter size={20} />
                     {hasActiveFilter && (
-                      <span className='absolute -top-1 -right-1 w-3 h-3 bg-indigo-400 border-2 border-white rounded-full'></span>
+                      <span className='absolute -top-1 -right-1 w-3 h-3 bg-indigo-400 border-2 border-white dark:border-slate-800 rounded-full'></span>
                     )}
                   </button>
                 )}
@@ -909,11 +911,13 @@ export default function DoaPage() {
         </header>
 
         <main className='max-w-md mx-auto p-4 pt-4'>
-          {/* Hafalan mode banner */}
           {hafalanMode && (
-            <div className='bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-2 mb-4'>
-              <EyeOff size={16} className='text-amber-600 shrink-0' />
-              <p className='text-amber-700 text-xs font-semibold'>
+            <div className='bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl px-4 py-3 flex items-center gap-2 mb-4'>
+              <EyeOff
+                size={16}
+                className='text-amber-600 dark:text-amber-400 shrink-0'
+              />
+              <p className='text-amber-700 dark:text-amber-400 text-xs font-semibold'>
                 Mode Hafalan aktif — klik "Intip Doa" untuk melihat bacaan
               </p>
             </div>
@@ -922,14 +926,17 @@ export default function DoaPage() {
           {loading ? (
             <div className='flex flex-col items-center justify-center py-20 gap-3'>
               <RefreshCw size={32} className='animate-spin text-rose-500' />
-              <p className='text-sm font-medium text-slate-500'>
+              <p className='text-sm font-medium text-slate-500 dark:text-slate-400'>
                 Memuat doa dari server...
               </p>
             </div>
           ) : filteredDoasList.length === 0 ? (
-            <div className='text-center py-20 border border-dashed border-slate-300 rounded-3xl bg-slate-50'>
-              <BookOpen size={40} className='mx-auto mb-3 text-slate-300' />
-              <p className='text-slate-500 text-sm px-6 leading-relaxed'>
+            <div className='text-center py-20 border border-dashed border-slate-300 dark:border-slate-600 rounded-3xl bg-slate-50 dark:bg-slate-800/50'>
+              <BookOpen
+                size={40}
+                className='mx-auto mb-3 text-slate-300 dark:text-slate-600'
+              />
+              <p className='text-slate-500 dark:text-slate-400 text-sm px-6 leading-relaxed'>
                 {searchDoaQuery || hasActiveFilter
                   ? 'Tidak ada doa yang sesuai pencarian atau filter.'
                   : selectedCategory.isCustom
@@ -965,35 +972,33 @@ export default function DoaPage() {
                       }
                     />
                   );
-                } else {
-                  return (
-                    <DoaItem
-                      key={doa.id}
-                      doa={doa}
-                      isBookmarked={bookmarks.some((b) => b.id === doa.id)}
-                      copiedId={copiedId}
-                      settings={settings}
-                      hafalanMode={hafalanMode}
-                      isCustom={selectedCategory.isCustom}
-                      onBookmark={(d) =>
-                        toggleBookmark(
-                          d,
-                          selectedCategory.title,
-                          selectedCategory.id,
-                          activeSubTab,
-                        )
-                      }
-                      onDelete={handleDeleteCustomDoa}
-                      onCopy={handleCopy}
-                    />
-                  );
                 }
+                return (
+                  <DoaItem
+                    key={doa.id}
+                    doa={doa}
+                    isBookmarked={bookmarks.some((b) => b.id === doa.id)}
+                    copiedId={copiedId}
+                    settings={settings}
+                    hafalanMode={hafalanMode}
+                    isCustom={selectedCategory.isCustom}
+                    onBookmark={(d) =>
+                      toggleBookmark(
+                        d,
+                        selectedCategory.title,
+                        selectedCategory.id,
+                        activeSubTab,
+                      )
+                    }
+                    onDelete={handleDeleteCustomDoa}
+                    onCopy={handleCopy}
+                  />
+                );
               })}
             </div>
           )}
         </main>
 
-        {/* COMPONENT FILTER BOTTOM SHEET */}
         <FilterPanel
           open={showFilterPanel}
           onClose={() => setShowFilterPanel(false)}
@@ -1005,22 +1010,22 @@ export default function DoaPage() {
           setActiveTag={setActiveTag}
         />
 
-        {/* MODAL TAMBAH DOA PRIBADI */}
+        {/* MODAL TAMBAH DOA */}
         {isAddModalOpen && (
           <div className='fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4'>
-            <div className='bg-white w-full max-w-md rounded-[2rem] p-6 shadow-2xl relative animate-in fade-in slide-in-from-bottom-10'>
+            <div className='bg-white dark:bg-slate-800 w-full max-w-md rounded-[2rem] p-6 shadow-2xl relative animate-in fade-in slide-in-from-bottom-10'>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className='absolute top-5 right-5 p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200'
+                className='absolute top-5 right-5 p-2 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
               >
                 <X size={16} />
               </button>
-              <h2 className='text-xl font-bold text-slate-800 mb-1'>
+              <h2 className='text-xl font-bold text-slate-800 dark:text-slate-100 mb-1'>
                 Tambah Doa Pribadi
               </h2>
               <form onSubmit={handleAddCustomDoa} className='space-y-4 mt-5'>
                 <div>
-                  <label className='text-xs font-bold text-slate-700 block mb-1.5'>
+                  <label className='text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5'>
                     Judul Doa *
                   </label>
                   <input
@@ -1030,12 +1035,12 @@ export default function DoaPage() {
                     onChange={(e) =>
                       setNewDoa({ ...newDoa, title: e.target.value })
                     }
-                    className='w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none'
+                    className='w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
                     placeholder='Misal: Doa Lulus Ujian'
                   />
                 </div>
                 <div>
-                  <label className='text-xs font-bold text-slate-700 block mb-1.5'>
+                  <label className='text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5'>
                     Teks Arab (Opsional)
                   </label>
                   <textarea
@@ -1043,13 +1048,13 @@ export default function DoaPage() {
                     onChange={(e) =>
                       setNewDoa({ ...newDoa, arab: e.target.value })
                     }
-                    className='w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none font-arabic text-right h-20'
+                    className='w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none font-arabic text-right h-20 text-slate-800 dark:text-slate-100'
                     placeholder='Teks Arab...'
                     dir='rtl'
-                  ></textarea>
+                  />
                 </div>
                 <div>
-                  <label className='text-xs font-bold text-slate-700 block mb-1.5'>
+                  <label className='text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5'>
                     Teks Latin (Opsional)
                   </label>
                   <input
@@ -1058,12 +1063,12 @@ export default function DoaPage() {
                     onChange={(e) =>
                       setNewDoa({ ...newDoa, latin: e.target.value })
                     }
-                    className='w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none'
+                    className='w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
                     placeholder='Teks terjemahan latin...'
                   />
                 </div>
                 <div>
-                  <label className='text-xs font-bold text-slate-700 block mb-1.5'>
+                  <label className='text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1.5'>
                     Arti / Makna (Opsional)
                   </label>
                   <textarea
@@ -1071,9 +1076,9 @@ export default function DoaPage() {
                     onChange={(e) =>
                       setNewDoa({ ...newDoa, arti: e.target.value })
                     }
-                    className='w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none h-20'
+                    className='w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-rose-500 outline-none h-20 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
                     placeholder='Artinya...'
-                  ></textarea>
+                  />
                 </div>
                 <button
                   type='submit'
@@ -1089,20 +1094,21 @@ export default function DoaPage() {
     );
   }
 
-  // ==========================================
-  // VIEW: BOOKMARKS
-  // ==========================================
+  // ── BOOKMARKS ─────────────────────────────────────────────────────────────────
   if (view === 'bookmarks') {
     return (
-      <div className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-20'>
-        <header className='sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center gap-3'>
+      <div className='min-h-screen bg-[#F6F9FC] dark:bg-slate-900 text-slate-800 dark:text-slate-100 pb-20'>
+        <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 px-6 py-4 flex items-center gap-3'>
           <button
             onClick={() => setView('home')}
-            className='p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors'
+            className='p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
           >
-            <ArrowLeft size={20} className='text-slate-600' />
+            <ArrowLeft
+              size={20}
+              className='text-slate-600 dark:text-slate-400'
+            />
           </button>
-          <h1 className='font-bold text-xl flex items-center gap-2 text-rose-600'>
+          <h1 className='font-bold text-xl flex items-center gap-2 text-rose-600 dark:text-rose-400'>
             <Bookmark size={22} /> Disimpan
           </h1>
         </header>
@@ -1110,8 +1116,11 @@ export default function DoaPage() {
         <main className='max-w-md mx-auto p-5 space-y-4'>
           {bookmarks.length === 0 ? (
             <div className='text-center py-20 opacity-50'>
-              <Bookmark size={48} className='mx-auto mb-4 text-slate-300' />
-              <p className='text-sm font-medium'>
+              <Bookmark
+                size={48}
+                className='mx-auto mb-4 text-slate-300 dark:text-slate-600'
+              />
+              <p className='text-sm font-medium text-slate-500 dark:text-slate-400'>
                 Belum ada doa yang disimpan.
               </p>
             </div>

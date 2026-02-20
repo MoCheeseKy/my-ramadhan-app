@@ -115,40 +115,44 @@ export default function TasbihPage() {
   };
 
   return (
-    <div className='min-h-screen bg-[#F0F5FA] text-slate-800 pb-10 flex flex-col overflow-hidden relative selection:bg-teal-200'>
+    <div className='min-h-screen bg-[#F0F5FA] dark:bg-slate-950 text-slate-800 dark:text-slate-200 pb-10 flex flex-col overflow-hidden relative selection:bg-teal-200 dark:selection:bg-teal-900 transition-colors duration-300'>
       <Head>
         <title>Tasbih Digital - MyRamadhan</title>
       </Head>
 
-      {/* --- BACKGROUND AMBIENT (Glow Effect) --- */}
+      {/* --- BACKGROUND AMBIENT (Glow Effect) - Disesuaikan untuk dark mode --- */}
       <div className='fixed inset-0 pointer-events-none'>
         <div
-          className='absolute -top-32 -left-32 w-96 h-96 bg-teal-300/30 rounded-full blur-[100px] animate-pulse'
+          className='absolute -top-32 -left-32 w-96 h-96 bg-teal-300/30 dark:bg-teal-500/10 rounded-full blur-[100px] animate-pulse'
           style={{ animationDuration: '4s' }}
         />
         <div
-          className='absolute top-1/2 -right-32 w-96 h-96 bg-emerald-300/20 rounded-full blur-[100px] animate-pulse'
+          className='absolute top-1/2 -right-32 w-96 h-96 bg-emerald-300/20 dark:bg-emerald-500/10 rounded-full blur-[100px] animate-pulse'
           style={{ animationDuration: '6s' }}
         />
-        <div className='absolute -bottom-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-300/20 rounded-full blur-[100px]' />
+        <div className='absolute -bottom-32 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-300/20 dark:bg-blue-500/10 rounded-full blur-[100px]' />
       </div>
 
       {/* --- HEADER --- */}
       <header className='px-6 py-4 flex items-center justify-between relative z-40'>
         <button
           onClick={() => router.push('/')}
-          className='w-10 h-10 bg-white/60 backdrop-blur-md border border-white rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-all'
+          className='w-10 h-10 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-white dark:border-slate-700 rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-all'
         >
-          <ArrowLeft size={18} className='text-slate-600' />
+          <ArrowLeft size={18} className='text-slate-600 dark:text-slate-400' />
         </button>
-        <div className='flex flex-col items-center bg-white/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/50 shadow-sm'>
-          <span className='text-[10px] font-black text-teal-600 uppercase tracking-widest'>
+        <div className='flex flex-col items-center bg-white/40 dark:bg-slate-800/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/50 dark:border-slate-700 shadow-sm'>
+          <span className='text-[10px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest'>
             {currentDzikir.id} OF {dzikirPresets.length}
           </span>
         </div>
         <button
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className={`w-10 h-10 backdrop-blur-md border border-white rounded-full flex items-center justify-center shadow-sm transition-all hover:scale-105 ${soundEnabled ? 'bg-white/60 text-teal-600' : 'bg-slate-100/60 text-slate-400'}`}
+          className={`w-10 h-10 backdrop-blur-md border border-white dark:border-slate-700 rounded-full flex items-center justify-center shadow-sm transition-all hover:scale-105 ${
+            soundEnabled
+              ? 'bg-white/60 dark:bg-slate-800/60 text-teal-600 dark:text-teal-400'
+              : 'bg-slate-100/60 dark:bg-slate-700/60 text-slate-400 dark:text-slate-500'
+          }`}
         >
           {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
         </button>
@@ -164,19 +168,19 @@ export default function TasbihPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 1.05, y: -10 }}
               transition={{ duration: 0.3 }}
-              className='bg-white/50 backdrop-blur-xl border border-white/60 p-8 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(20,184,166,0.1)] text-center relative overflow-hidden'
+              className='bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl border border-white/60 dark:border-slate-700 p-8 rounded-[2.5rem] shadow-[0_20px_40px_-15px_rgba(20,184,166,0.1)] dark:shadow-teal-900/20 text-center relative overflow-hidden'
             >
               <div className='absolute top-0 right-0 p-4 opacity-20'></div>
-              <h2 className='text-xs font-black text-teal-500 uppercase tracking-[0.2em] mb-4'>
+              <h2 className='text-xs font-black text-teal-500 dark:text-teal-400 uppercase tracking-[0.2em] mb-4'>
                 {currentDzikir.title}
               </h2>
               <p
-                className='font-arabic text-4xl mb-3 text-slate-800 leading-snug drop-shadow-sm'
+                className='font-arabic text-4xl mb-3 text-slate-800 dark:text-slate-200 leading-snug drop-shadow-sm'
                 dir='rtl'
               >
                 {currentDzikir.arabic}
               </p>
-              <p className='text-sm text-slate-500 font-medium tracking-wide'>
+              <p className='text-sm text-slate-500 dark:text-slate-400 font-medium tracking-wide'>
                 "{currentDzikir.latin}"
               </p>
             </motion.div>
@@ -188,13 +192,14 @@ export default function TasbihPage() {
           {/* SVG Progress Ring */}
           <div className='absolute w-[300px] h-[300px] pointer-events-none'>
             <svg className='w-full h-full transform -rotate-90 filter drop-shadow-md'>
-              {/* Background Track */}
+              {/* Background Track - Disesuaikan untuk dark mode */}
               <circle
                 cx='50%'
                 cy='50%'
                 r={radius}
                 fill='none'
-                stroke='rgba(255,255,255,0.6)'
+                stroke='rgba(255,255,255,0.6) dark:rgba(30,41,59,0.8)'
+                className='dark:stroke-slate-700'
                 strokeWidth='8'
               />
               {/* Animated Progress Line */}
@@ -208,12 +213,12 @@ export default function TasbihPage() {
                 strokeLinecap='round'
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
-                className='transition-all duration-500 ease-out drop-shadow-[0_0_8px_rgba(20,184,166,0.5)]'
+                className='transition-all duration-500 ease-out drop-shadow-[0_0_8px_rgba(20,184,166,0.5)] dark:drop-shadow-[0_0_12px_rgba(20,184,166,0.3)]'
               />
             </svg>
           </div>
 
-          {/* RIPPLE EFFECTS */}
+          {/* RIPPLE EFFECTS - Disesuaikan untuk dark mode */}
           {ripples.map((ripple) => (
             <motion.div
               key={ripple.id}
@@ -225,11 +230,11 @@ export default function TasbihPage() {
               }}
               animate={{ width: 400, height: 400, opacity: 0, borderWidth: 0 }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
-              className='absolute rounded-full border-teal-400 pointer-events-none'
+              className='absolute rounded-full border-teal-400 dark:border-teal-500 pointer-events-none'
             />
           ))}
 
-          {/* CLICKABLE BEAD (Neumorphism Button) */}
+          {/* CLICKABLE BEAD (Neumorphism Button) - Disesuaikan untuk dark mode */}
           <motion.button
             whileTap={
               !isCompleted
@@ -244,13 +249,17 @@ export default function TasbihPage() {
             disabled={isCompleted}
             className={`
               relative w-56 h-56 rounded-full flex flex-col items-center justify-center z-10
-              bg-[#F0F5FA]
               ${
                 isCompleted
-                  ? 'shadow-[10px_10px_30px_#d1d9e6,-10px_-10px_30px_#ffffff] cursor-default'
-                  : 'shadow-[15px_15px_35px_#d1d9e6,-15px_-15px_35px_#ffffff] cursor-pointer active:shadow-inner'
+                  ? 'bg-[#F0F5FA] dark:bg-slate-800'
+                  : 'bg-[#F0F5FA] dark:bg-slate-800'
               }
-              transition-all duration-200 border-4 border-white
+              ${
+                isCompleted
+                  ? 'shadow-[10px_10px_30px_#d1d9e6,-10px_-10px_30px_#ffffff] dark:shadow-[10px_10px_30px_#0f172a,-10px_-10px_30px_#1e293b] cursor-default'
+                  : 'shadow-[15px_15px_35px_#d1d9e6,-15px_-15px_35px_#ffffff] dark:shadow-[15px_15px_35px_#0f172a,-15px_-15px_35px_#1e293b] cursor-pointer active:shadow-inner'
+              }
+              transition-all duration-200 border-4 border-white dark:border-slate-700
             `}
           >
             <AnimatePresence mode='wait'>
@@ -259,7 +268,7 @@ export default function TasbihPage() {
                   key='completed'
                   initial={{ scale: 0.5, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className='flex flex-col items-center text-emerald-500'
+                  className='flex flex-col items-center text-emerald-500 dark:text-emerald-400'
                 >
                   <CheckCircle2 size={56} className='mb-2 drop-shadow-md' />
                   <span className='text-sm font-bold tracking-widest uppercase'>
@@ -268,16 +277,16 @@ export default function TasbihPage() {
                 </motion.div>
               ) : (
                 <motion.div
-                  key={count} // Akan menganimasikan angka setiap kali berubah
+                  key={count}
                   initial={{ scale: 1.1, opacity: 0.8 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                   className='flex flex-col items-center'
                 >
-                  <span className='text-[4.5rem] font-black text-slate-700 tabular-nums tracking-tighter leading-none drop-shadow-sm'>
+                  <span className='text-[4.5rem] font-black text-slate-700 dark:text-slate-200 tabular-nums tracking-tighter leading-none drop-shadow-sm'>
                     {count}
                   </span>
-                  <span className='text-[10px] font-bold text-teal-500 mt-2 uppercase tracking-[0.2em] bg-teal-50 px-3 py-1 rounded-full'>
+                  <span className='text-[10px] font-bold text-teal-500 dark:text-teal-400 mt-2 uppercase tracking-[0.2em] bg-teal-50 dark:bg-teal-900/30 px-3 py-1 rounded-full'>
                     Target:{' '}
                     {currentDzikir.target > 1000 ? '∞' : currentDzikir.target}
                   </span>
@@ -287,16 +296,16 @@ export default function TasbihPage() {
           </motion.button>
         </div>
 
-        {/* --- BOTTOM CONTROLS (Floating Pill) --- */}
-        <div className='bg-white/60 backdrop-blur-xl border border-white/60 p-2 rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] flex items-center gap-2 z-10'>
+        {/* --- BOTTOM CONTROLS (Floating Pill) - Disesuaikan untuk dark mode --- */}
+        <div className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl border border-white/60 dark:border-slate-700 p-2 rounded-full shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center gap-2 z-10'>
           <button
             onClick={() => changeDzikir(-1)}
-            className='p-3 text-slate-400 hover:text-teal-600 hover:bg-white rounded-full transition-all'
+            className='p-3 text-slate-400 dark:text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-all'
           >
             <ChevronLeft size={20} />
           </button>
 
-          <div className='w-[1px] h-6 bg-slate-200 mx-1' />
+          <div className='w-[1px] h-6 bg-slate-200 dark:bg-slate-700 mx-1' />
 
           <AnimatePresence mode='wait'>
             {isCompleted ? (
@@ -316,18 +325,18 @@ export default function TasbihPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 onClick={handleReset}
-                className='px-8 py-3 text-slate-500 font-bold hover:text-rose-500 hover:bg-white rounded-full transition-all flex items-center gap-2'
+                className='px-8 py-3 text-slate-500 dark:text-slate-400 font-bold hover:text-rose-500 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-all flex items-center gap-2'
               >
                 <RotateCcw size={18} /> Reset
               </motion.button>
             )}
           </AnimatePresence>
 
-          <div className='w-[1px] h-6 bg-slate-200 mx-1' />
+          <div className='w-[1px] h-6 bg-slate-200 dark:bg-slate-700 mx-1' />
 
           <button
             onClick={() => changeDzikir(1)}
-            className='p-3 text-slate-400 hover:text-teal-600 hover:bg-white rounded-full transition-all'
+            className='p-3 text-slate-400 dark:text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-all'
           >
             <ChevronRight size={20} />
           </button>

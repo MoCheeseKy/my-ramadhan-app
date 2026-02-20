@@ -41,28 +41,39 @@ function SectionCard({
   return (
     <motion.div
       layout
-      className={`bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden`}
+      className={`bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm dark:shadow-slate-900 overflow-hidden transition-colors duration-300`}
     >
       <button
         onClick={() => onToggle(id)}
         className='w-full flex items-center gap-4 p-5 text-left'
       >
         <div
-          className={`w-11 h-11 rounded-2xl ${bgClass} flex items-center justify-center shrink-0 text-xl`}
+          className={`w-11 h-11 rounded-2xl ${bgClass} dark:bg-opacity-20 flex items-center justify-center shrink-0 text-xl`}
         >
           {icon}
         </div>
         <div className='flex-1 min-w-0'>
-          <p className='font-bold text-slate-800 text-sm'>{title}</p>
-          <p className='text-[11px] text-slate-400 mt-0.5'>{subtitle}</p>
+          <p className='font-bold text-slate-800 dark:text-slate-200 text-sm'>
+            {title}
+          </p>
+          <p className='text-[11px] text-slate-400 dark:text-slate-500 mt-0.5'>
+            {subtitle}
+          </p>
         </div>
         <div
-          className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors ${isOpen ? accentClass + ' bg-opacity-10' : 'bg-slate-50'}`}
+          className={`w-7 h-7 rounded-xl flex items-center justify-center transition-colors ${
+            isOpen
+              ? accentClass + ' bg-opacity-10 dark:bg-opacity-20'
+              : 'bg-slate-50 dark:bg-slate-800'
+          }`}
         >
           {isOpen ? (
             <ChevronUp size={14} className={accentClass} />
           ) : (
-            <ChevronDown size={14} className='text-slate-400' />
+            <ChevronDown
+              size={14}
+              className='text-slate-400 dark:text-slate-500'
+            />
           )}
         </div>
       </button>
@@ -75,7 +86,7 @@ function SectionCard({
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            <div className='px-5 pb-6 pt-1 border-t border-slate-50'>
+            <div className='px-5 pb-6 pt-1 border-t border-slate-50 dark:border-slate-800'>
               {children}
             </div>
           </motion.div>
@@ -97,12 +108,12 @@ function InputField({
 }) {
   return (
     <div className='mb-4'>
-      <label className='block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider'>
+      <label className='block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider'>
         {label}
       </label>
-      <div className='flex items-center gap-2 bg-slate-50 rounded-2xl border border-slate-100 px-4 py-3 focus-within:border-[#1e3a8a]/30 focus-within:ring-2 focus-within:ring-[#1e3a8a]/10 transition-all'>
+      <div className='flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 px-4 py-3 focus-within:border-[#1e3a8a]/30 dark:focus-within:border-blue-500/30 focus-within:ring-2 focus-within:ring-[#1e3a8a]/10 dark:focus-within:ring-blue-500/20 transition-all'>
         {prefix && (
-          <span className='text-xs font-bold text-slate-400 shrink-0'>
+          <span className='text-xs font-bold text-slate-400 dark:text-slate-500 shrink-0'>
             {prefix}
           </span>
         )}
@@ -111,17 +122,17 @@ function InputField({
           min={min}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className='flex-1 bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-300 tabular-nums'
+          className='flex-1 bg-transparent text-sm font-semibold text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-300 dark:placeholder:text-slate-600 tabular-nums'
           placeholder='0'
         />
         {suffix && (
-          <span className='text-xs font-bold text-slate-400 shrink-0'>
+          <span className='text-xs font-bold text-slate-400 dark:text-slate-500 shrink-0'>
             {suffix}
           </span>
         )}
       </div>
       {hint && (
-        <p className='text-[10px] text-slate-400 mt-1.5 leading-relaxed'>
+        <p className='text-[10px] text-slate-400 dark:text-slate-500 mt-1.5 leading-relaxed'>
           {hint}
         </p>
       )}
@@ -134,30 +145,47 @@ function ResultBox({ label, value, isWajib, note }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`mt-5 rounded-2xl p-4 ${isWajib ? 'bg-[#1e3a8a]' : 'bg-slate-100'}`}
+      className={`mt-5 rounded-2xl p-4 ${
+        isWajib
+          ? 'bg-[#1e3a8a] dark:bg-blue-800'
+          : 'bg-slate-100 dark:bg-slate-800'
+      }`}
     >
       <div className='flex items-start justify-between gap-2'>
         <div>
           <p
-            className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${isWajib ? 'text-blue-200' : 'text-slate-400'}`}
+            className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${
+              isWajib
+                ? 'text-blue-200 dark:text-blue-300'
+                : 'text-slate-400 dark:text-slate-500'
+            }`}
           >
             {label}
           </p>
           <p
-            className={`text-xl font-black tabular-nums ${isWajib ? 'text-white' : 'text-slate-700'}`}
+            className={`text-xl font-black tabular-nums ${
+              isWajib ? 'text-white' : 'text-slate-700 dark:text-slate-300'
+            }`}
           >
             {value}
           </p>
           {note && (
             <p
-              className={`text-[11px] mt-1 ${isWajib ? 'text-blue-200' : 'text-slate-500'}`}
+              className={`text-[11px] mt-1 ${
+                isWajib
+                  ? 'text-blue-200 dark:text-blue-300'
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
             >
               {note}
             </p>
           )}
         </div>
         {isWajib && (
-          <CheckCircle2 size={20} className='text-blue-300 shrink-0 mt-0.5' />
+          <CheckCircle2
+            size={20}
+            className='text-blue-300 dark:text-blue-400 shrink-0 mt-0.5'
+          />
         )}
       </div>
     </motion.div>
@@ -166,9 +194,14 @@ function ResultBox({ label, value, isWajib, note }) {
 
 function InfoChip({ text }) {
   return (
-    <div className='flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-2xl p-3 mt-4'>
-      <Info size={13} className='text-amber-500 shrink-0 mt-0.5' />
-      <p className='text-[11px] text-amber-700 leading-relaxed'>{text}</p>
+    <div className='flex items-start gap-2 bg-amber-50 dark:bg-amber-900/30 border border-amber-100 dark:border-amber-800 rounded-2xl p-3 mt-4'>
+      <Info
+        size={13}
+        className='text-amber-500 dark:text-amber-400 shrink-0 mt-0.5'
+      />
+      <p className='text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed'>
+        {text}
+      </p>
     </div>
   );
 }
@@ -250,30 +283,30 @@ export default function ZakatPage() {
   }, [beratEmas, hargaEmasGram, beratPerak, hargaPerakGram]);
 
   return (
-    <div className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-24'>
+    <div className='min-h-screen bg-[#F6F9FC] dark:bg-slate-950 text-slate-800 dark:text-slate-200 pb-24 transition-colors duration-300'>
       <Head>
         <title>Kalkulator Zakat — MyRamadhan</title>
       </Head>
 
       {/* Ambient */}
       <div className='fixed inset-0 pointer-events-none -z-10 overflow-hidden'>
-        <div className='absolute -top-40 -right-40 w-96 h-96 bg-blue-100/40 rounded-full blur-3xl' />
-        <div className='absolute bottom-0 -left-20 w-80 h-80 bg-indigo-100/30 rounded-full blur-3xl' />
+        <div className='absolute -top-40 -right-40 w-96 h-96 bg-blue-100/40 dark:bg-blue-900/20 rounded-full blur-3xl' />
+        <div className='absolute bottom-0 -left-20 w-80 h-80 bg-indigo-100/30 dark:bg-indigo-900/20 rounded-full blur-3xl' />
       </div>
 
       {/* ── Header ── */}
-      <header className='sticky top-0 z-40 bg-[#F6F9FC]/90 backdrop-blur-md border-b border-slate-100 px-5 py-4 flex items-center gap-3'>
+      <header className='sticky top-0 z-40 bg-[#F6F9FC]/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-5 py-4 flex items-center gap-3'>
         <button
           onClick={() => router.push('/')}
-          className='w-9 h-9 rounded-xl bg-white border border-slate-100 shadow-sm flex items-center justify-center hover:bg-slate-50 transition-colors'
+          className='w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 shadow-sm dark:shadow-slate-900 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors'
         >
-          <ArrowLeft size={17} className='text-slate-600' />
+          <ArrowLeft size={17} className='text-slate-600 dark:text-slate-400' />
         </button>
         <div className='flex-1'>
-          <h1 className='font-bold text-base text-slate-800 leading-tight'>
+          <h1 className='font-bold text-base text-slate-800 dark:text-slate-200 leading-tight'>
             Kalkulator Zakat
           </h1>
-          <p className='text-[10px] text-slate-400 font-medium'>
+          <p className='text-[10px] text-slate-400 dark:text-slate-500 font-medium'>
             Hitung zakat dengan mudah & akurat
           </p>
         </div>
@@ -284,12 +317,12 @@ export default function ZakatPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className='bg-gradient-to-br from-[#1e3a8a] via-[#1e3a8a] to-indigo-700 rounded-3xl p-5 text-white relative overflow-hidden'
+          className='bg-gradient-to-br from-[#1e3a8a] via-[#1e3a8a] to-indigo-700 dark:from-blue-800 dark:via-blue-800 dark:to-indigo-800 rounded-3xl p-5 text-white relative overflow-hidden'
         >
           <div className='absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.08),transparent_60%)]' />
           <div className='absolute -bottom-8 -right-8 w-32 h-32 bg-white/5 rounded-full' />
           <div className='relative z-10'>
-            <p className='text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200 mb-1'>
+            <p className='text-[10px] font-bold uppercase tracking-[0.2em] text-blue-200 dark:text-blue-300 mb-1'>
               Panduan Zakat
             </p>
             <h2 className='text-lg font-bold leading-snug mb-2'>
@@ -297,7 +330,7 @@ export default function ZakatPage() {
               <br />
               bersihkan harta 🤍
             </h2>
-            <p className='text-xs text-blue-200 leading-relaxed'>
+            <p className='text-xs text-blue-200 dark:text-blue-300 leading-relaxed'>
               Zakat dihitung berdasarkan nisab (batas minimum) dan haul (1 tahun
               kepemilikan). Pilih jenis zakat di bawah.
             </p>
@@ -314,8 +347,8 @@ export default function ZakatPage() {
           icon='🍚'
           title='Zakat Fitrah'
           subtitle='Wajib setiap jiwa, dibayar sebelum Idul Fitri'
-          accentClass='text-emerald-600'
-          bgClass='bg-emerald-50'
+          accentClass='text-emerald-600 dark:text-emerald-400'
+          bgClass='bg-emerald-50 dark:bg-emerald-900'
         >
           <InputField
             label='Jumlah Jiwa yang Dibayarkan'
@@ -351,10 +384,10 @@ export default function ZakatPage() {
           icon='💰'
           title='Zakat Maal (Harta)'
           subtitle='Tabungan, investasi & piutang selama 1 tahun'
-          accentClass='text-[#1e3a8a]'
-          bgClass='bg-blue-50'
+          accentClass='text-[#1e3a8a] dark:text-blue-400'
+          bgClass='bg-blue-50 dark:bg-blue-900'
         >
-          <p className='text-[11px] text-slate-500 mb-4 leading-relaxed'>
+          <p className='text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed'>
             Masukkan total harta yang sudah dimiliki selama ≥ 1 tahun (haul).
           </p>
           <InputField
@@ -385,23 +418,33 @@ export default function ZakatPage() {
 
           {(Number(tabungan) || Number(investasi) || Number(piutang)) > 0 && (
             <>
-              <div className='mt-4 p-3 bg-slate-50 rounded-2xl space-y-1.5'>
+              <div className='mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl space-y-1.5'>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Total Harta</span>
-                  <span className='font-bold text-slate-700'>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Total Harta
+                  </span>
+                  <span className='font-bold text-slate-700 dark:text-slate-300'>
                     {formatRp(maalResult.totalHarta)}
                   </span>
                 </div>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Nisab (85g emas)</span>
-                  <span className='font-bold text-slate-700'>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Nisab (85g emas)
+                  </span>
+                  <span className='font-bold text-slate-700 dark:text-slate-300'>
                     {formatRp(maalResult.nisab)}
                   </span>
                 </div>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Status</span>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Status
+                  </span>
                   <span
-                    className={`font-bold ${maalResult.wajib ? 'text-[#1e3a8a]' : 'text-slate-400'}`}
+                    className={`font-bold ${
+                      maalResult.wajib
+                        ? 'text-[#1e3a8a] dark:text-blue-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
                   >
                     {maalResult.wajib ? '✓ Wajib Zakat' : '✗ Belum Nisab'}
                   </span>
@@ -434,10 +477,10 @@ export default function ZakatPage() {
           icon='💼'
           title='Zakat Penghasilan'
           subtitle='Gaji & pendapatan bulanan'
-          accentClass='text-violet-600'
-          bgClass='bg-violet-50'
+          accentClass='text-violet-600 dark:text-violet-400'
+          bgClass='bg-violet-50 dark:bg-violet-900'
         >
-          <p className='text-[11px] text-slate-500 mb-4 leading-relaxed'>
+          <p className='text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed'>
             Dibayar bulanan jika penghasilan setahun ≥ nisab. Atau bisa
             dikumpulkan dan dibayar setahun sekali.
           </p>
@@ -464,29 +507,41 @@ export default function ZakatPage() {
 
           {(Number(gaji) || Number(penghasilanLain)) > 0 && (
             <>
-              <div className='mt-4 p-3 bg-slate-50 rounded-2xl space-y-1.5'>
+              <div className='mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl space-y-1.5'>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Penghasilan / bulan</span>
-                  <span className='font-bold text-slate-700'>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Penghasilan / bulan
+                  </span>
+                  <span className='font-bold text-slate-700 dark:text-slate-300'>
                     {formatRp(penghasilanResult.totalBulan)}
                   </span>
                 </div>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Penghasilan / tahun</span>
-                  <span className='font-bold text-slate-700'>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Penghasilan / tahun
+                  </span>
+                  <span className='font-bold text-slate-700 dark:text-slate-300'>
                     {formatRp(penghasilanResult.totalTahun)}
                   </span>
                 </div>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Nisab tahunan</span>
-                  <span className='font-bold text-slate-700'>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Nisab tahunan
+                  </span>
+                  <span className='font-bold text-slate-700 dark:text-slate-300'>
                     {formatRp(penghasilanResult.nisab)}
                   </span>
                 </div>
                 <div className='flex justify-between text-xs'>
-                  <span className='text-slate-400'>Status</span>
+                  <span className='text-slate-400 dark:text-slate-500'>
+                    Status
+                  </span>
                   <span
-                    className={`font-bold ${penghasilanResult.wajib ? 'text-violet-600' : 'text-slate-400'}`}
+                    className={`font-bold ${
+                      penghasilanResult.wajib
+                        ? 'text-violet-600 dark:text-violet-400'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
                   >
                     {penghasilanResult.wajib
                       ? '✓ Wajib Zakat'
@@ -523,17 +578,17 @@ export default function ZakatPage() {
           icon='✨'
           title='Zakat Emas & Perak'
           subtitle='Perhiasan & logam mulia yang tersimpan'
-          accentClass='text-amber-600'
-          bgClass='bg-amber-50'
+          accentClass='text-amber-600 dark:text-amber-400'
+          bgClass='bg-amber-50 dark:bg-amber-900'
         >
-          <p className='text-[11px] text-slate-500 mb-4 leading-relaxed'>
+          <p className='text-[11px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed'>
             Emas/perak yang disimpan (bukan dipakai sehari-hari) dan sudah
             dimiliki ≥ 1 tahun.
           </p>
 
           {/* Emas */}
           <div className='mb-5'>
-            <p className='text-xs font-bold text-amber-600 uppercase tracking-wider mb-3'>
+            <p className='text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-3'>
               🥇 Emas
             </p>
             <InputField
@@ -568,8 +623,8 @@ export default function ZakatPage() {
           </div>
 
           {/* Perak */}
-          <div className='pt-4 border-t border-slate-100'>
-            <p className='text-xs font-bold text-slate-500 uppercase tracking-wider mb-3'>
+          <div className='pt-4 border-t border-slate-100 dark:border-slate-800'>
+            <p className='text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3'>
               🥈 Perak
             </p>
             <InputField
@@ -612,7 +667,7 @@ export default function ZakatPage() {
           transition={{ delay: 0.4 }}
           className='text-center pb-4'
         >
-          <p className='text-[10px] text-slate-300 leading-relaxed'>
+          <p className='text-[10px] text-slate-300 dark:text-slate-600 leading-relaxed'>
             Kalkulator ini sebagai panduan. Untuk keputusan zakat yang lebih
             tepat,
             <br />

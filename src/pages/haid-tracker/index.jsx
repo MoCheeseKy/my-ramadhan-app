@@ -218,45 +218,45 @@ export default function HaidTrackerPage() {
       phaseInfo = {
         phase: 'Fase Menstruasi',
         desc: 'Tubuh sedang melepaskan dinding rahim. Perbanyak istirahat, wajar jika merasa lemas atau kram perut.',
-        color: 'text-rose-600',
-        bg: 'bg-rose-50',
-        bar: 'bg-rose-500',
+        color: 'text-rose-600 dark:text-rose-400',
+        bg: 'bg-rose-50 dark:bg-rose-900/30',
+        bar: 'bg-rose-500 dark:bg-rose-500',
         progress: Math.min((dayOfCycle / 7) * 25, 25),
       };
     } else if (dayOfCycle > 7 && dayOfCycle <= 13) {
       phaseInfo = {
         phase: 'Fase Folikuler',
         desc: 'Energi dan mood sedang meningkat drastis! Waktu yang sangat tepat untuk produktif beraktivitas dan ibadah ekstra.',
-        color: 'text-blue-600',
-        bg: 'bg-blue-50',
-        bar: 'bg-blue-500',
+        color: 'text-blue-600 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-900/30',
+        bar: 'bg-blue-500 dark:bg-blue-500',
         progress: 25 + ((dayOfCycle - 7) / 6) * 25,
       };
     } else if (dayOfCycle >= 14 && dayOfCycle <= 15) {
       phaseInfo = {
         phase: 'Fase Ovulasi',
         desc: 'Puncak masa kesuburan. Terkadang disertai nyeri ringan di satu sisi perut bawah (mittelschmerz).',
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50',
-        bar: 'bg-emerald-500',
+        color: 'text-emerald-600 dark:text-emerald-400',
+        bg: 'bg-emerald-50 dark:bg-emerald-900/30',
+        bar: 'bg-emerald-500 dark:bg-emerald-500',
         progress: 50 + ((dayOfCycle - 13) / 2) * 25,
       };
     } else if (dayOfCycle > 15 && dayOfCycle <= 28) {
       phaseInfo = {
         phase: 'Fase Luteal (PMS)',
         desc: 'Energi mulai perlahan menurun. Kamu mungkin rentan mood swing, lapar, dan sensitif. Perbanyak sabar ya!',
-        color: 'text-amber-600',
-        bg: 'bg-amber-50',
-        bar: 'bg-amber-500',
+        color: 'text-amber-600 dark:text-amber-400',
+        bg: 'bg-amber-50 dark:bg-amber-900/30',
+        bar: 'bg-amber-500 dark:bg-amber-500',
         progress: 75 + ((dayOfCycle - 15) / 13) * 25,
       };
     } else {
       phaseInfo = {
         phase: 'Menunggu Siklus',
         desc: 'Siklusmu sudah melewati rata-rata 28 hari. Jangan stres agar siklusmu segera datang.',
-        color: 'text-slate-600',
-        bg: 'bg-slate-50',
-        bar: 'bg-slate-400',
+        color: 'text-slate-600 dark:text-slate-400',
+        bg: 'bg-slate-50 dark:bg-slate-800',
+        bar: 'bg-slate-400 dark:bg-slate-500',
         progress: 100,
       };
     }
@@ -268,22 +268,28 @@ export default function HaidTrackerPage() {
 
   return (
     <ProtectedRoute>
-      <div className='min-h-screen bg-[#FDF2F8] text-slate-800 pb-28 selection:bg-pink-200'>
+      <div className='min-h-screen bg-[#FDF2F8] dark:bg-slate-950 text-slate-800 dark:text-slate-200 pb-28 selection:bg-pink-200 dark:selection:bg-pink-900 transition-colors duration-300'>
         <Head>
           <title>Haid Tracker - MyRamadhan</title>
         </Head>
 
         {/* Header */}
-        <header className='sticky top-0 z-40 px-6 py-4 flex items-center justify-between bg-[#FDF2F8]/80 backdrop-blur-md'>
+        <header className='sticky top-0 z-40 px-6 py-4 flex items-center justify-between bg-[#FDF2F8]/80 dark:bg-slate-900/80 backdrop-blur-md'>
           <button
             onClick={() => router.push('/')}
-            className='p-2 -ml-2 rounded-full hover:bg-pink-100 transition-colors'
+            className='p-2 -ml-2 rounded-full hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors'
           >
-            <ArrowLeft size={20} className='text-slate-600' />
+            <ArrowLeft
+              size={20}
+              className='text-slate-600 dark:text-slate-400'
+            />
           </button>
-          <h1 className='font-bold text-lg text-pink-700 flex items-center gap-2'>
-            <Droplets size={20} className='text-pink-500 fill-pink-500' /> Haid
-            Tracker
+          <h1 className='font-bold text-lg text-pink-700 dark:text-pink-400 flex items-center gap-2'>
+            <Droplets
+              size={20}
+              className='text-pink-500 dark:text-pink-400 fill-pink-500 dark:fill-pink-400'
+            />{' '}
+            Haid Tracker
           </h1>
           <div className='w-8' />
         </header>
@@ -293,15 +299,19 @@ export default function HaidTrackerPage() {
           <div
             className={`relative overflow-hidden rounded-[2.5rem] p-8 text-center shadow-xl transition-all duration-500 ${
               activePeriod
-                ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-pink-200'
-                : 'bg-white text-slate-800 border border-pink-100'
+                ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-pink-200 dark:shadow-pink-900'
+                : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-pink-100 dark:border-pink-900'
             }`}
           >
-            <div className='absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2' />
+            <div className='absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2' />
 
             <div className='relative z-10'>
               <p
-                className={`text-xs font-bold uppercase tracking-widest mb-2 ${activePeriod ? 'text-pink-200' : 'text-slate-400'}`}
+                className={`text-xs font-bold uppercase tracking-widest mb-2 ${
+                  activePeriod
+                    ? 'text-pink-200'
+                    : 'text-slate-400 dark:text-slate-500'
+                }`}
               >
                 Status Saat Ini
               </p>
@@ -334,7 +344,7 @@ export default function HaidTrackerPage() {
                 </div>
               ) : (
                 <div className='animate-fadeUp'>
-                  <p className='text-slate-400 mb-6 text-sm'>
+                  <p className='text-slate-400 dark:text-slate-500 mb-6 text-sm'>
                     Semoga harimu menyenangkan!
                   </p>
                   <button
@@ -342,7 +352,7 @@ export default function HaidTrackerPage() {
                       setInputDate(dayjs().format('YYYY-MM-DD'));
                       setActionModal({ isOpen: true, type: 'start' });
                     }}
-                    className='bg-pink-500 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-pink-300 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto'
+                    className='bg-pink-500 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-pink-300 dark:shadow-pink-900 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto'
                   >
                     <Plus size={18} /> Mulai Haid Baru
                   </button>
@@ -356,12 +366,15 @@ export default function HaidTrackerPage() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className='bg-white rounded-3xl p-6 border border-pink-100 shadow-sm'
+              className='bg-white dark:bg-slate-900 rounded-3xl p-6 border border-pink-100 dark:border-pink-900 shadow-sm'
             >
               <div className='flex justify-between items-center mb-4'>
                 <div className='flex items-center gap-2'>
-                  <Activity size={18} className='text-pink-500' />
-                  <h3 className='font-bold text-slate-700'>
+                  <Activity
+                    size={18}
+                    className='text-pink-500 dark:text-pink-400'
+                  />
+                  <h3 className='font-bold text-slate-700 dark:text-slate-200'>
                     Prediksi Fase Tubuh
                   </h3>
                 </div>
@@ -380,7 +393,7 @@ export default function HaidTrackerPage() {
                 </div>
 
                 {/* Progress Bar Siklus */}
-                <div className='h-2 w-full bg-slate-100 rounded-full overflow-hidden flex'>
+                <div className='h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex'>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${currentPhase.progress}%` }}
@@ -390,7 +403,7 @@ export default function HaidTrackerPage() {
                     <div className='absolute top-0 right-0 bottom-0 w-4 bg-white/30 animate-pulse' />
                   </motion.div>
                 </div>
-                <div className='flex justify-between text-[9px] text-slate-400 font-bold mt-1.5 px-1 uppercase tracking-widest'>
+                <div className='flex justify-between text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1.5 px-1 uppercase tracking-widest'>
                   <span>Haid</span>
                   <span>Folikuler</span>
                   <span>Ovulasi</span>
@@ -398,7 +411,7 @@ export default function HaidTrackerPage() {
                 </div>
               </div>
 
-              <p className='text-xs text-slate-500 leading-relaxed font-medium bg-slate-50 p-3 rounded-xl border border-slate-100'>
+              <p className='text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700'>
                 💡 {currentPhase.desc}
               </p>
             </motion.div>
@@ -412,8 +425,8 @@ export default function HaidTrackerPage() {
               className='mb-6'
             >
               <div className='flex items-center gap-2 mb-3 px-2'>
-                <Heart size={16} className='text-pink-500' />
-                <h3 className='font-bold text-slate-600 text-sm uppercase tracking-wide'>
+                <Heart size={16} className='text-pink-500 dark:text-pink-400' />
+                <h3 className='font-bold text-slate-600 dark:text-slate-300 text-sm uppercase tracking-wide'>
                   Amalan Pengganti
                 </h3>
               </div>
@@ -421,15 +434,18 @@ export default function HaidTrackerPage() {
                 {AMALAN_HAID.map((amalan) => (
                   <div
                     key={amalan.id}
-                    className='min-w-[140px] bg-white border border-pink-100 rounded-2xl p-4 shadow-sm shrink-0'
+                    className='min-w-[140px] bg-white dark:bg-slate-900 border border-pink-100 dark:border-pink-900 rounded-2xl p-4 shadow-sm shrink-0'
                   >
-                    <div className='w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center mb-3'>
-                      <amalan.icon size={16} className='text-pink-500' />
+                    <div className='w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-3'>
+                      <amalan.icon
+                        size={16}
+                        className='text-pink-500 dark:text-pink-400'
+                      />
                     </div>
-                    <h4 className='font-bold text-slate-700 text-xs mb-1'>
+                    <h4 className='font-bold text-slate-700 dark:text-slate-200 text-xs mb-1'>
                       {amalan.title}
                     </h4>
-                    <p className='text-[10px] text-slate-400 leading-relaxed'>
+                    <p className='text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed'>
                       {amalan.desc}
                     </p>
                   </div>
@@ -440,26 +456,26 @@ export default function HaidTrackerPage() {
 
           {/* --- STATS SUMMARY --- */}
           <div className='grid grid-cols-2 gap-3'>
-            <div className='bg-white p-5 rounded-2xl border border-pink-100 flex flex-col items-center text-center shadow-sm'>
-              <span className='w-10 h-10 rounded-full bg-pink-50 text-pink-500 flex items-center justify-center mb-2'>
+            <div className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-pink-100 dark:border-pink-900 flex flex-col items-center text-center shadow-sm'>
+              <span className='w-10 h-10 rounded-full bg-pink-50 dark:bg-pink-900/30 text-pink-500 dark:text-pink-400 flex items-center justify-center mb-2'>
                 <History size={20} />
               </span>
-              <h3 className='text-2xl font-bold text-slate-700'>
+              <h3 className='text-2xl font-bold text-slate-700 dark:text-slate-200'>
                 {logs.length}
               </h3>
-              <p className='text-[10px] text-slate-400 font-bold uppercase'>
+              <p className='text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase'>
                 Total Siklus
               </p>
             </div>
 
-            <div className='bg-white p-5 rounded-2xl border border-rose-100 flex flex-col items-center text-center shadow-sm'>
-              <span className='w-10 h-10 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-2'>
+            <div className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-100 dark:border-rose-900 flex flex-col items-center text-center shadow-sm'>
+              <span className='w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 flex items-center justify-center mb-2'>
                 <Clock size={20} />
               </span>
-              <h3 className='text-2xl font-bold text-slate-700'>
+              <h3 className='text-2xl font-bold text-slate-700 dark:text-slate-200'>
                 {totalMissedFasting}
               </h3>
-              <p className='text-[10px] text-slate-400 font-bold uppercase'>
+              <p className='text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase'>
                 Utang Puasa
               </p>
             </div>
@@ -468,8 +484,11 @@ export default function HaidTrackerPage() {
           {/* --- RIWAYAT (HISTORY) --- */}
           <div className='mt-8'>
             <div className='flex items-center gap-2 mb-4 px-2'>
-              <Calendar size={16} className='text-slate-400' />
-              <h3 className='font-bold text-slate-600 text-sm uppercase tracking-wide'>
+              <Calendar
+                size={16}
+                className='text-slate-400 dark:text-slate-500'
+              />
+              <h3 className='font-bold text-slate-600 dark:text-slate-300 text-sm uppercase tracking-wide'>
                 Riwayat Siklus
               </h3>
             </div>
@@ -479,12 +498,12 @@ export default function HaidTrackerPage() {
                 [1, 2].map((i) => (
                   <div
                     key={i}
-                    className='h-20 bg-white rounded-2xl animate-pulse'
+                    className='h-20 bg-white dark:bg-slate-800 rounded-2xl animate-pulse'
                   />
                 ))
               ) : logs.length === 0 ? (
-                <div className='text-center py-10 opacity-50 bg-white rounded-2xl border border-dashed border-pink-200'>
-                  <p className='text-sm text-slate-500'>
+                <div className='text-center py-10 opacity-50 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-pink-200 dark:border-pink-800'>
+                  <p className='text-sm text-slate-500 dark:text-slate-400'>
                     Belum ada data riwayat.
                   </p>
                 </div>
@@ -497,14 +516,18 @@ export default function HaidTrackerPage() {
                   return (
                     <div
                       key={log.id}
-                      className='bg-white p-4 rounded-2xl border border-pink-50 shadow-sm flex justify-between items-center group relative overflow-hidden'
+                      className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-pink-50 dark:border-pink-900 shadow-sm flex justify-between items-center group relative overflow-hidden'
                     >
                       <div className='flex items-center gap-4'>
                         <div
-                          className={`w-1.5 h-12 rounded-full ${isOngoing ? 'bg-pink-500 animate-pulse' : 'bg-slate-200'}`}
+                          className={`w-1.5 h-12 rounded-full ${
+                            isOngoing
+                              ? 'bg-pink-500 animate-pulse'
+                              : 'bg-slate-200 dark:bg-slate-700'
+                          }`}
                         />
                         <div>
-                          <p className='text-[11px] text-slate-400 font-bold mb-0.5 uppercase tracking-wider'>
+                          <p className='text-[11px] text-slate-400 dark:text-slate-500 font-bold mb-0.5 uppercase tracking-wider'>
                             {dayjs(log.start_date).format('DD MMM')} -{' '}
                             {isOngoing
                               ? 'Sekarang'
@@ -512,12 +535,16 @@ export default function HaidTrackerPage() {
                           </p>
                           <div className='flex items-center gap-3'>
                             <h4
-                              className={`font-black text-lg ${isOngoing ? 'text-pink-600' : 'text-slate-700'}`}
+                              className={`font-black text-lg ${
+                                isOngoing
+                                  ? 'text-pink-600 dark:text-pink-400'
+                                  : 'text-slate-700 dark:text-slate-300'
+                              }`}
                             >
                               {duration} Hari
                             </h4>
                             {qadhaDays > 0 && (
-                              <span className='bg-rose-100 text-rose-600 text-[9px] font-bold px-2 py-0.5 rounded-md'>
+                              <span className='bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-md'>
                                 {qadhaDays} Qadha
                               </span>
                             )}
@@ -532,7 +559,7 @@ export default function HaidTrackerPage() {
                           e.stopPropagation();
                           setDeleteModal({ isOpen: true, id: log.id });
                         }}
-                        className='p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors relative z-10'
+                        className='p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors relative z-10'
                         aria-label='Hapus riwayat'
                       >
                         <Trash2 size={18} />
@@ -555,21 +582,21 @@ export default function HaidTrackerPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setDeleteModal({ isOpen: false, id: null })}
-              className='fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50'
+              className='fixed inset-0 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm z-50'
             />
             <motion.div
               initial={{ scale: 0.95, opacity: 0, x: '-50%', y: '-50%' }}
               animate={{ scale: 1, opacity: 1, x: '-50%', y: '-50%' }}
               exit={{ scale: 0.95, opacity: 0, x: '-50%', y: '-50%' }}
-              className='fixed top-1/2 left-1/2 w-[90%] max-w-sm bg-white rounded-[2rem] p-6 z-50 shadow-2xl text-center'
+              className='fixed top-1/2 left-1/2 w-[90%] max-w-sm bg-white dark:bg-slate-900 rounded-[2rem] p-6 z-50 shadow-2xl text-center'
             >
-              <div className='w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500'>
+              <div className='w-16 h-16 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500 dark:text-red-400'>
                 <Trash2 size={28} />
               </div>
-              <h3 className='font-bold text-lg text-slate-800 mb-2'>
+              <h3 className='font-bold text-lg text-slate-800 dark:text-slate-200 mb-2'>
                 Hapus Riwayat?
               </h3>
-              <p className='text-sm text-slate-500 mb-6'>
+              <p className='text-sm text-slate-500 dark:text-slate-400 mb-6'>
                 Data siklus haid ini akan dihapus secara permanen dan tidak
                 dapat dikembalikan.
               </p>
@@ -577,13 +604,13 @@ export default function HaidTrackerPage() {
               <div className='flex gap-3'>
                 <button
                   onClick={() => setDeleteModal({ isOpen: false, id: null })}
-                  className='flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors'
+                  className='flex-1 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors'
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className='flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200'
+                  className='flex-1 py-3.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-lg shadow-red-200 dark:shadow-red-900'
                 >
                   Ya, Hapus
                 </button>
@@ -602,28 +629,28 @@ export default function HaidTrackerPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setActionModal({ isOpen: false, type: null })}
-              className='fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50'
+              className='fixed inset-0 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-sm z-50'
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className='fixed bottom-0 left-0 right-0 bg-white rounded-t-[2rem] p-6 z-50 shadow-2xl'
+              className='fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-[2rem] p-6 z-50 shadow-2xl'
             >
               <div className='flex justify-between items-center mb-6'>
                 <div>
-                  <h3 className='font-bold text-lg text-slate-800'>
+                  <h3 className='font-bold text-lg text-slate-800 dark:text-slate-200'>
                     {actionModal.type === 'start'
                       ? 'Mulai Siklus Haid'
                       : 'Selesai Siklus Haid'}
                   </h3>
-                  <p className='text-xs text-slate-500'>
+                  <p className='text-xs text-slate-500 dark:text-slate-400'>
                     Pilih tanggal yang sesuai
                   </p>
                 </div>
                 <button
                   onClick={() => setActionModal({ isOpen: false, type: null })}
-                  className='p-2 bg-slate-100 rounded-full text-slate-500'
+                  className='p-2 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-500 dark:text-slate-400'
                 >
                   <X size={16} />
                 </button>
@@ -633,11 +660,11 @@ export default function HaidTrackerPage() {
                 value={inputDate}
                 onChange={(e) => setInputDate(e.target.value)}
                 max={dayjs().format('YYYY-MM-DD')}
-                className='w-full bg-slate-50 border border-slate-200 text-slate-800 text-lg rounded-xl p-4 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all mb-6'
+                className='w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-lg rounded-xl p-4 outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200 dark:focus:ring-pink-900 transition-all mb-6'
               />
               <button
                 onClick={handleSaveDate}
-                className='w-full bg-pink-500 text-white font-bold py-4 rounded-xl hover:bg-pink-600 transition-colors shadow-lg shadow-pink-200'
+                className='w-full bg-pink-500 text-white font-bold py-4 rounded-xl hover:bg-pink-600 transition-colors shadow-lg shadow-pink-200 dark:shadow-pink-900'
               >
                 Simpan Tanggal
               </button>
@@ -654,40 +681,43 @@ export default function HaidTrackerPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4'
+              className='fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4'
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className='bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden'
+                className='bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden'
               >
-                <div className='absolute top-0 right-0 w-32 h-32 bg-pink-50 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2' />
+                <div className='absolute top-0 right-0 w-32 h-32 bg-pink-50 dark:bg-pink-900/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2' />
                 <div className='relative z-10'>
-                  <div className='w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                    <Droplets size={28} className='text-pink-500' />
+                  <div className='w-16 h-16 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center mx-auto mb-4'>
+                    <Droplets
+                      size={28}
+                      className='text-pink-500 dark:text-pink-400'
+                    />
                   </div>
-                  <h3 className='font-black text-xl text-slate-800 mb-2'>
+                  <h3 className='font-black text-xl text-slate-800 dark:text-slate-200 mb-2'>
                     Alhamdulillah, Suci!
                   </h3>
-                  <p className='text-sm text-slate-500 mb-6 leading-relaxed'>
+                  <p className='text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed'>
                     Jangan lupa untuk menyucikan diri. Berikut adalah niat mandi
                     wajib setelah haid:
                   </p>
 
-                  <div className='bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-6 text-center'>
+                  <div className='bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl p-5 mb-6 text-center'>
                     <p
-                      className='text-xl font-arabic text-slate-800 mb-3 leading-relaxed'
+                      className='text-xl font-arabic text-slate-800 dark:text-slate-200 mb-3 leading-relaxed'
                       dir='rtl'
                     >
                       نَوَيْتُ الْغُسْلَ لِرَفْعِ الْحَدَثِ اْلاَكْبَرِ مِنَ
                       الحَيْضِ فَرْضًا ِللهِ تَعَالَى
                     </p>
-                    <p className='text-xs text-slate-500 font-medium italic mb-2'>
+                    <p className='text-xs text-slate-500 dark:text-slate-400 font-medium italic mb-2'>
                       "Nawaitul ghusla liraf'il hadatsil akbari minal haidhi
                       fardhan lillahi ta'ala."
                     </p>
-                    <p className='text-[11px] text-slate-600 font-semibold mt-3 pt-3 border-t border-slate-200'>
+                    <p className='text-[11px] text-slate-600 dark:text-slate-300 font-semibold mt-3 pt-3 border-t border-slate-200 dark:border-slate-700'>
                       "Aku niat mandi wajib untuk mensucikan hadast besar dari
                       haid karena Allah Ta'ala."
                     </p>
@@ -695,7 +725,7 @@ export default function HaidTrackerPage() {
 
                   <button
                     onClick={() => setShowNiatModal(false)}
-                    className='w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl hover:bg-slate-900 transition-colors'
+                    className='w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3.5 rounded-xl hover:bg-slate-900 dark:hover:bg-slate-600 transition-colors'
                   >
                     Insyaallah, Siap!
                   </button>

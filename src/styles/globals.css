@@ -12,6 +12,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+html {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

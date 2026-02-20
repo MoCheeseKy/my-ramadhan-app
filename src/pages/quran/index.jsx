@@ -20,9 +20,8 @@ export default function QuranIndex() {
   const router = useRouter();
   const { user } = useUser();
 
-  // --- STATES ---
-  const [view, setView] = useState('home'); // 'home' atau 'bookmarks'
-  const [activeTab, setActiveTab] = useState('surah'); // 'surah' atau 'juz'
+  const [view, setView] = useState('home');
+  const [activeTab, setActiveTab] = useState('surah');
 
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +30,6 @@ export default function QuranIndex() {
   const [lastRead, setLastRead] = useState(null);
   const [bookmarks, setBookmarks] = useState([]);
 
-  // Fetch Daftar Surah
   useEffect(() => {
     const fetchSurahs = async () => {
       try {
@@ -48,7 +46,6 @@ export default function QuranIndex() {
     fetchSurahs();
   }, []);
 
-  // Fetch User Data (Last Read & Bookmarks)
   useEffect(() => {
     const loadUserData = async () => {
       if (user) {
@@ -106,50 +103,47 @@ export default function QuranIndex() {
     }
   };
 
-  // --- LOGIC PERBAIKAN NAVIGASI JUZ ---
   const handleLanjutkan = () => {
     if (!lastRead) return;
 
     let targetUrl;
     if (lastRead.isJuz) {
-      // Arahkan ke rute juzNumber, dan Scroll ke ID: #ayat-[surahId]-[ayahNumber]
-      const targetJuz = lastRead.juzNumber || 1; // Fallback untuk mencegah data usang
+      const targetJuz = lastRead.juzNumber || 1;
       targetUrl = `/quran/juz/${targetJuz}#ayat-${lastRead.surahId}-${lastRead.ayahNumber}`;
     } else {
-      // Untuk baca surah, formatnya tetap
       targetUrl = `/quran/surah/${lastRead.surahId}#ayat-${lastRead.ayahNumber}`;
     }
 
     router.push(targetUrl);
   };
 
-  // ==========================================
-  // VIEW: HOME (Daftar Surah & Juz)
-  // ==========================================
   if (view === 'home') {
     return (
-      <div className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-20 selection:bg-blue-200'>
+      <div className='min-h-screen bg-[#F6F9FC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-20 selection:bg-blue-200 dark:selection:bg-blue-800'>
         <Head>
           <title>Al-Qur'an - MyRamadhan</title>
         </Head>
 
-        <header className='sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 py-4'>
+        <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4'>
           <div className='flex items-center justify-between mb-5'>
             <div className='flex items-center gap-4'>
               <button
                 onClick={() => router.push('/')}
-                className='p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors'
+                className='p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
               >
-                <ArrowLeft size={20} className='text-slate-600' />
+                <ArrowLeft
+                  size={20}
+                  className='text-slate-600 dark:text-slate-300'
+                />
               </button>
-              <h1 className='font-bold text-xl flex items-center gap-2 text-[#1e3a8a]'>
+              <h1 className='font-bold text-xl flex items-center gap-2 text-[#1e3a8a] dark:text-blue-400'>
                 <BookOpen size={24} /> Al-Qur'an
               </h1>
             </div>
-            {/* Tombol Akses Bookmark di Kanan Atas */}
+
             <button
               onClick={() => setView('bookmarks')}
-              className='p-2 bg-blue-50 text-[#1e3a8a] rounded-full hover:bg-blue-100 transition-colors'
+              className='p-2 bg-blue-50 dark:bg-blue-500/20 text-[#1e3a8a] dark:text-blue-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-500/30 transition-colors'
             >
               <Bookmark size={20} />
             </button>
@@ -157,7 +151,7 @@ export default function QuranIndex() {
 
           <div className='relative mb-4'>
             <Search
-              className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
+              className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500'
               size={18}
             />
             <input
@@ -168,22 +162,30 @@ export default function QuranIndex() {
                   : 'Pencarian dinonaktifkan di sini'
               }
               disabled={activeTab !== 'surah'}
-              className='w-full pl-12 pr-4 py-3 bg-slate-100 rounded-2xl border-none focus:ring-2 focus:ring-[#1e3a8a] outline-none text-sm transition-all disabled:opacity-50'
+              className='w-full pl-12 pr-4 py-3 bg-slate-100 dark:bg-slate-800 rounded-2xl border-none focus:ring-2 focus:ring-[#1e3a8a] dark:focus:ring-blue-400 outline-none text-sm transition-all disabled:opacity-50'
               onChange={(e) => setSearchQuery(e.target.value)}
               value={searchQuery}
             />
           </div>
 
-          <div className='flex p-1 bg-slate-100 rounded-xl'>
+          <div className='flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl'>
             <button
               onClick={() => setActiveTab('surah')}
-              className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all ${activeTab === 'surah' ? 'bg-white text-[#1e3a8a] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all ${
+                activeTab === 'surah'
+                  ? 'bg-white dark:bg-slate-900 text-[#1e3a8a] dark:text-blue-300 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
             >
               Surah
             </button>
             <button
               onClick={() => setActiveTab('juz')}
-              className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all ${activeTab === 'juz' ? 'bg-white text-[#1e3a8a] shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`flex-1 py-2 text-[13px] font-bold rounded-lg transition-all ${
+                activeTab === 'juz'
+                  ? 'bg-white dark:bg-slate-900 text-[#1e3a8a] dark:text-blue-300 shadow-sm'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
             >
               Juz
             </button>
@@ -191,7 +193,6 @@ export default function QuranIndex() {
         </header>
 
         <main className='max-w-md mx-auto p-5'>
-          {/* LAST READ CARD */}
           {lastRead && (
             <div className='mb-6 bg-gradient-to-r from-[#1e3a8a] to-[#312e81] rounded-[2rem] p-5 text-white shadow-lg relative overflow-hidden'>
               <BookOpen
@@ -225,14 +226,13 @@ export default function QuranIndex() {
             </div>
           )}
 
-          {/* TAB: SURAH */}
           {activeTab === 'surah' && (
             <div className='space-y-3'>
               {loading ? (
                 [...Array(10)].map((_, i) => (
                   <div
                     key={i}
-                    className='h-20 bg-white border border-slate-100 rounded-2xl animate-pulse'
+                    className='h-20 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl animate-pulse'
                   />
                 ))
               ) : filteredSurahs.length > 0 ? (
@@ -240,29 +240,29 @@ export default function QuranIndex() {
                   <div
                     key={s.nomor}
                     onClick={() => router.push(`/quran/surah/${s.nomor}`)}
-                    className='bg-white p-4 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-[#1e3a8a] transition-all cursor-pointer flex items-center justify-between group'
+                    className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#1e3a8a] dark:hover:border-blue-400 transition-all cursor-pointer flex items-center justify-between group'
                   >
                     <div className='flex items-center gap-4'>
-                      <div className='w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-xs font-bold text-slate-400 group-hover:bg-[#1e3a8a] group-hover:text-white transition-colors'>
+                      <div className='w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-500/20 flex items-center justify-center text-xs font-bold text-slate-400 dark:text-slate-300 group-hover:bg-[#1e3a8a] group-hover:text-white transition-colors'>
                         {s.nomor}
                       </div>
                       <div>
-                        <h3 className='font-bold text-slate-800 text-sm group-hover:text-[#1e3a8a] transition-colors'>
+                        <h3 className='font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-[#1e3a8a] dark:group-hover:text-blue-400 transition-colors'>
                           {s.namaLatin}
                         </h3>
-                        <p className='text-[10px] font-medium text-slate-400 uppercase tracking-wider mt-0.5'>
+                        <p className='text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5'>
                           {s.tempatTurun} • {s.jumlahAyat} Ayat
                         </p>
                       </div>
                     </div>
-                    <div className='text-xl font-arabic text-[#1e3a8a] opacity-80 group-hover:opacity-100 transition-opacity'>
+                    <div className='text-xl font-arabic text-[#1e3a8a] dark:text-blue-400 opacity-80 group-hover:opacity-100 transition-opacity'>
                       {s.nama}
                     </div>
                   </div>
                 ))
               ) : (
                 <div className='text-center py-10'>
-                  <p className='text-slate-500 text-sm'>
+                  <p className='text-slate-500 dark:text-slate-400 text-sm'>
                     Surah tidak ditemukan.
                   </p>
                 </div>
@@ -270,19 +270,18 @@ export default function QuranIndex() {
             </div>
           )}
 
-          {/* TAB: JUZ */}
           {activeTab === 'juz' && (
             <div className='grid grid-cols-2 gap-3'>
               {juzList.map((juz) => (
                 <div
                   key={juz}
                   onClick={() => router.push(`/quran/juz/${juz}`)}
-                  className='bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-[#1e3a8a] transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group'
+                  className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-[#1e3a8a] dark:hover:border-blue-400 transition-all cursor-pointer flex flex-col items-center justify-center gap-2 group'
                 >
-                  <div className='w-12 h-12 rounded-full bg-blue-50 text-[#1e3a8a] flex items-center justify-center group-hover:scale-110 transition-transform'>
+                  <div className='w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-500/20 text-[#1e3a8a] dark:text-blue-300 flex items-center justify-center group-hover:scale-110 transition-transform'>
                     <Book size={20} />
                   </div>
-                  <h3 className='font-bold text-slate-800 group-hover:text-[#1e3a8a]'>
+                  <h3 className='font-bold text-slate-800 dark:text-slate-100 group-hover:text-[#1e3a8a] dark:group-hover:text-blue-400'>
                     Juz {juz}
                   </h3>
                 </div>
@@ -294,20 +293,20 @@ export default function QuranIndex() {
     );
   }
 
-  // ==========================================
-  // VIEW: BOOKMARKS
-  // ==========================================
   if (view === 'bookmarks') {
     return (
-      <div className='min-h-screen bg-[#F6F9FC] text-slate-800 pb-20'>
-        <header className='sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center gap-3'>
+      <div className='min-h-screen bg-[#F6F9FC] dark:bg-slate-950 text-slate-800 dark:text-slate-100 pb-20'>
+        <header className='sticky top-0 z-40 bg-white/80 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center gap-3'>
           <button
             onClick={() => setView('home')}
-            className='p-2 -ml-2 rounded-full hover:bg-slate-100 transition-colors'
+            className='p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
           >
-            <ArrowLeft size={20} className='text-slate-600' />
+            <ArrowLeft
+              size={20}
+              className='text-slate-600 dark:text-slate-300'
+            />
           </button>
-          <h1 className='font-bold text-xl flex items-center gap-2 text-[#1e3a8a]'>
+          <h1 className='font-bold text-xl flex items-center gap-2 text-[#1e3a8a] dark:text-blue-400'>
             <Bookmark size={22} /> Disimpan
           </h1>
         </header>
@@ -315,7 +314,10 @@ export default function QuranIndex() {
         <main className='max-w-md mx-auto p-5 space-y-4'>
           {bookmarks.length === 0 ? (
             <div className='text-center py-20 opacity-50'>
-              <Bookmark size={48} className='mx-auto mb-4 text-slate-300' />
+              <Bookmark
+                size={48}
+                className='mx-auto mb-4 text-slate-300 dark:text-slate-600'
+              />
               <p className='text-sm font-medium'>
                 Belum ada ayat yang disimpan.
               </p>
@@ -324,26 +326,26 @@ export default function QuranIndex() {
             bookmarks.map((b, i) => (
               <div
                 key={i}
-                className='bg-white p-5 rounded-2xl border border-slate-100 shadow-sm'
+                className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm'
               >
                 <div className='flex justify-between items-center mb-4'>
-                  <span className='bg-blue-50 text-[#1e3a8a] text-[10px] font-black px-3 py-1.5 rounded-md uppercase tracking-wider'>
+                  <span className='bg-blue-50 dark:bg-blue-500/20 text-[#1e3a8a] dark:text-blue-300 text-[10px] font-black px-3 py-1.5 rounded-md uppercase tracking-wider'>
                     {b.surahName} • Ayat {b.ayahNumber}
                   </span>
                   <button
                     onClick={() => removeBookmark(b)}
-                    className='p-2 text-rose-400 hover:bg-rose-50 rounded-full transition-colors'
+                    className='p-2 text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/20 rounded-full transition-colors'
                   >
                     <Trash2 size={16} />
                   </button>
                 </div>
                 <p
-                  className='font-arabic text-2xl leading-[2.2] text-slate-800 text-right mb-4'
+                  className='font-arabic text-2xl leading-[2.2] text-slate-800 dark:text-slate-100 text-right mb-4'
                   dir='rtl'
                 >
                   {b.arab}
                 </p>
-                <p className='text-slate-600 text-[13px] leading-relaxed mb-4'>
+                <p className='text-slate-600 dark:text-slate-400 text-[13px] leading-relaxed mb-4'>
                   "{b.translation}"
                 </p>
                 <button
@@ -352,7 +354,7 @@ export default function QuranIndex() {
                       `/quran/surah/${b.surahId}#ayat-${b.ayahNumber}`,
                     )
                   }
-                  className='w-full py-2.5 rounded-xl border border-[#1e3a8a] text-xs font-bold text-[#1e3a8a] hover:bg-[#1e3a8a] hover:text-white transition-all'
+                  className='w-full py-2.5 rounded-xl border border-[#1e3a8a] dark:border-blue-400 text-xs font-bold text-[#1e3a8a] dark:text-blue-300 hover:bg-[#1e3a8a] hover:text-white dark:hover:bg-blue-400 dark:hover:text-slate-900 transition-all'
                 >
                   Buka Ayat Ini
                 </button>
