@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
-import { supabase } from '@/lib/supabase';
 import useUser from '@/hook/useUser';
 import { motion, AnimatePresence } from 'framer-motion';
 import { studyMaterials } from '@/data/studyMaterials';
@@ -32,11 +31,10 @@ import {
   Compass,
   Fingerprint,
   Droplets,
-  LogIn,
-  LogOut,
   HandCoins,
   Bell,
   X,
+  User,
 } from 'lucide-react';
 
 import TrackerDrawer from '@/components/TrackerDrawer';
@@ -236,16 +234,6 @@ export default function MyRamadhanHome() {
   };
 
   if (!mounted) return null;
-
-  const hour = currentTime.hour();
-  const greeting =
-    hour < 11
-      ? 'Selamat Pagi'
-      : hour < 15
-        ? 'Selamat Siang'
-        : hour < 18
-          ? 'Selamat Sore'
-          : 'Selamat Malam';
 
   const getHijriDate = () => {
     try {
@@ -472,35 +460,30 @@ export default function MyRamadhanHome() {
               {hijriDate}
             </span>
             <h1 className='text-2xl font-extrabold tracking-tight mt-2 leading-tight'>
-              {greeting}, <br />
+              {"Assalamu'alaikum"} <br />
               <span className='text-[#1e3a8a] dark:text-blue-400'>
-                {user?.username || 'Pendatang!'}
+                {user?.username || 'Sahabat!'}
               </span>{' '}
               👋
             </h1>
           </div>
-          <div className='w-12 h-12 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
-            {user ? (
-              <LogOut
-                size={20}
-                className='text-rose-500 cursor-pointer'
-                onClick={() => {
-                  if (!isPWA) supabase.auth.signOut();
-                  localStorage.removeItem('myRamadhan_user');
-                  if (!isPWA) {
-                    router.push('/auth/login');
-                  } else {
-                    window.location.reload();
-                  }
-                }}
-              />
-            ) : (
-              <LogIn
-                size={20}
-                className='text-emerald-500 cursor-pointer'
-                onClick={() => router.push('/auth/login')}
-              />
-            )}
+          <div className='flex gap-2 items-center'>
+            <Bell size={20} className='white cursor-pointer' />
+            <div className='w-12 h-12 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
+              {user ? (
+                <User
+                  size={20}
+                  className='text-rose-500 cursor-pointer'
+                  onClick={() => router.push('/auth/login')}
+                />
+              ) : (
+                <User
+                  size={20}
+                  className='text-emerald-500 cursor-pointer'
+                  onClick={() => router.push('/auth/login')}
+                />
+              )}
+            </div>
           </div>
         </header>
 
@@ -544,7 +527,7 @@ export default function MyRamadhanHome() {
                     {hero.timeLeft}
                   </h2>
                 ) : (
-                  <h2 className='text-[2.2rem] font-black bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-tight mt-4'>
+                  <h2 className='text-[2rem] font-black bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-tight mt-4'>
                     {hero.label}
                   </h2>
                 )}
@@ -805,16 +788,6 @@ export default function MyRamadhanHome() {
         onClose={() => setIsScheduleOpen(false)}
         onUpdate={fetchPrayerTimes}
       />
-
-      <p className='w-full text-center text-sm text-[#1e3a8a] dark:text-blue-400 pt-16'>
-        By @mocheeseky for every muslim 🤍
-      </p>
-      <p className='w-full text-center text-sm text-[#1e3a8a] dark:text-blue-400 pt-1'>
-        Partnership hit{' '}
-        <a href='mailto:rifky.muhammadprayudhi@gmail.com' className='underline'>
-          rifky.muhammadprayudhi@gmail.com
-        </a>
-      </p>
     </main>
   );
 }
