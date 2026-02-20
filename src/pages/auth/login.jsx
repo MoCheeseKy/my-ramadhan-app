@@ -1,39 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import {
-  Moon,
-  ShieldAlert,
-  ArrowRight,
-  Smartphone,
-  Download,
-  ShieldCheck,
-} from 'lucide-react';
+import { Moon, ShieldAlert, ArrowRight, ShieldCheck } from 'lucide-react';
 import useAppMode from '@/hook/useAppMode';
-import useInstallPrompt from '@/hook/useInstallPrompt'; // <-- TAMBAHAN: Import Hook Install
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [code, setCode] = useState('');
-  const [step, setStep] = useState('choice');
+  const [step, setStep] = useState('loading');
   const [userData, setUserData] = useState(null);
   const router = useRouter();
 
   const { isPWA } = useAppMode();
 
-  // <-- TAMBAHAN: Ambil status bisa install atau tidak
-  const { isInstallable, promptInstall, isIOS } = useInstallPrompt();
-
+  // Efek penentuan halaman awal saat dibuka
   useEffect(() => {
+    // Jika user punya data lokal, dia tetap bisa buka login kalau sengaja nge-klik,
+    // tapi kita berikan notice jika dia pakai PWA.
     if (isPWA) {
-      router.replace('/');
-      return;
+      setStep('pwa_notice');
+    } else {
+      setStep('choice');
     }
-
-    const localUser = localStorage.getItem('myRamadhan_user');
-    if (localUser) {
-      router.replace('/');
-    }
-  }, [isPWA, router]);
+  }, [isPWA]);
 
   const handleRegister = async () => {
     if (!username) return;
@@ -69,10 +57,12 @@ export default function Login() {
     router.push('/');
   };
 
-  if (isPWA)
+  // Mencegah kedipan UI saat loading status PWA
+  if (step === 'loading') {
     return (
       <div className='min-h-screen bg-[#1e3a8a] flex items-center justify-center' />
     );
+  }
 
   return (
     <div className='min-h-screen bg-[#1e3a8a] text-white relative flex items-center justify-center px-6 overflow-y-auto custom-scrollbar py-10'>
@@ -101,6 +91,45 @@ export default function Login() {
           </p>
         </div>
 
+        {/* ================= PWA NOTICE (KHUSUS MODE PWA) ================= */}
+        {step === 'pwa_notice' && (
+          <div className='space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
+            <div className='bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 text-left relative overflow-hidden shadow-2xl'>
+              <div className='absolute -right-8 -top-8 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none' />
+              <ShieldCheck className='text-emerald-400 mb-4' size={36} />
+              <h3 className='font-bold text-xl mb-2 text-white'>
+                Mode Privat Aktif
+              </h3>
+              <p className='text-sm text-blue-100 mb-6 leading-relaxed'>
+                Anda sedang menggunakan aplikasi ini dalam mode PWA (Offline).
+                Data Anda 100% aman tersimpan di HP ini secara lokal.
+                <br />
+                <br />
+                Anda <strong className='text-white'>
+                  tidak perlu login
+                </strong>{' '}
+                untuk menggunakan aplikasi. Lanjut login hanya jika Anda ingin
+                menyinkronkan data lama Anda.
+              </p>
+
+              <div className='flex gap-3 flex-col sm:flex-row'>
+                <button
+                  onClick={() => router.push('/')}
+                  className='w-full py-3.5 bg-white text-blue-900 rounded-xl font-bold hover:bg-blue-50 transition active:scale-[0.98]'
+                >
+                  Gak usah, Kembali ke Beranda
+                </button>
+                <button
+                  onClick={() => setStep('choice')}
+                  className='w-full py-3.5 border border-white/30 text-white rounded-xl font-bold hover:bg-white/10 transition active:scale-[0.98]'
+                >
+                  Tetap Login
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ================= CHOICE ================= */}
         {step === 'choice' && (
           <div className='space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500'>
@@ -118,73 +147,6 @@ export default function Login() {
             >
               Sudah punya kode unik
             </button>
-
-            {/* ================= BANNER INSTALL APP ================= */}
-            {!isPWA && (isInstallable || isIOS) && (
-              <div className='mt-8 pt-6 border-t border-white/10 text-left animate-in fade-in duration-700'>
-                <div className='bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-5 relative overflow-hidden'>
-                  <div className='absolute -right-6 -top-6 w-24 h-24 bg-blue-400/20 rounded-full blur-2xl' />
-
-                  <h3 className='font-bold text-lg mb-3 flex items-center gap-2'>
-                    <Smartphone size={20} className='text-blue-300' />
-                    Rekomendasi: Install Aplikasi
-                  </h3>
-
-                  <ul className='text-xs text-blue-100 space-y-2.5 mb-5 font-medium'>
-                    <li className='flex items-start gap-2'>
-                      <ShieldCheck
-                        size={16}
-                        className='shrink-0 text-emerald-400'
-                      />
-                      <span>
-                        <strong className='text-white'>100% Privat:</strong>{' '}
-                        Data Jurnal & Haid disimpan aman di dalam HP-mu, bukan
-                        di server.
-                      </span>
-                    </li>
-                    <li className='flex items-start gap-2'>
-                      <ShieldCheck
-                        size={16}
-                        className='shrink-0 text-emerald-400'
-                      />
-                      <span>
-                        <strong className='text-white'>Tanpa Login:</strong>{' '}
-                        Langsung masuk tanpa perlu menghafal Personal Code.
-                      </span>
-                    </li>
-                    <li className='flex items-start gap-2'>
-                      <ShieldCheck
-                        size={16}
-                        className='shrink-0 text-emerald-400'
-                      />
-                      <span>
-                        <strong className='text-white'>Super Cepat:</strong>{' '}
-                        Menghemat kuota dan bisa diakses secara offline.
-                      </span>
-                    </li>
-                  </ul>
-
-                  {/* Tombol Android/Chrome vs Teks Panduan iOS */}
-                  {isInstallable ? (
-                    <button
-                      onClick={promptInstall}
-                      className='w-full py-3.5 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-bold flex justify-center items-center gap-2 transition-all shadow-lg active:scale-[0.98]'
-                    >
-                      <Download size={18} /> Install ke Layar Utama
-                    </button>
-                  ) : isIOS ? (
-                    <div className='p-3 bg-blue-950/50 rounded-xl text-[11px] text-blue-200 text-center border border-blue-400/20'>
-                      <p>Untuk pengguna iPhone/iPad:</p>
-                      <p className='font-bold mt-1 text-white flex items-center justify-center gap-1'>
-                        Tekan ikon Share{' '}
-                        <span className='text-lg align-bottom mb-1'>⍐</span>{' '}
-                        lalu "Add to Home Screen"
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            )}
           </div>
         )}
 

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   LogOut,
@@ -22,18 +23,72 @@ import {
   Instagram,
   Mail,
   X,
-  Heart,
   Edit3,
   Camera,
   Loader2,
   KeyRound,
+  Database,
+  Download,
+  Upload,
+  LogIn,
+  Search,
+  MessageSquare,
+  AlertTriangle,
+  ChevronDown,
+  CheckCircle2,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import useUser from '@/hook/useUser';
 
-// --- TAMBAHAN: Import Hook dan StorageService ---
 import useAppMode from '@/hook/useAppMode';
 import { StorageService } from '@/lib/storageService';
+
+// --- DAFTAR KOTA (Sama persis seperti ScheduleDrawer) ---
+const CITIES = [
+  'Ambon',
+  'Balikpapan',
+  'Banda Aceh',
+  'Bandar Lampung',
+  'Bandung',
+  'Banjarmasin',
+  'Batam',
+  'Bekasi',
+  'Bengkulu',
+  'Bogor',
+  'Cirebon',
+  'Denpasar',
+  'Depok',
+  'Gorontalo',
+  'Jakarta',
+  'Jambi',
+  'Jayapura',
+  'Kendari',
+  'Kupang',
+  'Madiun',
+  'Magelang',
+  'Makassar',
+  'Malang',
+  'Manado',
+  'Mataram',
+  'Medan',
+  'Padang',
+  'Palangkaraya',
+  'Palembang',
+  'Palu',
+  'Pangkalpinang',
+  'Pekanbaru',
+  'Pontianak',
+  'Samarinda',
+  'Semarang',
+  'Serang',
+  'Surabaya',
+  'Surakarta',
+  'Tangerang',
+  'Tanjungpinang',
+  'Tarakan',
+  'Ternate',
+  'Yogyakarta',
+];
 
 // ─── KOMPONEN BOTTOM SHEET DRAWER ──────────────────────────────────────────────
 function DrawerPanel({
@@ -97,8 +152,6 @@ function DrawerPanel({
 // ─── HALAMAN UTAMA USER PROFILE ───────────────────────────────────────────────
 export default function UserProfile() {
   const router = useRouter();
-
-  // --- TAMBAHAN: Gunakan hooks ---
   const { user, loading } = useUser();
   const { isPWA } = useAppMode();
 
@@ -111,10 +164,16 @@ export default function UserProfile() {
     avatar: null,
   });
 
+  // --- STATE EDIT PROFILE & PILIH KOTA ---
   const [editName, setEditName] = useState('');
+  const [editLocation, setEditLocation] = useState('');
+  const [isCityPickerOpen, setIsCityPickerOpen] = useState(false);
+  const [searchCityTerm, setSearchCityTerm] = useState('');
+
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef(null);
+  const importFileRef = useRef(null);
 
   const [activeDrawer, setActiveDrawer] = useState(null);
 
@@ -126,18 +185,19 @@ export default function UserProfile() {
     return `${firstTwo}${masked}${lastOne}`;
   };
 
-  // --- PERUBAHAN: Mengambil data profil via StorageService ---
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const data = await StorageService.getProfile(user.personal_code, isPWA);
-
         if (data) {
           setTheme(data.app_theme || localStorage.getItem('theme') || 'light');
 
           const cityFromDB = data.location_city;
           const cityFromLocal = localStorage.getItem('user_city');
-          setLocationName(cityFromDB || cityFromLocal || 'Lokasi belum diatur');
+          const finalCity = cityFromDB || cityFromLocal || 'Jakarta';
+
+          setLocationName(finalCity);
+          setEditLocation(finalCity);
 
           const userName =
             data.username ||
@@ -156,9 +216,9 @@ export default function UserProfile() {
         }
       } catch (err) {
         console.error('Gagal mengambil data profil:', err);
-        setLocationName(
-          localStorage.getItem('user_city') || 'Lokasi belum diatur',
-        );
+        const fbCity = localStorage.getItem('user_city') || 'Jakarta';
+        setLocationName(fbCity);
+        setEditLocation(fbCity);
       }
     };
 
@@ -167,23 +227,16 @@ export default function UserProfile() {
         fetchUserProfile();
       } else {
         setTheme(localStorage.getItem('theme') || 'light');
-        setLocationName(
-          localStorage.getItem('user_city') || 'Lokasi belum diatur',
-        );
+        setLocationName(localStorage.getItem('user_city') || 'Jakarta');
       }
     }
   }, [user, loading, isPWA]);
 
-  // --- PERUBAHAN: Simpan preferensi tema via StorageService ---
   const toggleTheme = async (newTheme) => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    if (newTheme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
 
     if (user) {
       await StorageService.saveProfile(
@@ -192,22 +245,17 @@ export default function UserProfile() {
         isPWA,
       );
     }
-
     setActiveDrawer(null);
   };
 
-  // --- PERUBAHAN: Logika Upload (Cloud Supabase vs Lokal Base64) ---
   const handleUploadPhoto = async (e) => {
     if (!e.target.files || e.target.files.length === 0 || !user) return;
-
     const file = e.target.files[0];
     setIsUploading(true);
 
     try {
       let publicUrl = null;
-
       if (isPWA) {
-        // MODE LOKAL: Ubah gambar menjadi text (Base64) agar bisa disimpan di IndexedDB
         const reader = new FileReader();
         reader.readAsDataURL(file);
         await new Promise((resolve, reject) => {
@@ -218,14 +266,12 @@ export default function UserProfile() {
           reader.onerror = (err) => reject(err);
         });
       } else {
-        // MODE WEB: Upload ke Supabase
         const fileExt = file.name.split('.').pop();
         const fileName = `${user.personal_code}-${Math.random()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, file);
         if (uploadError) throw uploadError;
-
         const { data: publicUrlData } = supabase.storage
           .from('avatars')
           .getPublicUrl(fileName);
@@ -245,18 +291,28 @@ export default function UserProfile() {
     }
   };
 
-  // --- PERUBAHAN: Simpan username via StorageService ---
   const handleSaveProfile = async () => {
     if (!user) return alert('Silakan login terlebih dahulu!');
     setIsSaving(true);
     try {
       await StorageService.saveProfile(
         user.personal_code,
-        { username: editName },
+        { username: editName, location_city: editLocation },
         isPWA,
       );
+      localStorage.setItem('user_city', editLocation);
+
       setProfileData((prev) => ({ ...prev, name: editName }));
+      setLocationName(editLocation);
       setActiveDrawer(null);
+
+      if (
+        window.confirm(
+          'Profil disimpan! Halaman akan direfresh untuk memperbarui Jadwal Sholat.',
+        )
+      ) {
+        window.location.reload();
+      }
     } catch (error) {
       alert('Gagal menyimpan profil.');
     } finally {
@@ -264,28 +320,79 @@ export default function UserProfile() {
     }
   };
 
-  // --- PERUBAHAN: Logout membedakan PWA dan Web ---
-  const handleLogout = async () => {
-    const confirm = window.confirm('Apakah Anda yakin ingin keluar?');
-    if (!confirm) return;
+  // Filter kota untuk dropdown
+  const filteredCities = CITIES.filter((city) =>
+    city.toLowerCase().includes(searchCityTerm.toLowerCase()),
+  );
 
+  // --- LOGIKA EXPORT & IMPORT DATA ---
+  const handleExportData = () => {
+    const dataToExport = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        (key.startsWith('myRamadhan_') ||
+          [
+            'ramadhan_tracker',
+            'daily_journal',
+            'haid_tracker',
+            'user_city',
+            'theme',
+          ].includes(key))
+      ) {
+        dataToExport[key] = localStorage.getItem(key);
+      }
+    }
+
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(dataToExport));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute('href', dataStr);
+    downloadAnchorNode.setAttribute(
+      'download',
+      `myramadhan_backup_${new Date().getTime()}.json`,
+    );
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    setActiveDrawer(null);
+  };
+
+  const handleImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedData = JSON.parse(event.target.result);
+        Object.keys(importedData).forEach((key) => {
+          localStorage.setItem(key, importedData[key]);
+        });
+        alert('Data berhasil diimpor! Halaman akan dimuat ulang.');
+        window.location.reload();
+      } catch (err) {
+        alert(
+          'Format file tidak valid. Pastikan Anda mengunggah file backup MyRamadhan yang benar.',
+        );
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // --- LOGIKA EKSEKUSI LOGOUT ---
+  const executeLogout = async () => {
     if (!isPWA && user) await supabase.auth.signOut();
     localStorage.removeItem('myRamadhan_user');
 
-    if (!isPWA) {
-      router.push('/auth/login');
-    } else {
-      window.location.reload();
-    }
+    if (!isPWA) router.push('/auth/login');
+    else window.location.reload();
   };
 
-  // --- PERUBAHAN: Reset data via StorageService ---
-  const handleResetData = async () => {
-    const confirm = window.confirm(
-      'PERINGATAN!\n\nApakah Anda yakin ingin MENGHAPUS SEMUA DATA progres Anda?',
-    );
-    if (!confirm) return;
-
+  // --- LOGIKA EKSEKUSI RESET DATA ---
+  const executeResetData = async () => {
     const keysToRemove = [
       'myRamadhan_quran_bookmarks',
       'myRamadhan_quran_lastread',
@@ -303,10 +410,7 @@ export default function UserProfile() {
     ];
     keysToRemove.forEach((key) => localStorage.removeItem(key));
 
-    if (user) {
-      await StorageService.clearAllData(user.personal_code, isPWA);
-    }
-    alert('Semua data progres berhasil direset.');
+    if (user) await StorageService.clearAllData(user.personal_code, isPWA);
     router.reload();
   };
 
@@ -342,14 +446,12 @@ export default function UserProfile() {
         <div className='bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-5 relative transition-colors duration-300'>
           <button
             onClick={() =>
-              user
-                ? setActiveDrawer('edit_profil')
-                : alert('Silakan login untuk mengubah profil.')
+              user ? setActiveDrawer('edit_profil') : router.push('/auth/login')
             }
             className='absolute top-4 right-4 p-2 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 hover:text-[#1e3a8a] dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-full transition-colors'
-            title='Edit Profil'
+            title={user ? 'Edit Profil' : 'Login'}
           >
-            <Edit3 size={16} />
+            {user ? <Edit3 size={16} /> : <LogIn size={16} />}
           </button>
 
           <div className='w-20 h-20 bg-gradient-to-tr from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 rounded-full flex items-center justify-center text-[#1e3a8a] dark:text-blue-400 shadow-inner shrink-0 relative overflow-hidden'>
@@ -415,7 +517,24 @@ export default function UserProfile() {
               </div>
             </button>
             <button
-              onClick={handleResetData}
+              onClick={() => setActiveDrawer('data_management')}
+              className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
+            >
+              <div className='flex items-center gap-3'>
+                <div className='p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400'>
+                  <Database size={18} />
+                </div>
+                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
+                  Manajemen Data
+                </span>
+              </div>
+              <ChevronRight
+                size={16}
+                className='text-slate-300 dark:text-slate-600'
+              />
+            </button>
+            <button
+              onClick={() => setActiveDrawer('confirm_reset')}
               className='w-full flex items-center justify-between p-4 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors group'
             >
               <div className='flex items-center gap-3'>
@@ -492,6 +611,23 @@ export default function UserProfile() {
               />
             </button>
             <button
+              onClick={() => window.open('', '_blank')}
+              className='w-full flex items-center justify-between p-4 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors border-b border-slate-50 dark:border-slate-800 group'
+            >
+              <div className='flex items-center gap-3'>
+                <div className='p-2 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors'>
+                  <MessageSquare size={18} />
+                </div>
+                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-teal-600 dark:group-hover:text-teal-400'>
+                  Kirim Feedback
+                </span>
+              </div>
+              <ChevronRight
+                size={16}
+                className='text-slate-300 dark:text-slate-600'
+              />
+            </button>
+            <button
               onClick={() => setActiveDrawer('donasi')}
               className='w-full flex items-center justify-between p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-colors group'
             >
@@ -531,12 +667,10 @@ export default function UserProfile() {
                 <p className='text-xs text-slate-400'>Software Engineer</p>
               </div>
             </div>
-
             <p className='text-[13px] text-slate-300 leading-relaxed mb-5'>
               Dibuat dengan sepenuh hati untuk membantu ibadah umat Muslim,
               khususnya di bulan suci Ramadhan.
             </p>
-
             <div className='flex items-center gap-3'>
               <a
                 href='https://github.com/MoCheeseKy'
@@ -572,18 +706,25 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* ── LOGOUT BUTTON ── */}
-        {user && (
+        {/* ── LOGIN / LOGOUT BUTTON ── */}
+        {user ? (
           <button
-            onClick={handleLogout}
+            onClick={() => setActiveDrawer('confirm_logout')}
             className='w-full mt-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-rose-500 dark:text-rose-400 font-bold rounded-2xl shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:border-rose-200 dark:hover:border-rose-800 transition-all flex items-center justify-center gap-2'
           >
             <LogOut size={18} /> Keluar Akun
           </button>
+        ) : (
+          <button
+            onClick={() => router.push('/auth/login')}
+            className='w-full mt-4 py-4 bg-[#1e3a8a] text-white font-bold rounded-2xl shadow-md hover:bg-blue-800 transition-all flex items-center justify-center gap-2'
+          >
+            <LogIn size={18} /> Login / Daftar Sekarang
+          </button>
         )}
 
         <p className='text-center text-[10px] font-medium text-slate-400 dark:text-slate-600 mt-6 mb-2'>
-          MyRamadhan App v1.0.0 &copy; {new Date().getFullYear()}
+          MyRamadhan App v1.1.0 &copy; {new Date().getFullYear()}
         </p>
       </main>
 
@@ -591,7 +732,80 @@ export default function UserProfile() {
       {/* KUMPULAN DRAWER / POPUP BOTTOM SHEET */}
       {/* ========================================================= */}
 
-      {/* DRAWER: EDIT PROFIL */}
+      {/* DRAWER: KONFIRMASI RESET DATA */}
+      <DrawerPanel
+        open={activeDrawer === 'confirm_reset'}
+        onClose={() => setActiveDrawer(null)}
+        title='Reset Semua Data'
+        icon={AlertTriangle}
+        titleColor='text-rose-600 dark:text-rose-400'
+        hideFooterButton
+      >
+        <div className='flex flex-col items-center text-center mt-2'>
+          <div className='w-16 h-16 bg-rose-100 dark:bg-rose-900/40 text-rose-500 flex items-center justify-center rounded-full mb-4'>
+            <Trash2 size={32} />
+          </div>
+          <p className='text-sm text-slate-600 dark:text-slate-300 leading-relaxed px-2'>
+            <strong>PERINGATAN!</strong> Apakah Anda yakin ingin menghapus semua
+            data progres ibadah, jurnal, dan preferensi Anda? <br />
+            <br />
+            <span className='text-rose-600 dark:text-rose-400 font-semibold'>
+              Tindakan ini permanen dan data tidak dapat dikembalikan.
+            </span>
+          </p>
+          <div className='flex gap-3 w-full mt-6'>
+            <button
+              onClick={() => setActiveDrawer(null)}
+              className='flex-1 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors'
+            >
+              Batal
+            </button>
+            <button
+              onClick={executeResetData}
+              className='flex-1 py-3.5 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors shadow-md'
+            >
+              Ya, Hapus Semua
+            </button>
+          </div>
+        </div>
+      </DrawerPanel>
+
+      {/* DRAWER: KONFIRMASI LOGOUT */}
+      <DrawerPanel
+        open={activeDrawer === 'confirm_logout'}
+        onClose={() => setActiveDrawer(null)}
+        title='Keluar Akun'
+        icon={LogOut}
+        titleColor='text-rose-500 dark:text-rose-400'
+        hideFooterButton
+      >
+        <div className='flex flex-col items-center text-center mt-2'>
+          <div className='w-16 h-16 bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center rounded-full mb-4'>
+            <LogOut size={32} />
+          </div>
+          <p className='text-sm text-slate-600 dark:text-slate-300 leading-relaxed px-2'>
+            Apakah Anda yakin ingin keluar dari akun ini? Anda harus memasukkan{' '}
+            <strong>Personal Code</strong> lagi untuk dapat mengakses data Anda
+            nanti.
+          </p>
+          <div className='flex gap-3 w-full mt-6'>
+            <button
+              onClick={() => setActiveDrawer(null)}
+              className='flex-1 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors'
+            >
+              Batal
+            </button>
+            <button
+              onClick={executeLogout}
+              className='flex-1 py-3.5 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 transition-colors shadow-md'
+            >
+              Ya, Keluar
+            </button>
+          </div>
+        </div>
+      </DrawerPanel>
+
+      {/* DRAWER: EDIT PROFIL & LOKASI */}
       <DrawerPanel
         open={activeDrawer === 'edit_profil'}
         onClose={() => setActiveDrawer(null)}
@@ -621,7 +835,6 @@ export default function UserProfile() {
               </div>
             )}
           </div>
-
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
@@ -639,7 +852,7 @@ export default function UserProfile() {
           />
         </div>
 
-        <div className='space-y-4'>
+        <div className='space-y-4 pb-4'>
           <div>
             <label className='text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block'>
               Username
@@ -652,13 +865,147 @@ export default function UserProfile() {
               placeholder='Masukkan nama pengguna'
             />
           </div>
+
+          {/* PILIH KOTA DROPDOWN STYLE */}
+          <div>
+            <label className='text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block'>
+              Lokasi Kota (Untuk Jadwal Sholat)
+            </label>
+            <button
+              onClick={() => setIsCityPickerOpen(!isCityPickerOpen)}
+              className={`w-full flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border transition-all ${isCityPickerOpen ? 'border-[#1e3a8a] dark:border-blue-500 ring-2 ring-blue-500/20' : 'border-slate-200 dark:border-slate-700'}`}
+            >
+              <div className='flex items-center gap-3 text-left'>
+                <MapPin
+                  size={18}
+                  className='text-slate-500 dark:text-slate-400'
+                />
+                <span className='font-semibold text-sm text-slate-800 dark:text-slate-100'>
+                  {editLocation || 'Pilih Kota'}
+                </span>
+              </div>
+              <ChevronDown
+                size={18}
+                className={`text-slate-400 transition-transform ${isCityPickerOpen ? 'rotate-180 text-[#1e3a8a] dark:text-blue-400' : ''}`}
+              />
+            </button>
+
+            <AnimatePresence>
+              {isCityPickerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                  animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
+                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                  className='overflow-hidden'
+                >
+                  <div className='bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm'>
+                    <div className='relative mb-2'>
+                      <Search
+                        size={14}
+                        className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400'
+                      />
+                      <input
+                        type='text'
+                        placeholder='Cari kota...'
+                        value={searchCityTerm}
+                        onChange={(e) => setSearchCityTerm(e.target.value)}
+                        className='w-full pl-9 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#1e3a8a] dark:focus:ring-blue-500'
+                      />
+                    </div>
+                    <div className='max-h-40 overflow-y-auto space-y-1 pr-1 custom-scrollbar'>
+                      {filteredCities.length > 0 ? (
+                        filteredCities.map((city) => (
+                          <button
+                            key={city}
+                            onClick={() => {
+                              setEditLocation(city);
+                              setIsCityPickerOpen(false);
+                              setSearchCityTerm('');
+                            }}
+                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-all ${editLocation === city ? 'bg-blue-50 dark:bg-blue-900/40 text-[#1e3a8a] dark:text-blue-400' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`}
+                          >
+                            {city}
+                            {editLocation === city && (
+                              <CheckCircle2
+                                size={16}
+                                className='text-[#1e3a8a] dark:text-blue-400'
+                              />
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <p className='text-center text-xs text-slate-400 py-3'>
+                          Kota tidak ditemukan
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           <button
             onClick={handleSaveProfile}
             disabled={isSaving || !editName.trim()}
-            className='w-full py-3.5 bg-[#1e3a8a] dark:bg-blue-700 text-white font-bold rounded-xl hover:bg-[#162d6e] dark:hover:bg-blue-600 transition-colors disabled:opacity-50'
+            className='w-full py-3.5 mt-4 bg-[#1e3a8a] dark:bg-blue-700 text-white font-bold rounded-xl hover:bg-[#162d6e] dark:hover:bg-blue-600 transition-colors disabled:opacity-50'
           >
-            {isSaving ? 'Menyimpan...' : 'Simpan Profil'}
+            {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </button>
+        </div>
+      </DrawerPanel>
+
+      {/* DRAWER: MANAJEMEN DATA (EXPORT/IMPORT) */}
+      <DrawerPanel
+        open={activeDrawer === 'data_management'}
+        onClose={() => setActiveDrawer(null)}
+        title='Manajemen Data'
+        icon={Database}
+        titleColor='text-indigo-600 dark:text-indigo-400'
+      >
+        <p className='text-slate-500 dark:text-slate-400 mb-5'>
+          Pindahkan data Jurnal, Tracker, dan preferensi Anda jika ingin
+          berpindah perangkat atau beralih ke Mode PWA secara offline.
+        </p>
+
+        <div className='space-y-4'>
+          <div className='bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-800/50'>
+            <h4 className='font-bold text-sm text-indigo-800 dark:text-indigo-300 mb-1 flex items-center gap-2'>
+              <Download size={16} /> Export (Backup) Data
+            </h4>
+            <p className='text-xs text-indigo-600/80 dark:text-indigo-400/80 mb-3'>
+              Unduh semua progres dan data lokal Anda ke dalam file `.json`.
+            </p>
+            <button
+              onClick={handleExportData}
+              className='w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors'
+            >
+              Unduh Backup Sekarang
+            </button>
+          </div>
+
+          <div className='bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50'>
+            <h4 className='font-bold text-sm text-emerald-800 dark:text-emerald-300 mb-1 flex items-center gap-2'>
+              <Upload size={16} /> Import (Restore) Data
+            </h4>
+            <p className='text-xs text-emerald-600/80 dark:text-emerald-400/80 mb-3'>
+              Punya file backup? Unggah di sini untuk memulihkan semua data
+              Anda.
+            </p>
+            <input
+              type='file'
+              accept='.json'
+              ref={importFileRef}
+              onChange={handleImportData}
+              className='hidden'
+            />
+            <button
+              onClick={() => importFileRef.current?.click()}
+              className='w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition-colors'
+            >
+              Pilih File Backup
+            </button>
+          </div>
         </div>
       </DrawerPanel>
 
@@ -699,31 +1046,36 @@ export default function UserProfile() {
         icon={HelpCircle}
         titleColor='text-blue-500 dark:text-blue-400'
       >
-        <div className='space-y-6'>
+        <div className='space-y-4'>
           <div className='bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl'>
             <h4 className='font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2'>
-              <span className='text-blue-500 dark:text-blue-400 font-black'>
-                Q.
-              </span>{' '}
-              Bagaimana cara menyimpan progres?
+              <span className='text-blue-500 font-black'>Q.</span> Kenapa harus
+              pakai versi Aplikasi (PWA)?
             </h4>
             <p className='text-[13px] mt-1.5'>
-              Seluruh progres ibadah akan disimpan secara otomatis. Jika Anda
-              login, data akan aman tersimpan di <i>cloud database</i>. Saat
-              diakses via PWA, data tersimpan aman di memori HP Anda.
+              Versi PWA menyimpan Jurnal dan Tracker 100% secara offline di
+              memori HP Anda. Ini membuatnya jauh lebih cepat, privat, dan hemat
+              kuota dibanding versi Web.
             </p>
           </div>
           <div className='bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl'>
             <h4 className='font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2'>
-              <span className='text-blue-500 dark:text-blue-400 font-black'>
-                Q.
-              </span>{' '}
-              Apakah aplikasi web ini bisa offline?
+              <span className='text-blue-500 font-black'>Q.</span> Kenapa lokasi
+              sholat saya salah?
             </h4>
             <p className='text-[13px] mt-1.5'>
-              Saat ini, website masih membutuhkan koneksi internet untuk memuat
-              data Al-Qur'an dan Doa. Namun kami menyimpan progres seperti
-              Tracker di <i>cache</i> perangkat agar sangat hemat kuota.
+              Anda bisa mengubah lokasi kota secara manual melalui tombol "Edit
+              Profil" yang ada di bagian atas halaman ini.
+            </p>
+          </div>
+          <div className='bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl'>
+            <h4 className='font-bold text-slate-800 dark:text-slate-100 mb-1 flex items-center gap-2'>
+              <span className='text-blue-500 font-black'>Q.</span> Bagaimana
+              cara pindah HP tanpa hilang data?
+            </h4>
+            <p className='text-[13px] mt-1.5'>
+              Gunakan fitur "Manajemen Data" untuk meng-ekspor data Anda menjadi
+              file Backup, lalu impor file tersebut di HP Anda yang baru.
             </p>
           </div>
         </div>
@@ -738,19 +1090,19 @@ export default function UserProfile() {
         titleColor='text-emerald-500 dark:text-emerald-400'
       >
         <div className='space-y-4'>
-          <p>Kenyamanan dan privasi Anda adalah prioritas utama kami:</p>
+          <p>Kenyamanan dan privasi Anda adalah prioritas mutlak kami:</p>
           <div className='flex gap-3 items-start'>
             <div className='w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-1'>
               1
             </div>
             <div>
               <h4 className='font-bold text-slate-800 dark:text-slate-100'>
-                Penyimpanan Transparan
+                Mode Privat 100% (PWA)
               </h4>
               <p className='text-[13px] mt-0.5'>
-                Saat Anda menginstal aplikasi ini (PWA mode), semua data ibadah
-                dan privasi (seperti Jurnal dan Haid Tracker) disimpan 100% di
-                memori perangkat Anda.
+                Saat diinstal sebagai aplikasi, semua tulisan Jurnal yang
+                sensitif dan catatan Tracker hanya akan disimpan secara lokal di
+                HP Anda. Kami tidak bisa melihat atau membacanya.
               </p>
             </div>
           </div>
@@ -760,12 +1112,26 @@ export default function UserProfile() {
             </div>
             <div>
               <h4 className='font-bold text-slate-800 dark:text-slate-100'>
-                Keamanan Data
+                Keamanan Data Web
               </h4>
               <p className='text-[13px] mt-0.5'>
-                Saat menggunakan web browser dan <i>Personal Code</i>, data
-                preferensi ibadah disimpan di database ber-enkripsi tinggi agar
-                progres tidak hilang antar perangkat.
+                Jika Anda menggunakan versi Web dengan login *Personal Code*,
+                preferensi Anda akan disimpan di database Cloud ber-enkripsi
+                standar industri.
+              </p>
+            </div>
+          </div>
+          <div className='flex gap-3 items-start'>
+            <div className='w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-1'>
+              3
+            </div>
+            <div>
+              <h4 className='font-bold text-slate-800 dark:text-slate-100'>
+                Tanpa Jual Beli Data
+              </h4>
+              <p className='text-[13px] mt-0.5'>
+                Aplikasi ini tidak memiliki iklan pelacak dan kami tidak akan
+                pernah menjual data personal Anda kepada pihak ketiga mana pun.
               </p>
             </div>
           </div>
@@ -788,13 +1154,18 @@ export default function UserProfile() {
             MyRamadhan
           </h3>
           <p className='text-xs text-slate-400 dark:text-slate-500 font-bold tracking-widest uppercase mt-1'>
-            Version 1.0.0
+            Version 1.1.0 (PWA Ready)
           </p>
         </div>
-        <p className='mb-3'>
-          <strong>MyRamadhan</strong> adalah inisiatif independen yang lahir
-          dari keinginan untuk memiliki asisten ibadah digital yang bersih,
-          ringan, dan modern.
+        <p className='mb-3 text-[13px] leading-relaxed'>
+          <strong>MyRamadhan</strong> adalah inisiatif independen yang dibangun
+          untuk menjadi "Asisten Ibadah Personal" Anda. Aplikasi ini dirancang
+          seringan mungkin, bebas dari iklan yang mengganggu, dan mengedepankan
+          pendekatan *Privacy-First* (privasi utama).
+        </p>
+        <p className='text-[13px] leading-relaxed'>
+          Semoga aplikasi ini dapat menjadi teman yang baik dalam meraih pahala
+          maksimal selama bulan suci Ramadhan maupun di bulan-bulan lainnya.
         </p>
       </DrawerPanel>
 
@@ -813,7 +1184,6 @@ export default function UserProfile() {
             Assalamu'alaikum!
           </h3>
         </div>
-
         <div className='space-y-3 mb-6'>
           <p>
             Aplikasi <strong>MyRamadhan</strong> ini saya bangun secara mandiri
@@ -821,12 +1191,11 @@ export default function UserProfile() {
             <strong>gratis dan bebas dari iklan</strong>.
           </p>
           <p>
-            Kalau aplikasi ini ngebantu ibadah, hafalan, atau nemenin Ramadhan
-            kamu jadi lebih bermakna, kamu bisa traktir kopi sebagai bentuk
-            support kecil biar saya semakin semangat ngembanginnya.
+            Kalau aplikasi ini ngebantu ibadah dan nemenin Ramadhan kamu jadi
+            lebih bermakna, kamu bisa traktir kopi biar saya semakin semangat
+            ngerawatnya!
           </p>
         </div>
-
         <div className='bg-slate-50 dark:bg-slate-800/60 p-4 rounded-3xl border border-slate-100 dark:border-slate-700'>
           <p className='text-xs font-bold text-center text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-3'>
             Scan QRIS di Bawah Ini

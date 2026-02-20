@@ -1,6 +1,7 @@
 import '@/styles/globals.css';
 import { useEffect } from 'react';
-import SideNav from '@/components/SideNav'; // Import komponen laci navigasi
+import SideNav from '@/components/SideNav';
+import GlobalInstallPrompt from '@/components/GlobalInstallPrompt';
 
 export default function App({ Component, pageProps }) {
   useEffect(() => {
@@ -15,11 +16,9 @@ export default function App({ Component, pageProps }) {
 
   return (
     <>
-      {/* Konten Utama Aplikasi */}
       <Component {...pageProps} />
-
-      {/* Quick Action Navigation Global */}
       <SideNav />
+      <GlobalInstallPrompt />
     </>
   );
 }

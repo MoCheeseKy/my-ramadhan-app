@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
 import useUser from '@/hook/useUser';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { studyMaterials } from '@/data/studyMaterials';
 
-// --- TAMBAHAN: Import StorageService & useAppMode ---
 import useAppMode from '@/hook/useAppMode';
 import { StorageService } from '@/lib/storageService';
 
@@ -33,79 +32,44 @@ import {
   Droplets,
   HandCoins,
   Bell,
-  X,
   User,
 } from 'lucide-react';
 
 import TrackerDrawer from '@/components/TrackerDrawer';
 import ScheduleDrawer from '@/components/ScheduleDrawer';
+import NotificationDrawer from '@/components/NotificationDrawer'; // <-- Komponen Notifikasi Baru
+import { getNotificationForDay } from '@/data/notificationsData'; // <-- Data Notifikasi Baru
 import { quotesData } from '@/data/quotes';
 
 dayjs.locale('id');
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
-const PRAYER_REMINDERS = [
-  {
-    key: 'Subuh',
-    label: 'Subuh',
-    icon: '🌅',
-    message: 'Waktunya sholat Subuh! Awali hari dengan mengingat Allah 🤍',
-  },
-  {
-    key: 'Dzuhur',
-    label: 'Dzuhur',
-    icon: '☀️',
-    message:
-      'Waktunya sholat Dzuhur! Semangat, masih ada sisa hari yang berkah 💪',
-  },
-  {
-    key: 'Ashar',
-    label: 'Ashar',
-    icon: '🌤️',
-    message: 'Waktunya sholat Ashar! Jangan sampai kelewat ya 🙏',
-  },
-  {
-    key: 'Maghrib',
-    label: 'Maghrib',
-    icon: '🌇',
-    message:
-      'Waktunya sholat Maghrib! Alhamdulillah, puasa hari ini selesai 🎉',
-  },
-  {
-    key: 'Isya',
-    label: 'Isya',
-    icon: '🌙',
-    message: 'Waktunya sholat Isya! Tutup malam dengan ibadah yang indah ✨',
-  },
-];
-
-const getReminderKey = (prayerKey) =>
-  `myRamadhan_reminder_${prayerKey}_${dayjs().format('YYYY-MM-DD')}`;
-
 export default function MyRamadhanHome() {
   const { user } = useUser();
   const router = useRouter();
-
-  // --- TAMBAHAN: Deteksi PWA ---
   const { isPWA } = useAppMode();
 
   const [mounted, setMounted] = useState(false);
   const [currentTime, setCurrentTime] = useState(dayjs());
 
+  // --- STATE LACI (DRAWERS) ---
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
+  // --- STATE DATA ---
   const [taskProgress, setTaskProgress] = useState({ completed: 0, total: 9 });
   const [quoteOfTheDay, setQuoteOfTheDay] = useState(quotesData[0]);
   const [isSpinning, setIsSpinning] = useState(false);
-
   const [prayerTimes, setPrayerTimes] = useState(null);
   const [userCity, setUserCity] = useState('Jakarta');
 
-  const [activeReminder, setActiveReminder] = useState(null);
-  const triggeredRef = useRef(new Set());
+  // --- STATE NOTIFIKASI PINTAR ---
+  const [notifications, setNotifications] = useState([]);
+  const [hasUnreadNotif, setHasUnreadNotif] = useState(false);
 
+  // Jalankan jam detak harian
   useEffect(() => {
     setMounted(true);
     const timer = setInterval(() => setCurrentTime(dayjs()), 1000);
@@ -114,45 +78,105 @@ export default function MyRamadhanHome() {
     return () => clearInterval(timer);
   }, []);
 
-  // --- TAMBAHAN LOGIKA: Fetch Tracker dipanggil ketika data `user` sudah tersedia ---
+  // Fetch Tracker Summary
   useEffect(() => {
-    if (user) {
-      fetchTrackerSummary();
-    }
+    if (user) fetchTrackerSummary();
   }, [user, isPWA]);
 
-  useEffect(() => {
-    if (!prayerTimes || activeReminder) return;
-
-    for (const prayer of PRAYER_REMINDERS) {
-      const timeStr = prayerTimes[prayer.key];
-      if (!timeStr) continue;
-
-      const [h, m] = timeStr.split(':').map(Number);
-      const prayerMoment = dayjs().hour(h).minute(m).second(0);
-      const diffSec = currentTime.diff(prayerMoment, 'second');
-
-      if (diffSec < 0 || diffSec >= 60) continue;
-      if (localStorage.getItem(getReminderKey(prayer.key))) continue;
-      if (triggeredRef.current.has(prayer.key)) continue;
-
-      triggeredRef.current.add(prayer.key);
-      setActiveReminder(prayer);
-      break;
+  // ==========================================
+  // LOGIKA NOTIFIKASI PINTAR (HARIAN & SHOLAT)
+  // ==========================================
+  const getHijriDate = () => {
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+      });
+      const parts = formatter.formatToParts(yesterday);
+      const day = parts.find((p) => p.type === 'day')?.value || '';
+      const month = parts.find((p) => p.type === 'month')?.value || '';
+      const year = parts.find((p) => p.type === 'year')?.value || '';
+      const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+      return `${day} ${monthCapitalized} ${year} H`;
+    } catch {
+      return 'Ramadhan 1447 H';
     }
-  }, [currentTime, prayerTimes, activeReminder]);
-
-  const dismissReminder = () => {
-    if (!activeReminder) return;
-    localStorage.setItem(getReminderKey(activeReminder.key), 'true');
-    setActiveReminder(null);
   };
+
+  const hijriDate = getHijriDate();
+  const hijriDay = parseInt(hijriDate.split(' ')[0], 10);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const dayNum = isNaN(hijriDay) ? 0 : hijriDay;
+    const baseNotifs = getNotificationForDay(dayNum);
+
+    let dynamicNotifs = [];
+    if (prayerTimes) {
+      const prayers = [
+        { key: 'Subuh', label: 'Subuh' },
+        { key: 'Dzuhur', label: 'Dzuhur' },
+        { key: 'Ashar', label: 'Ashar' },
+        { key: 'Maghrib', label: 'Maghrib' },
+        { key: 'Isya', label: 'Isya' },
+      ];
+
+      prayers.forEach((p) => {
+        const timeStr = prayerTimes[p.key];
+        if (timeStr) {
+          const [h, m] = timeStr.split(':').map(Number);
+          const prayerMoment = dayjs().hour(h).minute(m).second(0);
+
+          // Tambahkan notif sholat jika waktu saat ini MELEWATI waktu sholat
+          if (currentTime.isAfter(prayerMoment)) {
+            dynamicNotifs.push({
+              id: `prayer_${p.key}_${dayjs().format('YYYYMMDD')}`,
+              day: dayNum,
+              title: `Waktu ${p.label} Telah Tiba! 🕌`,
+              message: `Udah masuk waktu ${p.label} nih! Jangan lupa sholat ya, dan catat di Tracker.`,
+              type: 'prayer',
+            });
+          }
+        }
+      });
+    }
+
+    // Gabungkan: Notif Sholat ditaruh paling atas, Notif Harian di bawahnya
+    const combined = [...dynamicNotifs.reverse(), ...baseNotifs];
+    setNotifications(combined);
+  }, [mounted, prayerTimes, currentTime.hour(), hijriDay]);
+
+  // Cek apakah ada notifikasi yang belum dibaca
+  useEffect(() => {
+    const lastReadCount = parseInt(
+      localStorage.getItem('myRamadhan_notifCount') || '0',
+      10,
+    );
+    if (notifications.length > lastReadCount) {
+      setHasUnreadNotif(true);
+    }
+  }, [notifications]);
+
+  const handleOpenNotification = () => {
+    setIsNotificationOpen(true);
+    setHasUnreadNotif(false);
+    localStorage.setItem(
+      'myRamadhan_notifCount',
+      notifications.length.toString(),
+    );
+  };
+
+  // ==========================================
 
   const fetchPrayerTimes = useCallback(async () => {
     try {
       const localUserStr = localStorage.getItem('myRamadhan_user');
       const localUser = localUserStr ? JSON.parse(localUserStr) : null;
-      // Gunakan localUser city, jika tidak ada fallback ke Jakarta
       const city = localUser?.location_city || 'Jakarta';
       setUserCity(city);
       const res = await fetch(`/api/schedule?city=${encodeURIComponent(city)}`);
@@ -166,21 +190,15 @@ export default function MyRamadhanHome() {
     }
   }, []);
 
-  // --- PERUBAHAN LOGIKA: Menggunakan StorageService ---
   const fetchTrackerSummary = async () => {
     if (!user) return;
-
     try {
       const today = dayjs().format('YYYY-MM-DD');
-
-      // 1. Ambil data user (untuk melihat custom_habits) via StorageService
       const userData = await StorageService.getProfile(
         user.personal_code,
         isPWA,
       );
       const customHabits = userData?.custom_habits || [];
-
-      // 2. Ambil progres hari ini via StorageService
       const data = await StorageService.getDailyTracker(
         user.personal_code,
         today,
@@ -198,7 +216,6 @@ export default function MyRamadhanHome() {
         'quran',
         'sedekah',
       ];
-
       let defaultCompleted = 0;
       let customCompleted = 0;
 
@@ -235,33 +252,10 @@ export default function MyRamadhanHome() {
 
   if (!mounted) return null;
 
-  const getHijriDate = () => {
-    try {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const formatter = new Intl.DateTimeFormat('id-ID-u-ca-islamic-umalqura', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        timeZone: 'Asia/Jakarta',
-      });
-      const parts = formatter.formatToParts(yesterday);
-      const day = parts.find((p) => p.type === 'day')?.value || '';
-      const month = parts.find((p) => p.type === 'month')?.value || '';
-      const year = parts.find((p) => p.type === 'year')?.value || '';
-      const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
-      return `${day} ${monthCapitalized} ${year} H`;
-    } catch {
-      return 'Ramadhan 1447 H';
-    }
-  };
-
-  const hijriDate = getHijriDate();
   const progressPercent =
     taskProgress.total === 0
       ? 0
       : (taskProgress.completed / taskProgress.total) * 100;
-  const hijriDay = parseInt(getHijriDate().split(' ')[0], 10);
   const dailyTopic =
     studyMaterials.find((m) => m.day === hijriDay) || studyMaterials[0];
 
@@ -373,86 +367,6 @@ export default function MyRamadhanHome() {
         <div className='absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-100/50 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-60' />
       </div>
 
-      <AnimatePresence>
-        {activeReminder && (
-          <>
-            <motion.div
-              key='backdrop'
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50'
-              onClick={dismissReminder}
-            />
-            <motion.div
-              key='reminder'
-              initial={{ opacity: 0, y: 80 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 80 }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className='fixed bottom-0 left-0 right-0 z-50 px-4 pb-8'
-            >
-              <div className='max-w-md mx-auto bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800'>
-                <div className='h-1.5 bg-gradient-to-r from-[#1e3a8a] via-indigo-500 to-purple-500' />
-                <div className='p-6'>
-                  <div className='flex items-start justify-between mb-4'>
-                    <div className='flex items-center gap-3'>
-                      <div className='w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1e3a8a] to-indigo-600 flex items-center justify-center text-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50'>
-                        {activeReminder.icon}
-                      </div>
-                      <div>
-                        <p className='text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500'>
-                          Pengingat Sholat
-                        </p>
-                        <p className='font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight'>
-                          Waktu {activeReminder.label}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={dismissReminder}
-                      className='w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors'
-                    >
-                      <X
-                        size={15}
-                        className='text-slate-500 dark:text-slate-400'
-                      />
-                    </button>
-                  </div>
-                  <p className='text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-5'>
-                    {activeReminder.message}
-                  </p>
-                  <div className='bg-slate-50 dark:bg-slate-800 rounded-2xl px-4 py-3 flex items-center justify-between mb-5'>
-                    <div className='flex items-center gap-2'>
-                      <Bell
-                        size={13}
-                        className='text-[#1e3a8a] dark:text-blue-400'
-                      />
-                      <span className='text-xs font-semibold text-slate-500 dark:text-slate-400'>
-                        Waktu sholat {activeReminder.label}
-                      </span>
-                    </div>
-                    <span className='text-sm font-black text-[#1e3a8a] dark:text-blue-400 tabular-nums'>
-                      {prayerTimes?.[activeReminder.key]}
-                    </span>
-                  </div>
-                  <button
-                    onClick={dismissReminder}
-                    className='w-full py-4 rounded-2xl bg-gradient-to-r from-[#1e3a8a] to-indigo-600 text-white font-bold text-sm shadow-lg shadow-indigo-200 dark:shadow-indigo-900/50 hover:opacity-90 active:scale-95 transition-all'
-                  >
-                    Siap, segera sholat! 🙏
-                  </button>
-                  <p className='text-center text-[10px] text-slate-300 dark:text-slate-600 mt-3'>
-                    Pengingat ini tidak akan muncul lagi hari ini
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
       <div className='max-w-md mx-auto p-5'>
         <header className='flex justify-between items-center mb-8 mt-2'>
           <div>
@@ -467,14 +381,25 @@ export default function MyRamadhanHome() {
               👋
             </h1>
           </div>
-          <div className='flex gap-2 items-center'>
-            <Bell size={20} className='white cursor-pointer' />
-            <div className='w-12 h-12 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
+
+          <div className='flex gap-4 items-center'>
+            {/* IKON LONCENG NOTIFIKASI */}
+            <div
+              className='relative cursor-pointer hover:scale-110 transition-transform flex items-center justify-center'
+              onClick={handleOpenNotification}
+            >
+              <Bell size={24} className='text-slate-500 dark:text-slate-400' />
+              {hasUnreadNotif && (
+                <span className='absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full border-2 border-[#F6F9FC] dark:border-slate-950 animate-pulse' />
+              )}
+            </div>
+
+            <div className='w-11 h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
               {user ? (
                 <User
                   size={20}
-                  className='text-rose-500 cursor-pointer'
-                  onClick={() => router.push('/auth/login')}
+                  className='text-[#1e3a8a] dark:text-blue-400 cursor-pointer'
+                  onClick={() => router.push('/user')}
                 />
               ) : (
                 <User
@@ -787,6 +712,13 @@ export default function MyRamadhanHome() {
         isOpen={isScheduleOpen}
         onClose={() => setIsScheduleOpen(false)}
         onUpdate={fetchPrayerTimes}
+      />
+
+      {/* --- LACI NOTIFIKASI BARU --- */}
+      <NotificationDrawer
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        notifications={notifications}
       />
     </main>
   );
