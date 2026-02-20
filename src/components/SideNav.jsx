@@ -14,6 +14,12 @@ import {
   CalendarDays,
   MessageCircle,
   User,
+  List,
+  Pen,
+  Fingerprint,
+  Droplets,
+  ScrollText,
+  Scale,
 } from 'lucide-react';
 
 export default function SideNav() {
@@ -45,6 +51,22 @@ export default function SideNav() {
     ],
     [
       {
+        path: '/tracker-kalender',
+        icon: CalendarDays,
+        label: 'Ramadhan Tracker',
+        activeColor: 'text-orange-500 dark:text-orange-400',
+        bgHover: 'hover:bg-orange-50 dark:hover:bg-orange-900/30',
+      },
+      {
+        path: '/jurnal',
+        icon: Pen,
+        label: 'Jurnal Syukur',
+        activeColor: 'text-teal-600 dark:text-teal-400',
+        bgHover: 'hover:bg-teal-50 dark:hover:bg-teal-900/30',
+      },
+    ],
+    [
+      {
         path: '/quran',
         icon: BookOpen,
         label: "Al-Qur'an",
@@ -60,34 +82,20 @@ export default function SideNav() {
       },
       {
         path: '/hadits',
-        icon: Book,
+        icon: ScrollText,
         label: 'Hadits Pilihan',
         activeColor: 'text-emerald-600 dark:text-emerald-400',
         bgHover: 'hover:bg-emerald-50 dark:hover:bg-emerald-900/30',
       },
+      {
+        path: '/fiqih',
+        icon: Scale,
+        label: 'Fiqih Ramadhan',
+        activeColor: 'text-amber-600 dark:text-amber-400',
+        bgHover: 'hover:bg-amber-50 dark:hover:bg-amber-900/30',
+      },
     ],
     [
-      {
-        path: '/tracker-kalender',
-        icon: CalendarDays,
-        label: 'Ramadhan Tracker',
-        activeColor: 'text-orange-500 dark:text-orange-400',
-        bgHover: 'hover:bg-orange-50 dark:hover:bg-orange-900/30',
-      },
-      {
-        path: '/jurnal',
-        icon: Book,
-        label: 'Jurnal Syukur',
-        activeColor: 'text-teal-600 dark:text-teal-400',
-        bgHover: 'hover:bg-teal-50 dark:hover:bg-teal-900/30',
-      },
-      {
-        path: '/tasbih',
-        icon: Activity,
-        label: 'Tasbih Digital',
-        activeColor: 'text-purple-600 dark:text-purple-400',
-        bgHover: 'hover:bg-purple-50 dark:hover:bg-purple-900/30',
-      },
       {
         path: '/kompas',
         icon: Compass,
@@ -96,8 +104,22 @@ export default function SideNav() {
         bgHover: 'hover:bg-amber-50 dark:hover:bg-amber-900/30',
       },
       {
+        path: '/tasbih',
+        icon: Fingerprint,
+        label: 'Tasbih Digital',
+        activeColor: 'text-purple-600 dark:text-purple-400',
+        bgHover: 'hover:bg-purple-50 dark:hover:bg-purple-900/30',
+      },
+      {
+        path: '/zakat',
+        icon: Fingerprint,
+        label: 'Zakat Digital',
+        activeColor: 'text-yellow-600 dark:text-yellow-400',
+        bgHover: 'hover:bg-yellow-50 dark:hover:bg-yellow-900/30',
+      },
+      {
         path: '/haid-tracker',
-        icon: Activity,
+        icon: Droplets,
         label: 'Haid Tracker',
         activeColor: 'text-pink-500 dark:text-pink-400',
         bgHover: 'hover:bg-pink-50 dark:hover:bg-pink-900/30',
