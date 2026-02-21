@@ -129,8 +129,8 @@ const useUserProfile = (user, isPWA) => {
     }
   };
 
-  const handleSaveProfile = async (onClose) => {
-    if (!user) return alert('Silakan login terlebih dahulu!');
+  const handleSaveProfile = async () => {
+    if (!user) throw new Error('Silakan login terlebih dahulu!');
     setIsSaving(true);
     try {
       await StorageService.saveProfile(
@@ -138,15 +138,21 @@ const useUserProfile = (user, isPWA) => {
         { username: editName, location_city: editLocation },
         isPWA,
       );
+
       localStorage.setItem('user_city', editLocation);
+
+      // Sinkronisasi ke state Home & ScheduleDrawer
+      const localUserStr = localStorage.getItem('myRamadhan_user');
+      const localUserObj = localUserStr ? JSON.parse(localUserStr) : {};
+      localUserObj.location_city = editLocation;
+      localStorage.setItem('myRamadhan_user', JSON.stringify(localUserObj));
+
       setProfileData((prev) => ({ ...prev, name: editName }));
       setLocationName(editLocation);
-      onClose?.();
-      if (window.confirm('Profil disimpan! Halaman akan direfresh.')) {
-        window.location.reload();
-      }
-    } catch {
-      alert('Gagal menyimpan profil.');
+
+      return true; // Beri sinyal sukses ke komponen
+    } catch (error) {
+      throw new Error('Gagal menyimpan profil. Silakan coba lagi.');
     } finally {
       setIsSaving(false);
     }

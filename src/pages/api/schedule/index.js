@@ -50,22 +50,21 @@ export default async function handler(req, res) {
       // Parse tanggal item (Format API: DD-MM-YYYY)
       const itemDate = dayjs(item.date.gregorian.date, 'DD-MM-YYYY');
 
-      // Ambil jika tanggal item SAMA DENGAN atau SETELAH startDate
       if (
         itemDate.isSame(startDate, 'day') ||
         itemDate.isAfter(startDate, 'day')
       ) {
         schedule.push({
-          date: item.date.readable, // Contoh: "19 Feb 2026"
+          date: item.date.readable,
           isoDate: itemDate.toISOString(),
           hijri: `${item.date.hijri.day} ${item.date.hijri.month.en} ${item.date.hijri.year}`,
           timings: {
-            Imsak: item.timings.Imsak.replace(' (WIB)', ''),
-            Subuh: item.timings.Fajr.replace(' (WIB)', ''),
-            Dzuhur: item.timings.Dhuhr.replace(' (WIB)', ''),
-            Ashar: item.timings.Asr.replace(' (WIB)', ''),
-            Maghrib: item.timings.Maghrib.replace(' (WIB)', ''),
-            Isya: item.timings.Isha.replace(' (WIB)', ''),
+            Imsak: item.timings.Imsak.split(' ')[0],
+            Subuh: item.timings.Fajr.split(' ')[0],
+            Dzuhur: item.timings.Dhuhr.split(' ')[0],
+            Ashar: item.timings.Asr.split(' ')[0],
+            Maghrib: item.timings.Maghrib.split(' ')[0],
+            Isya: item.timings.Isha.split(' ')[0],
           },
         });
         count++;

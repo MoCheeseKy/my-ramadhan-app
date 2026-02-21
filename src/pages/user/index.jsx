@@ -179,7 +179,7 @@ export default function UserProfile() {
         isUploading={isUploading}
         isSaving={isSaving}
         onUploadPhoto={handleUploadPhoto}
-        onSaveProfile={() => handleSaveProfile(closeDrawer)}
+        onSaveProfile={handleSaveProfile}
       />
       <DrawerDataManagement
         open={activeDrawer === DRAWERS.DATA_MANAGEMENT}

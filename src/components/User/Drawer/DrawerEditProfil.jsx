@@ -12,6 +12,7 @@ import {
   ChevronDown,
   CheckCircle2,
   User as UserIcon,
+  AlertCircle,
 } from 'lucide-react';
 import DrawerPanel from '@/components/_shared/DrawerPanel';
 import { CITIES } from '@/data/cities';
@@ -29,7 +30,7 @@ import { CITIES } from '@/data/cities';
  * @prop {boolean}  isUploading     - Loading saat upload foto
  * @prop {boolean}  isSaving        - Loading saat simpan profil
  * @prop {Function} onUploadPhoto   - Handler file input foto
- * @prop {Function} onSaveProfile   - Handler simpan profil
+ * @prop {Function} onSaveProfile   - Handler simpan profil (harus me-return Promise yang bisa di catch)
  */
 const DrawerEditProfil = ({
   open,
@@ -47,10 +48,28 @@ const DrawerEditProfil = ({
   const fileInputRef = useRef(null);
   const [isCityPickerOpen, setIsCityPickerOpen] = useState(false);
   const [searchCityTerm, setSearchCityTerm] = useState('');
+  const [alertMsg, setAlertMsg] = useState(null);
 
   const filteredCities = CITIES.filter((city) =>
     city.toLowerCase().includes(searchCityTerm.toLowerCase()),
   );
+
+  const handleFormSubmit = async () => {
+    setAlertMsg(null);
+    try {
+      await onSaveProfile();
+      setAlertMsg({ type: 'success', text: 'Profil berhasil diperbarui!' });
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      setAlertMsg({
+        type: 'error',
+        text: error.message || 'Terjadi kesalahan',
+      });
+    }
+  };
 
   return (
     <DrawerPanel
@@ -100,9 +119,29 @@ const DrawerEditProfil = ({
         />
       </div>
 
-      {/* Form fields */}
       <div className='space-y-4 pb-4'>
-        {/* Input username */}
+        <AnimatePresence>
+          {alertMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className={`p-3.5 rounded-xl flex items-center gap-3 text-sm font-semibold border ${
+                alertMsg.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
+                  : 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800'
+              }`}
+            >
+              {alertMsg.type === 'success' ? (
+                <CheckCircle2 size={18} className='shrink-0' />
+              ) : (
+                <AlertCircle size={18} className='shrink-0' />
+              )}
+              {alertMsg.text}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div>
           <label className='text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block'>
             Username
@@ -116,7 +155,6 @@ const DrawerEditProfil = ({
           />
         </div>
 
-        {/* City picker */}
         <div>
           <label className='text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block'>
             Lokasi Kota (Untuk Jadwal Sholat)
@@ -140,7 +178,6 @@ const DrawerEditProfil = ({
             />
           </button>
 
-          {/* Dropdown kota dengan animasi */}
           <AnimatePresence>
             {isCityPickerOpen && (
               <motion.div
@@ -197,8 +234,10 @@ const DrawerEditProfil = ({
         </div>
 
         <button
-          onClick={onSaveProfile}
-          disabled={isSaving || !editName.trim()}
+          onClick={handleFormSubmit}
+          disabled={
+            isSaving || !editName.trim() || alertMsg?.type === 'success'
+          }
           className='w-full py-3.5 mt-4 bg-[#1e3a8a] dark:bg-blue-700 text-white font-bold rounded-xl hover:bg-[#162d6e] dark:hover:bg-blue-600 transition-colors disabled:opacity-50'
         >
           {isSaving ? 'Menyimpan...' : 'Simpan Perubahan'}
