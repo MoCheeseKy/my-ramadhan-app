@@ -11,11 +11,11 @@ import useQuranStorage from '@/hooks/useQuranStorage';
 import useReaderActions from '@/store/useReaderActions';
 import { JUZ_MAPPING } from '@/data/juzMapping';
 
-import JuzHeader from '@/components/quran/JuzHeader';
-import JuzHeroBanner from '@/components/quran/JuzHeroBanner';
-import SurahSeparator from '@/components/quran/SurahSeparator';
-import AyatCard from '@/components/quran/AyatCard';
-import AudioPlayer from '@/components/quran/AudioPlayer';
+import JuzHeader from '@/components/Quran/JuzHeader';
+import JuzHeroBanner from '@/components/Quran/JuzHeroBanner';
+import SurahSeparator from '@/components/Quran/SurahSeparator';
+import AyatCard from '@/components/Quran/AyatCard';
+import AudioPlayer from '@/components/Quran/AudioPlayer';
 
 export default function JuzReader() {
   const router = useRouter();
