@@ -13,8 +13,8 @@ import {
 } from 'lucide-react';
 import useUser from '@/hooks/useUser';
 import useQuranStorage from '@/hooks/useQuranStorage';
-import LastReadBanner from '@/components/quran/LastReadBanner';
-import BookmarkCard from '@/components/quran/BookmarkCard';
+import LastReadBanner from '@/components/Quran/LastReadBanner';
+import BookmarkCard from '@/components/Quran/BookmarkCard';
 
 /**
  * Tab options untuk navigasi surah / juz.

@@ -2,7 +2,7 @@
 
 import { ArrowLeft, Eye, EyeOff, Settings2, Navigation } from 'lucide-react';
 import { useRouter } from 'next/router';
-import ReaderSettingsPanel from '@/components/quran/ReaderSettingsPanel';
+import ReaderSettingsPanel from '@/components/Quran/ReaderSettingsPanel';
 
 /**
  * SurahHeader — sticky header halaman reader surah.

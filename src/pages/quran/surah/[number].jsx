@@ -10,10 +10,10 @@ import useReaderSettings from '@/store/useReaderSettings';
 import useQuranStorage from '@/hooks/useQuranStorage';
 import useReaderActions from '@/store/useReaderActions';
 
-import SurahHeader from '@/components/quran/SurahHeader';
-import SurahHeroBanner from '@/components/quran/SurahHeroBanner';
-import AyatCard from '@/components/quran/AyatCard';
-import AudioPlayer from '@/components/quran/AudioPlayer';
+import SurahHeader from '@/components/Quran/SurahHeader';
+import SurahHeroBanner from '@/components/Quran/SurahHeroBanner';
+import AyatCard from '@/components/Quran/AyatCard';
+import AudioPlayer from '@/components/Quran/AudioPlayer';
 
 export default function SurahReader() {
   const router = useRouter();
