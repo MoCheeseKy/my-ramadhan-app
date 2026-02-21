@@ -611,7 +611,12 @@ export default function UserProfile() {
               />
             </button>
             <button
-              onClick={() => window.open('', '_blank')}
+              onClick={() =>
+                window.open(
+                  'https://docs.google.com/forms/d/e/1FAIpQLSeB0TrSZDDrJ-xbmEjdiH5mV30Z4A28PFwSfAmTY0Y_qV265A/viewform?usp=publish-editor',
+                  '_blank',
+                )
+              }
               className='w-full flex items-center justify-between p-4 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors border-b border-slate-50 dark:border-slate-800 group'
             >
               <div className='flex items-center gap-3'>
