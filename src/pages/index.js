@@ -19,14 +19,14 @@ import useNotifications from '@/hooks/useNotifications';
 import useTrackerSummary from '@/hooks/useTrackerSummary';
 
 // Home components
-import HomeHeader from '@/components/home/HomeHeader';
-import HeroCard from '@/components/home/HeroCard';
-import DailyGoalTracker from '@/components/home/DailyGoalTracker';
-import ToolGrid from '@/components/home/ToolGrid';
-import DailyKnowledge from '@/components/home/DailyKnowledge';
-import JurnalCard from '@/components/home/JurnalCard';
-import RamaTalkCard from '@/components/home/RamaTalkCard';
-import QuoteCard from '@/components/home/QuoteCard';
+import HomeHeader from '@/components/Home/HomeHeader';
+import HeroCard from '@/components/Home/HeroCard';
+import DailyGoalTracker from '@/components/Home/DailyGoalTracker';
+import ToolGrid from '@/components/Home/ToolGrid';
+import DailyKnowledge from '@/components/Home/DailyKnowledge';
+import JurnalCard from '@/components/Home/JurnalCard';
+import RamaTalkCard from '@/components/Home/RamaTalkCard';
+import QuoteCard from '@/components/Home/QuoteCard';
 
 // Drawers
 import TrackerDrawer from '@/components/TrackerDrawer';

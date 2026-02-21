@@ -10,21 +10,21 @@ import useAppMode from '@/hooks/useAppMode';
 import useUserProfile from '@/hooks/useUserProfile';
 
 // Komponen UI
-import UserProfileCard from '@/components/user/UserProfileCard';
-import PreferensiMenuSection from '@/components/user/PreferensiMenuSection';
-import BantuanMenuSection from '@/components/user/BantuanMenuSection';
+import UserProfileCard from '@/components/User/UserProfileCard';
+import PreferensiMenuSection from '@/components/User/PreferensiMenuSection';
+import BantuanMenuSection from '@/components/User/BantuanMenuSection';
 
 // Drawers
-import DrawerConfirmReset from '@/components/user/Drawer/DrawerConfirmReset';
-import DrawerConfirmLogout from '@/components/user/Drawer/DrawerConfirmLogout';
-import DrawerEditProfil from '@/components/user/Drawer/DrawerEditProfil';
-import DrawerDataManagement from '@/components/user/Drawer/DrawerDataManagement';
-import DrawerTema from '@/components/user/Drawer/DrawerTema';
-import DrawerBantuan from '@/components/user/Drawer/DrawerBantuan';
-import DrawerPrivasi from '@/components/user/Drawer/DrawerPrivasi';
-import DrawerTentang from '@/components/user/Drawer/DrawerTentang';
-import DrawerPengembang from '@/components/user/Drawer/DrawerPengembang';
-import DrawerDonasi from '@/components/user/Drawer/DrawerDonasi';
+import DrawerConfirmReset from '@/components/User/Drawer/DrawerConfirmReset';
+import DrawerConfirmLogout from '@/components/User/Drawer/DrawerConfirmLogout';
+import DrawerEditProfil from '@/components/User/Drawer/DrawerEditProfil';
+import DrawerDataManagement from '@/components/User/Drawer/DrawerDataManagement';
+import DrawerTema from '@/components/User/Drawer/DrawerTema';
+import DrawerBantuan from '@/components/User/Drawer/DrawerBantuan';
+import DrawerPrivasi from '@/components/User/Drawer/DrawerPrivasi';
+import DrawerTentang from '@/components/User/Drawer/DrawerTentang';
+import DrawerPengembang from '@/components/User/Drawer/DrawerPengembang';
+import DrawerDonasi from '@/components/User/Drawer/DrawerDonasi';
 
 /**
  * Enum string untuk nama drawer — satu state string menggantikan 10 boolean.
