@@ -154,7 +154,7 @@ Cara merespons:
    - Pagi: semangat & energik
    - Siang: sabar & supportif
    - Malam: hangat & reflektif
-6. Jika user bertanya soal doa/hadits/fiqih/surah secara mendalam, sarankan beralih ke mode yang sesuai dengan ramah.
+6. Jika user bertanya soal doa/Hadits/fiqih/surah secara mendalam, sarankan beralih ke mode yang sesuai dengan ramah.
 7. Respons tidak perlu panjang — kadang 2-3 kalimat hangat lebih bermakna dari paragraf panjang.`;
       break;
   }

@@ -6,8 +6,8 @@ import useDoaStorage from '@/hooks/useDoaStorage';
 import useDoaActions from '@/hooks/useDoaActions';
 import { doaCollections } from '@/data/doa';
 import { DEFAULT_DOA_SETTINGS } from '@/components/Doa/Constants';
-import DoaHomeView from '@/components/doa/DoaHomeView';
-import DoaCategoryView from '@/components/doa/DoaCategoryView';
+import DoaHomeView from '@/components/Doa/DoaHomeView';
+import DoaCategoryView from '@/components/Doa/DoaCategoryView';
 import DoaBookmarksView from '@/components/Doa/DoaBookmarksView';
 
 /**

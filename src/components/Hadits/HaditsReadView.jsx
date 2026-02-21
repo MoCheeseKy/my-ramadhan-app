@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Head from 'next/head';
 import { EyeOff } from 'lucide-react';
 import { HADITS_PER_PAGE } from '@/components/Hadits/Constants';
-import HaditsReaderHeader from '@/components/hadits/HaditsReaderHeader';
-import HadithCard from '@/components/hadits/HadithCard';
-import HaditsPagination from '@/components/hadits/HaditsPagination';
+import HaditsReaderHeader from '@/components/Hadits/HaditsReaderHeader';
+import HadithCard from '@/components/Hadits/HadithCard';
+import HaditsPagination from '@/components/Hadits/HaditsPagination';
 
 /**
  * HaditsReadView — view membaca hadits dalam satu kitab.

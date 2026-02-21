@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, Eye, EyeOff, Settings2, Navigation } from 'lucide-react';
-import HaditsSettingsPanel from '@/components/hadits/HaditsSettingsPanel';
+import HaditsSettingsPanel from '@/components/Hadits/HaditsSettingsPanel';
 
 /**
  * HaditsReaderHeader — sticky header untuk halaman baca hadits.

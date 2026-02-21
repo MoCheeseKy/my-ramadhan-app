@@ -13,11 +13,11 @@ import {
   RefreshCw,
   BookOpen,
 } from 'lucide-react';
-import DoaSettingsPanel from '@/components/doa/DoaSettingsPanel';
-import FilterPanel from '@/components/doa/FilterPanel';
-import AsmaulHusnaItem from '@/components/doa/AsmaulHusnaItem';
-import DoaItem from '@/components/doa/DoaItem';
-import AddDoaModal from '@/components/doa/AddDoaModal';
+import DoaSettingsPanel from '@/components/Doa/DoaSettingsPanel';
+import FilterPanel from '@/components/Doa/FilterPanel';
+import AsmaulHusnaItem from '@/components/Doa/AsmaulHusnaItem';
+import DoaItem from '@/components/Doa/DoaItem';
+import AddDoaModal from '@/components/Doa/AddDoaModal';
 
 /**
  * DoaCategoryView — view konten doa dalam satu kategori.

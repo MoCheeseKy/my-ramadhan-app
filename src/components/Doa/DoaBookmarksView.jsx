@@ -2,7 +2,7 @@
 
 import Head from 'next/head';
 import { ArrowLeft, Bookmark } from 'lucide-react';
-import DoaItem from '@/components/doa/DoaItem';
+import DoaItem from '@/components/Doa/DoaItem';
 
 /**
  * DoaBookmarksView — menampilkan semua doa yang di-bookmark user.

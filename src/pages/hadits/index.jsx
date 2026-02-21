@@ -8,9 +8,9 @@ import {
   HADITS_API_BASE,
   DEFAULT_HADITS_SETTINGS,
 } from '@/components/Hadits/Constants';
-import HaditsHomeView from '@/components/hadits/HaditsHomeView';
-import HaditsReadView from '@/components/hadits/HaditsReadView';
-import HaditsBookmarksView from '@/components/hadits/HaditsBookmarksView';
+import HaditsHomeView from '@/components/Hadits/HaditsHomeView';
+import HaditsReadView from '@/components/Hadits/HaditsReadView';
+import HaditsBookmarksView from '@/components/Hadits/HaditsBookmarksView';
 
 /**
  * HaditsPage — orchestrator halaman Hadits.
