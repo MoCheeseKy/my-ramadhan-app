@@ -57,7 +57,7 @@ const HomeHeader = ({
             <User
               size={20}
               className='text-emerald-500 cursor-pointer md:w-6 md:h-6 lg:w-6 lg:h-6'
-              onClick={() => router.push('/auth/login')}
+              onClick={() => router.push('/user')}
             />
           )}
         </div>
