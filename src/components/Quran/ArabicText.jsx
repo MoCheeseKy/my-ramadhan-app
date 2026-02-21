@@ -3,21 +3,14 @@
 import { ARAB_SIZES } from '@/data/quranConstants';
 import { applyTajwid } from '@/utils/applyTajwid';
 
-/**
- * ArabicText — menampilkan teks Arab dengan ukuran yang bisa dikonfigurasi.
- * Jika tajwid aktif, tiap segmen yang dikenali akan diwarnai sesuai aturan.
- *
- * @prop {string}  text       - Teks Arab
- * @prop {string}  arabSize   - Key ukuran: 'sm' | 'md' | 'lg' | 'xl'
- * @prop {boolean} tajwid     - Aktifkan highlight tajwid
- * @prop {boolean} isDark     - Gunakan warna darkBg untuk dark mode
- */
 const ArabicText = ({
   text,
   arabSize = 'md',
   tajwid = false,
   isDark = false,
 }) => {
+  if (!text) return null; // Fail-safe: jika text kosong, jangan render
+
   const sizeConfig =
     ARAB_SIZES.find((s) => s.key === arabSize) || ARAB_SIZES[1];
   const fontClass =
@@ -31,7 +24,17 @@ const ArabicText = ({
     );
   }
 
-  const highlights = applyTajwid(text);
+  // Fail-safe handling balikan dari fungsi applyTajwid
+  let highlights = [];
+  try {
+    const tajwidResult = applyTajwid(text);
+    highlights = Array.isArray(tajwidResult)
+      ? tajwidResult
+      : tajwidResult?.highlights || [];
+  } catch (e) {
+    console.error('Tajwid parsing error:', e);
+  }
+
   if (!highlights.length) {
     return (
       <p className={fontClass} dir='rtl' style={{ fontSize: sizeConfig.size }}>
@@ -54,7 +57,7 @@ const ArabicText = ({
           key={`h${i}`}
           style={{
             color,
-            backgroundColor: isDark ? darkBg : bg,
+            backgroundColor: isDark ? darkBg || bg : bg,
             borderRadius: '3px',
             padding: '0 2px',
           }}
