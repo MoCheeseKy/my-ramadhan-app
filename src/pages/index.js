@@ -37,8 +37,8 @@ import {
 
 import TrackerDrawer from '@/components/TrackerDrawer';
 import ScheduleDrawer from '@/components/ScheduleDrawer';
-import NotificationDrawer from '@/components/NotificationDrawer'; // <-- Komponen Notifikasi Baru
-import { getNotificationForDay } from '@/data/notificationsData'; // <-- Data Notifikasi Baru
+import NotificationDrawer from '@/components/NotificationDrawer';
+import { getNotificationForDay } from '@/data/notificationsData';
 import { quotesData } from '@/data/quotes';
 
 dayjs.locale('id');
@@ -69,7 +69,6 @@ export default function MyRamadhanHome() {
   const [notifications, setNotifications] = useState([]);
   const [hasUnreadNotif, setHasUnreadNotif] = useState(false);
 
-  // Jalankan jam detak harian
   useEffect(() => {
     setMounted(true);
     const timer = setInterval(() => setCurrentTime(dayjs()), 1000);
@@ -78,14 +77,10 @@ export default function MyRamadhanHome() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch Tracker Summary
   useEffect(() => {
     if (user) fetchTrackerSummary();
   }, [user, isPWA]);
 
-  // ==========================================
-  // LOGIKA NOTIFIKASI PINTAR (HARIAN & SHOLAT)
-  // ==========================================
   const getHijriDate = () => {
     try {
       const yesterday = new Date();
@@ -132,7 +127,6 @@ export default function MyRamadhanHome() {
           const [h, m] = timeStr.split(':').map(Number);
           const prayerMoment = dayjs().hour(h).minute(m).second(0);
 
-          // Tambahkan notif sholat jika waktu saat ini MELEWATI waktu sholat
           if (currentTime.isAfter(prayerMoment)) {
             dynamicNotifs.push({
               id: `prayer_${p.key}_${dayjs().format('YYYYMMDD')}`,
@@ -146,12 +140,10 @@ export default function MyRamadhanHome() {
       });
     }
 
-    // Gabungkan: Notif Sholat ditaruh paling atas, Notif Harian di bawahnya
     const combined = [...dynamicNotifs.reverse(), ...baseNotifs];
     setNotifications(combined);
   }, [mounted, prayerTimes, currentTime.hour(), hijriDay]);
 
-  // Cek apakah ada notifikasi yang belum dibaca
   useEffect(() => {
     const lastReadCount = parseInt(
       localStorage.getItem('myRamadhan_notifCount') || '0',
@@ -170,8 +162,6 @@ export default function MyRamadhanHome() {
       notifications.length.toString(),
     );
   };
-
-  // ==========================================
 
   const fetchPrayerTimes = useCallback(async () => {
     try {
@@ -367,13 +357,15 @@ export default function MyRamadhanHome() {
         <div className='absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-100/50 dark:bg-indigo-900/20 rounded-full blur-3xl opacity-60' />
       </div>
 
-      <div className='max-w-md mx-auto p-5'>
-        <header className='flex justify-between items-center mb-8 mt-2'>
+      {/* ADAPTIVE CONTAINER: Mobile -> Tablet -> Desktop */}
+      <div className='w-full max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto p-5 md:py-8 lg:py-10 lg:px-8'>
+        {/* HEADER */}
+        <header className='flex justify-between items-center mb-8 mt-2 md:mb-10 lg:mb-10'>
           <div>
-            <span className='px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-[#1e3a8a] dark:text-blue-400 text-[10px] font-bold uppercase tracking-wider rounded-md'>
+            <span className='px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-[#1e3a8a] dark:text-blue-400 text-[10px] md:text-xs font-bold uppercase tracking-wider rounded-md'>
               {hijriDate}
             </span>
-            <h1 className='text-2xl font-extrabold tracking-tight mt-2 leading-tight'>
+            <h1 className='text-2xl md:text-3xl lg:text-3xl font-extrabold tracking-tight mt-2 leading-tight'>
               {"Assalamu'alaikum"} <br />
               <span className='text-[#1e3a8a] dark:text-blue-400'>
                 {user?.username || 'Sahabat!'}
@@ -382,29 +374,31 @@ export default function MyRamadhanHome() {
             </h1>
           </div>
 
-          <div className='flex gap-4 items-center'>
+          <div className='flex gap-4 md:gap-5 items-center'>
             {/* IKON LONCENG NOTIFIKASI */}
             <div
               className='relative cursor-pointer hover:scale-110 transition-transform flex items-center justify-center'
               onClick={handleOpenNotification}
             >
-              <Bell size={24} className='text-slate-500 dark:text-slate-400' />
+              <Bell
+                size={24}
+                className='text-slate-500 dark:text-slate-400 md:w-7 md:h-7'
+              />
               {hasUnreadNotif && (
-                <span className='absolute top-0 right-0 w-3 h-3 bg-rose-500 rounded-full border-2 border-[#F6F9FC] dark:border-slate-950 animate-pulse' />
+                <span className='absolute top-0 right-0 w-3 h-3 md:w-3.5 md:h-3.5 bg-rose-500 rounded-full border-2 border-[#F6F9FC] dark:border-slate-950 animate-pulse' />
               )}
             </div>
-
-            <div className='w-11 h-11 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
+            <div className='w-11 h-11 md:w-14 md:h-14 lg:w-14 lg:h-14 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-100 dark:border-slate-700 flex items-center justify-center text-xl hover:scale-105 transition-transform'>
               {user ? (
                 <User
                   size={20}
-                  className='text-[#1e3a8a] dark:text-blue-400 cursor-pointer'
+                  className='text-[#1e3a8a] dark:text-blue-400 cursor-pointer md:w-6 md:h-6 lg:w-6 lg:h-6'
                   onClick={() => router.push('/user')}
                 />
               ) : (
                 <User
                   size={20}
-                  className='text-emerald-500 cursor-pointer'
+                  className='text-emerald-500 cursor-pointer md:w-6 md:h-6 lg:w-6 lg:h-6'
                   onClick={() => router.push('/auth/login')}
                 />
               )}
@@ -412,291 +406,314 @@ export default function MyRamadhanHome() {
           </div>
         </header>
 
-        <div className='grid grid-cols-2 gap-4 animate-fadeUp'>
-          {hero ? (
-            <div
-              className={`col-span-2 relative min-h-[300px] rounded-[2.5rem] p-7 text-white overflow-hidden group bg-gradient-to-br ${hero.gradient} transition-all duration-500 hover:-translate-y-1`}
-              style={{ boxShadow: hero.shadow }}
-            >
-              <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.15),transparent_60%)]' />
-              <div className='absolute -top-20 -right-20 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse' />
-              <div className='absolute -bottom-24 -left-24 w-72 h-72 bg-white/10 rounded-full blur-3xl' />
-              <div className='absolute inset-0 opacity-30 pointer-events-none'>
-                <div className='absolute w-1 h-1 bg-white rounded-full top-[20%] left-[15%] animate-pulse' />
-                <div className='absolute w-1 h-1 bg-white rounded-full top-[35%] left-[75%] animate-pulse' />
-              </div>
+        {/* GRID LAYOUT UTAMA */}
+        <div className='flex flex-col lg:flex-row gap-5 md:gap-6 lg:gap-8 animate-fadeUp'>
+          {/* ========================================= */}
+          {/* KOLOM KIRI (MAIN CONTENT)                   */}
+          {/* ========================================= */}
+          <div className='flex-1 flex flex-col gap-5 md:gap-6 lg:gap-6'>
+            {/* HERO CARD */}
+            {hero ? (
+              <div
+                className={`relative min-h-[300px] md:min-h-[320px] lg:min-h-[340px] rounded-[2.5rem] p-7 md:p-9 lg:p-10 text-white overflow-hidden group bg-gradient-to-br ${hero.gradient} transition-all duration-500 hover:-translate-y-1`}
+                style={{ boxShadow: hero.shadow }}
+              >
+                <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.15),transparent_60%)]' />
+                <div className='absolute -top-20 -right-20 w-72 h-72 lg:w-96 lg:h-96 bg-white/10 rounded-full blur-3xl animate-pulse' />
+                <div className='absolute -bottom-24 -left-24 w-72 h-72 lg:w-96 lg:h-96 bg-white/10 rounded-full blur-3xl' />
 
-              <div className='relative z-10 flex justify-between items-center'>
-                <div className='flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10'>
-                  <span
-                    className={`text-[10px] uppercase tracking-widest font-bold ${hero.accent}`}
+                <div className='relative z-10 flex justify-between items-center'>
+                  <div className='flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10'>
+                    <span
+                      className={`text-[10px] md:text-xs lg:text-xs uppercase tracking-widest font-bold ${hero.accent}`}
+                    >
+                      {userCity}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setIsScheduleOpen(true)}
+                    className='p-2 hover:bg-white/10 rounded-full transition-colors backdrop-blur-sm'
                   >
-                    {userCity}
-                  </span>
+                    <CalendarDays
+                      size={18}
+                      className='text-white/90 cursor-pointer md:w-5 md:h-5'
+                    />
+                  </button>
                 </div>
-                <CalendarDays
-                  onClick={() => setIsScheduleOpen(true)}
-                  size={18}
-                  className='text-white/80 cursor-pointer'
+
+                <div className='relative z-10 text-center mt-8 md:mt-10 lg:mt-12'>
+                  <p
+                    className={`text-[10px] md:text-xs lg:text-xs uppercase tracking-[0.3em] ${hero.accent} mb-2`}
+                  >
+                    {hero.countdownLabel || hero.label}
+                  </p>
+                  {hero.timeLeft ? (
+                    <h2 className='text-[4rem] md:text-[4.5rem] lg:text-[5.5rem] font-black tracking-[-0.05em] tabular-nums bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-none'>
+                      {hero.timeLeft}
+                    </h2>
+                  ) : (
+                    <h2 className='text-[2rem] md:text-[2.5rem] lg:text-[3rem] font-black bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-tight mt-4'>
+                      {hero.label}
+                    </h2>
+                  )}
+                  <p
+                    className={`mt-3 md:mt-4 lg:mt-4 text-sm md:text-base lg:text-base ${hero.accent} opacity-80`}
+                  >
+                    {hero.sublabel}
+                  </p>
+                </div>
+
+                {hero.progress && (
+                  <div className='relative z-10 mt-10 md:mt-12 lg:mt-14 max-w-2xl mx-auto'>
+                    <div
+                      className={`flex justify-between text-[9px] md:text-[10px] lg:text-[10px] uppercase tracking-widest ${hero.accent} opacity-70 mb-2`}
+                    >
+                      <span>{hero.progress.startLabel}</span>
+                      <span>{hero.progress.endLabel}</span>
+                    </div>
+                    <div className='relative h-3 lg:h-4 w-full bg-white/10 rounded-full overflow-hidden backdrop-blur-sm'>
+                      <div
+                        className='h-full bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-300 rounded-full shadow-[0_0_20px_rgba(96,165,250,0.8)] transition-all duration-1000 ease-out'
+                        style={{ width: `${hero.progress.value}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+                <Moon
+                  size={214}
+                  className='absolute -bottom-14 -right-14 text-white/10 rotate-12 pointer-events-none'
                 />
               </div>
+            ) : (
+              <div className='min-h-[300px] rounded-[2.5rem] bg-slate-200 dark:bg-slate-800 animate-pulse' />
+            )}
 
-              <div className='relative z-10 text-center mt-8'>
-                <p
-                  className={`text-[10px] uppercase tracking-[0.3em] ${hero.accent} mb-2`}
-                >
-                  {hero.countdownLabel || hero.label}
-                </p>
-                {hero.timeLeft ? (
-                  <h2 className='text-[4rem] font-black tracking-[-0.05em] tabular-nums bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-none'>
-                    {hero.timeLeft}
-                  </h2>
-                ) : (
-                  <h2 className='text-[2rem] font-black bg-gradient-to-b from-white via-white/90 to-white/60 bg-clip-text text-transparent drop-shadow-xl leading-tight mt-4'>
-                    {hero.label}
-                  </h2>
-                )}
-                <p className={`mt-3 text-sm ${hero.accent} opacity-80`}>
-                  {hero.sublabel}
-                </p>
-              </div>
-
-              {hero.progress && (
-                <div className='relative z-10 mt-10'>
-                  <div
-                    className={`flex justify-between text-[9px] uppercase tracking-widest ${hero.accent} opacity-70 mb-2`}
-                  >
-                    <span>{hero.progress.startLabel}</span>
-                    <span>{hero.progress.endLabel}</span>
-                  </div>
-                  <div className='relative h-3 w-full bg-white/10 rounded-full overflow-hidden backdrop-blur-sm'>
-                    <div
-                      className='h-full bg-gradient-to-r from-cyan-300 via-blue-400 to-indigo-300 rounded-full shadow-[0_0_20px_rgba(96,165,250,0.8)] transition-all duration-1000 ease-out'
-                      style={{ width: `${hero.progress.value}%` }}
-                    />
-                    <div className='absolute inset-0 bg-white/10 mix-blend-overlay' />
-                  </div>
+            {/* DAILY GOAL TRACKER */}
+            <div
+              onClick={() =>
+                !user ? router.push('/auth/login') : setIsTrackerOpen(true)
+              }
+              className='bg-white dark:bg-slate-900 rounded-[2rem] p-5 md:p-6 lg:p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] cursor-pointer'
+            >
+              <div className='flex justify-between items-center mb-3'>
+                <div className='bg-emerald-100 dark:bg-emerald-900/40 p-2 lg:p-2.5 rounded-xl w-fit text-emerald-600 dark:text-emerald-400'>
+                  <CheckSquare size={20} />
                 </div>
-              )}
-              <Moon
-                size={214}
-                className='absolute -bottom-14 -right-14 text-white/10 rotate-12'
+                <span className='text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-lg'>
+                  Daily Goal
+                </span>
+              </div>
+              <div className='flex justify-between items-end'>
+                <div>
+                  <h3 className='font-bold text-lg md:text-xl lg:text-xl leading-tight text-slate-800 dark:text-slate-100'>
+                    Ibadah Harian
+                  </h3>
+                  <p className='text-xs md:text-sm lg:text-sm text-slate-500 dark:text-slate-400 mt-1'>
+                    Sudah {taskProgress.completed} dari {taskProgress.total}{' '}
+                    target!
+                  </p>
+                </div>
+                <div className='w-12 h-12 md:w-14 md:h-14 lg:w-14 lg:h-14 relative flex items-center justify-center'>
+                  <svg className='w-full h-full -rotate-90' viewBox='0 0 36 36'>
+                    <path
+                      className='text-slate-100 dark:text-slate-700'
+                      d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='4'
+                    />
+                    <path
+                      className='text-emerald-500 transition-all duration-1000 ease-out'
+                      strokeDasharray={`${progressPercent}, 100`}
+                      d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='4'
+                    />
+                  </svg>
+                  <span className='absolute text-[10px] lg:text-xs font-bold text-emerald-600 dark:text-emerald-400'>
+                    {Math.round(progressPercent)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* MAIN TOOLS (4 Kolom Mobile, 8 Kolom Tablet & Desktop) */}
+            <div className='grid grid-cols-4 md:grid-cols-8 lg:grid-cols-4 gap-3 mt-1'>
+              <ToolCard
+                icon={BookOpen}
+                title="Al-Qur'an"
+                colorClass='text-[#1e3a8a] dark:text-blue-400'
+                bgClass='text-blue-100 dark:text-blue-900/60'
+                onClick={() => router.push('/quran')}
+              />
+              <ToolCard
+                icon={HeartHandshake}
+                title='Doa'
+                colorClass='text-rose-500 dark:text-rose-400'
+                bgClass='text-rose-100 dark:text-rose-900/60'
+                onClick={() => router.push('/doa')}
+              />
+              <ToolCard
+                icon={ScrollText}
+                title='Hadits'
+                colorClass='text-emerald-600 dark:text-emerald-400'
+                bgClass='text-emerald-100 dark:text-emerald-900/60'
+                onClick={() => router.push('/hadits')}
+              />
+              <ToolCard
+                icon={Scale}
+                title='Fiqih'
+                colorClass='text-amber-600 dark:text-amber-400'
+                bgClass='text-amber-100 dark:text-amber-900/60'
+                onClick={() => router.push('/fiqih')}
+              />
+              <ToolCard
+                icon={Compass}
+                title='Kiblat'
+                colorClass='text-indigo-600 dark:text-indigo-400'
+                bgClass='text-indigo-100 dark:text-indigo-900/60'
+                onClick={() => router.push('/kompas')}
+              />
+              <ToolCard
+                icon={Fingerprint}
+                title='Tasbih'
+                colorClass='text-teal-600 dark:text-teal-400'
+                bgClass='text-teal-100 dark:text-teal-900/60'
+                onClick={() => router.push('/tasbih')}
+              />
+              <ToolCard
+                icon={HandCoins}
+                title='Zakat'
+                colorClass='text-yellow-500 dark:text-yellow-400'
+                bgClass='text-yellow-100 dark:text-yellow-900/60'
+                onClick={() => router.push('/zakat')}
+              />
+              <ToolCard
+                icon={Droplets}
+                title='Haid'
+                colorClass='text-pink-500 dark:text-pink-400'
+                bgClass='text-pink-100 dark:text-pink-900/60'
+                onClick={() => router.push('/haid-tracker')}
               />
             </div>
-          ) : (
-            <div className='col-span-2 min-h-[300px] rounded-[2.5rem] bg-slate-200 dark:bg-slate-800 animate-pulse' />
-          )}
+          </div>
 
-          <div
-            onClick={() =>
-              !user ? router.push('/auth/login') : setIsTrackerOpen(true)
-            }
-            className='col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
-          >
-            <div className='flex justify-between items-center mb-3'>
-              <div className='bg-emerald-100 dark:bg-emerald-900/40 p-2 rounded-xl w-fit text-emerald-600 dark:text-emerald-400'>
-                <CheckSquare size={18} />
-              </div>
-              <span className='text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-800 px-2 py-1 rounded-lg'>
-                Daily Goal
-              </span>
-            </div>
-            <div className='flex justify-between items-end'>
+          {/* ========================================= */}
+          {/* KOLOM KANAN / BAWAH (SIDEBAR DESKTOP & TABLET GRID) */}
+          {/* ========================================= */}
+          <div className='w-full lg:w-[350px] xl:w-[380px] flex-shrink-0 grid grid-cols-1 md:grid-cols-2 lg:flex lg:flex-col gap-5 md:gap-6 lg:gap-6'>
+            {/* DAILY KNOWLEDGE */}
+            <div
+              onClick={() => router.push(`/study/${hijriDay}`)}
+              className='bg-white dark:bg-slate-900 rounded-[2rem] p-5 md:p-6 lg:p-6 group shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer flex items-center justify-between h-full'
+            >
               <div>
-                <h3 className='font-bold text-lg leading-tight text-slate-800 dark:text-slate-100'>
-                  Ibadah Harian
+                <div className='flex items-center gap-2 mb-2'>
+                  <span className='bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 p-1.5 rounded-lg'>
+                    <Lightbulb size={16} />
+                  </span>
+                  <span className='text-[10px] md:text-xs lg:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider'>
+                    Daily Knowledge
+                  </span>
+                </div>
+                <h3 className='font-bold text-slate-800 dark:text-slate-100 text-sm md:text-base lg:text-base group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors'>
+                  {dailyTopic.title}
                 </h3>
-                <p className='text-xs text-slate-500 dark:text-slate-400 mt-1'>
-                  Sudah {taskProgress.completed} dari {taskProgress.total}{' '}
-                  target!
-                </p>
               </div>
-              <div className='w-12 h-12 relative flex items-center justify-center'>
-                <svg className='w-full h-full -rotate-90' viewBox='0 0 36 36'>
-                  <path
-                    className='text-slate-100 dark:text-slate-700'
-                    d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='4'
-                  />
-                  <path
-                    className='text-emerald-500 transition-all duration-1000 ease-out'
-                    strokeDasharray={`${progressPercent}, 100`}
-                    d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='4'
-                  />
-                </svg>
-                <span className='absolute text-[10px] font-bold text-emerald-600 dark:text-emerald-400'>
-                  {Math.round(progressPercent)}%
-                </span>
+              <div className='bg-slate-50 dark:bg-slate-800 p-3 rounded-full group-hover:bg-amber-50 dark:group-hover:bg-amber-900/30 transition-colors shrink-0'>
+                <ChevronRight
+                  size={20}
+                  className='text-slate-400 dark:text-slate-500 group-hover:text-amber-500 dark:group-hover:text-amber-400'
+                />
               </div>
             </div>
-          </div>
 
-          <div className='col-span-2 grid grid-cols-4 gap-3 mt-2'>
-            <ToolCard
-              icon={BookOpen}
-              title="Al-Qur'an"
-              colorClass='text-[#1e3a8a] dark:text-blue-400'
-              bgClass='text-blue-100 dark:text-blue-900/60'
-              onClick={() => router.push('/quran')}
-            />
-            <ToolCard
-              icon={HeartHandshake}
-              title='Doa'
-              colorClass='text-rose-500 dark:text-rose-400'
-              bgClass='text-rose-100 dark:text-rose-900/60'
-              onClick={() => router.push('/doa')}
-            />
-            <ToolCard
-              icon={ScrollText}
-              title='Hadits'
-              colorClass='text-emerald-600 dark:text-emerald-400'
-              bgClass='text-emerald-100 dark:text-emerald-900/60'
-              onClick={() => router.push('/hadits')}
-            />
-            <ToolCard
-              icon={Scale}
-              title='Fiqih'
-              colorClass='text-amber-600 dark:text-amber-400'
-              bgClass='text-amber-100 dark:text-amber-900/60'
-              onClick={() => router.push('/fiqih')}
-            />
-            <ToolCard
-              icon={Compass}
-              title='Kiblat'
-              colorClass='text-indigo-600 dark:text-indigo-400'
-              bgClass='text-indigo-100 dark:text-indigo-900/60'
-              onClick={() => router.push('/kompas')}
-            />
-            <ToolCard
-              icon={Fingerprint}
-              title='Tasbih'
-              colorClass='text-teal-600 dark:text-teal-400'
-              bgClass='text-teal-100 dark:text-teal-900/60'
-              onClick={() => router.push('/tasbih')}
-            />
-            <ToolCard
-              icon={HandCoins}
-              title='Zakat'
-              colorClass='text-yellow-500 dark:text-yellow-400'
-              bgClass='text-yellow-100 dark:text-yellow-900/60'
-              onClick={() => router.push('/zakat')}
-            />
-            <ToolCard
-              icon={Droplets}
-              title='Haid'
-              colorClass='text-pink-500 dark:text-pink-400'
-              bgClass='text-pink-100 dark:text-pink-900/60'
-              onClick={() => router.push('/haid-tracker')}
-            />
-          </div>
-
-          <div
-            onClick={() => router.push(`/study/${hijriDay}`)}
-            className='col-span-2 bg-white dark:bg-slate-900 rounded-[2rem] p-5 group shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer flex items-center justify-between'
-          >
-            <div>
-              <div className='flex items-center gap-2 mb-1'>
-                <span className='bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 p-1.5 rounded-lg'>
-                  <Lightbulb size={16} />
-                </span>
-                <span className='text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider'>
-                  Daily Knowledge
-                </span>
-              </div>
-              <h3 className='font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors'>
-                {dailyTopic.title}
-              </h3>
-            </div>
-            <div className='bg-slate-50 dark:bg-slate-800 p-3 rounded-full group-hover:bg-amber-50 dark:group-hover:bg-amber-900/30 transition-colors'>
-              <ChevronRight
-                size={20}
-                className='text-slate-400 dark:text-slate-500 group-hover:text-amber-500 dark:group-hover:text-amber-400'
+            {/* JURNAL */}
+            <div
+              onClick={() =>
+                !user ? router.push('/auth/login') : router.push('/jurnal')
+              }
+              className='relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-7 lg:p-7 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg cursor-pointer overflow-hidden h-full flex flex-col justify-center'
+            >
+              <Moon
+                size={120}
+                className='absolute -bottom-8 -right-8 text-[#1e3a8a] dark:text-blue-700 opacity-10 pointer-events-none'
               />
+              <div className='flex items-center gap-2 mb-3'>
+                <PenLine
+                  size={20}
+                  className='text-[#1e3a8a] dark:text-blue-400'
+                />
+                <h3 className='font-bold text-lg text-slate-800 dark:text-slate-100'>
+                  Jurnal Refleksi
+                </h3>
+              </div>
+              <p className='text-sm text-slate-500 dark:text-slate-400 relative z-10'>
+                Bagaimana perasaanmu hari ini?
+              </p>
+              <div className='mt-4 md:mt-5 lg:mt-5 text-xs font-semibold text-[#1e3a8a] dark:text-blue-400 flex items-center gap-1 relative z-10'>
+                Mulai menulis <ChevronRight size={14} />
+              </div>
             </div>
-          </div>
 
-          <div
-            onClick={() =>
-              !user ? router.push('/auth/login') : router.push('/jurnal')
-            }
-            className='col-span-2 relative bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer'
-          >
-            <Moon
-              size={120}
-              className='absolute -bottom-8 -right-8 text-[#1e3a8a] dark:text-blue-700 opacity-10'
-            />
-            <div className='flex items-center gap-2 mb-3'>
-              <PenLine
-                size={18}
-                className='text-[#1e3a8a] dark:text-blue-400'
-              />
-              <h3 className='font-bold text-slate-800 dark:text-slate-100'>
-                Jurnal Refleksi
-              </h3>
-            </div>
-            <p className='text-sm text-slate-500 dark:text-slate-400'>
-              Bagaimana perasaanmu hari ini?
-            </p>
-            <div className='mt-3 text-xs font-semibold text-[#1e3a8a] dark:text-blue-400 flex items-center gap-1'>
-              Mulai menulis <ChevronRight size={14} />
-            </div>
-          </div>
-
-          <div
-            onClick={() => router.push('/ramatalk')}
-            className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group cursor-pointer'
-          >
-            <div className='absolute inset-0 bg-[radial-gradient(circle_at_60%_30%,rgba(255,255,255,0.12),transparent_65%)]' />
-            <div className='absolute -bottom-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl' />
-            <div className='relative z-10'>
-              <div className='flex items-center gap-2 mb-4'>
-                <Sparkles size={16} className='text-indigo-200' />
-                <p className='text-[10px] uppercase tracking-[0.3em] text-indigo-200'>
-                  Ramatalk AI
+            {/* RAMATALK */}
+            <div
+              onClick={() => router.push('/ramatalk')}
+              className='relative rounded-[2rem] p-6 md:p-7 lg:p-7 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group cursor-pointer h-full flex flex-col justify-center'
+            >
+              <div className='absolute inset-0 bg-[radial-gradient(circle_at_60%_30%,rgba(255,255,255,0.12),transparent_65%)]' />
+              <div className='absolute -bottom-20 -right-20 w-64 h-64 bg-blue-400/20 rounded-full blur-3xl pointer-events-none' />
+              <div className='relative z-10'>
+                <div className='flex items-center gap-2 mb-4'>
+                  <Sparkles size={16} className='text-indigo-200' />
+                  <p className='text-[10px] md:text-xs lg:text-xs uppercase tracking-[0.3em] text-indigo-200 font-bold'>
+                    Ramatalk AI
+                  </p>
+                </div>
+                <h3 className='text-xl md:text-2xl lg:text-2xl font-bold bg-gradient-to-b from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent mb-2'>
+                  Tanya Seputar Ibadah
+                </h3>
+                <p className='text-sm text-indigo-100/80 leading-relaxed'>
+                  Butuh penjelasan fiqih atau hukum puasa? Ramatalk siap
+                  membantu 🤍
                 </p>
               </div>
-              <h3 className='text-xl font-bold bg-gradient-to-b from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent mb-2'>
-                Tanya Seputar Ibadah
-              </h3>
-              <p className='text-sm text-indigo-100/80'>
-                Butuh penjelasan fiqih? Ramatalk siap membantu 🤍
-              </p>
             </div>
-          </div>
 
-          <div className='col-span-2 relative rounded-[2rem] p-6 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group'>
-            <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.15),transparent_65%)]' />
-            <div className='absolute -top-16 -left-16 w-60 h-60 bg-indigo-400/20 rounded-full blur-3xl animate-pulse' />
-            <div className='relative z-10'>
-              <div className='flex justify-between items-start mb-4'>
-                <p className='text-[10px] uppercase tracking-[0.3em] text-indigo-200'>
-                  Quote of the Day
+            {/* QUOTE */}
+            <div className='relative rounded-[2rem] p-6 md:p-7 lg:p-7 overflow-hidden text-white bg-gradient-to-br from-[#1e3a8a] via-[#312e81] to-[#4c1d95] shadow-[0_25px_50px_-15px_rgba(79,70,229,0.5)] transition-all duration-500 hover:-translate-y-1 group h-full flex flex-col justify-center'>
+              <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(255,255,255,0.15),transparent_65%)]' />
+              <div className='absolute -top-16 -left-16 w-60 h-60 bg-indigo-400/20 rounded-full blur-3xl animate-pulse pointer-events-none' />
+              <div className='relative z-10'>
+                <div className='flex justify-between items-start mb-4'>
+                  <p className='text-[10px] md:text-xs lg:text-xs uppercase tracking-[0.3em] text-indigo-200 font-bold mt-1.5'>
+                    Quote of the Day
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      randomizeQuote();
+                    }}
+                    className={`p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all text-indigo-200 hover:text-white ${isSpinning ? 'animate-spin' : ''}`}
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+                <p className='text-lg md:text-xl lg:text-xl leading-relaxed font-medium bg-gradient-to-b from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent min-h-[4rem]'>
+                  {'"'}
+                  {quoteOfTheDay.text}
+                  {'"'}
                 </p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    randomizeQuote();
-                  }}
-                  className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-all text-indigo-200 hover:text-white ${isSpinning ? 'animate-spin' : ''}`}
-                >
-                  <RefreshCw size={14} />
-                </button>
-              </div>
-              <p className='text-lg leading-relaxed font-medium bg-gradient-to-b from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent min-h-[3.5rem]'>
-                {'"'}
-                {quoteOfTheDay.text}
-                {'"'}
-              </p>
-              <div className='mt-4 flex items-center justify-between'>
-                <p className='text-xs text-indigo-200/70'>
-                  {quoteOfTheDay.source}
-                </p>
-                <Quote size={40} className='text-white/5 opacity-50' />
+                <div className='mt-5 flex items-center justify-between'>
+                  <p className='text-xs text-indigo-200/70 font-medium max-w-[70%]'>
+                    {quoteOfTheDay.source}
+                  </p>
+                  <Quote
+                    size={40}
+                    className='text-white/5 opacity-50 shrink-0'
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -713,8 +730,6 @@ export default function MyRamadhanHome() {
         onClose={() => setIsScheduleOpen(false)}
         onUpdate={fetchPrayerTimes}
       />
-
-      {/* --- LACI NOTIFIKASI BARU --- */}
       <NotificationDrawer
         isOpen={isNotificationOpen}
         onClose={() => setIsNotificationOpen(false)}
@@ -724,6 +739,7 @@ export default function MyRamadhanHome() {
   );
 }
 
+// Sub-komponen ToolCard yang disesuaikan ukurannya untuk tablet & desktop
 const ToolCard = ({
   icon: Icon,
   title,
@@ -734,14 +750,14 @@ const ToolCard = ({
 }) => (
   <div
     onClick={onClick}
-    className={`relative bg-white dark:bg-slate-900 rounded-[2rem] p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer h-32 ${className}`}
+    className={`relative bg-white dark:bg-slate-900 rounded-[1.5rem] md:rounded-[2rem] lg:rounded-[2rem] p-3 md:p-4 lg:p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center justify-center text-center gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] overflow-hidden cursor-pointer h-28 md:h-32 lg:h-32 ${className}`}
   >
     <Icon
       size={80}
-      className={`absolute -bottom-6 -right-6 ${bgClass} opacity-50 z-1`}
+      className={`absolute -bottom-6 -right-6 md:-bottom-5 md:-right-5 lg:-bottom-5 lg:-right-5 ${bgClass} opacity-50 z-1 pointer-events-none`}
     />
-    <Icon size={24} className={colorClass} />
-    <span className='text-xs font-bold text-slate-700 dark:text-slate-200 z-2'>
+    <Icon size={24} className={`${colorClass} md:w-7 md:h-7 lg:w-7 lg:h-7`} />
+    <span className='text-[11px] md:text-xs lg:text-xs font-bold text-slate-700 dark:text-slate-200 z-2'>
       {title}
     </span>
   </div>

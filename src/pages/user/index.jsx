@@ -39,11 +39,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import useUser from '@/hook/useUser';
-
 import useAppMode from '@/hook/useAppMode';
 import { StorageService } from '@/lib/storageService';
 
-// --- DAFTAR KOTA (Sama persis seperti ScheduleDrawer) ---
 const CITIES = [
   'Ambon',
   'Balikpapan',
@@ -90,7 +88,7 @@ const CITIES = [
   'Yogyakarta',
 ];
 
-// ─── KOMPONEN BOTTOM SHEET DRAWER ──────────────────────────────────────────────
+// ─── KOMPONEN BOTTOM SHEET / MODAL ───────────────────────────────────────────
 function DrawerPanel({
   open,
   onClose,
@@ -114,12 +112,16 @@ function DrawerPanel({
   if (!open) return null;
 
   return (
-    <div className='fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm p-4 sm:p-0'>
+    // items-end untuk HP, md:items-center untuk Tablet/Desktop agar ke tengah
+    <div className='fixed inset-0 z-50 flex items-end md:items-center justify-center bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm p-0 md:p-4'>
+      {/* rounded-t untuk HP, md:rounded-[2rem] penuh untuk Desktop */}
       <div
         ref={panelRef}
-        className='bg-white dark:bg-slate-900 w-full max-w-md sm:rounded-t-[2rem] rounded-[2rem] sm:rounded-b-none p-6 shadow-2xl animate-in slide-in-from-bottom-10 sm:slide-in-from-bottom-0 duration-200 max-h-[85vh] flex flex-col border border-slate-100 dark:border-slate-700/50'
+        className='bg-white dark:bg-slate-900 w-full max-w-md rounded-t-[2rem] rounded-b-none md:rounded-[2rem] p-6 shadow-2xl animate-in slide-in-from-bottom-10 md:slide-in-from-bottom-0 md:zoom-in-95 duration-200 max-h-[85vh] flex flex-col border border-slate-100 dark:border-slate-700/50'
       >
-        <div className='w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6 shrink-0' />
+        {/* Garis drag handle (Hanya tampil di HP) */}
+        <div className='w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-6 shrink-0 md:hidden' />
+
         <div className='flex items-center justify-between mb-5 shrink-0'>
           <h2
             className={`font-bold text-lg flex items-center gap-2.5 ${titleColor}`}
@@ -133,9 +135,11 @@ function DrawerPanel({
             <X size={16} />
           </button>
         </div>
+
         <div className='overflow-y-auto custom-scrollbar pr-2 flex-1 pb-4 text-slate-600 dark:text-slate-300 text-sm leading-relaxed space-y-4'>
           {children}
         </div>
+
         {!hideFooterButton && (
           <button
             onClick={onClose}
@@ -164,7 +168,6 @@ export default function UserProfile() {
     avatar: null,
   });
 
-  // --- STATE EDIT PROFILE & PILIH KOTA ---
   const [editName, setEditName] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [isCityPickerOpen, setIsCityPickerOpen] = useState(false);
@@ -179,10 +182,7 @@ export default function UserProfile() {
 
   const maskPersonalCode = (code) => {
     if (!code || code.length < 4) return code;
-    const firstTwo = code.substring(0, 2);
-    const lastOne = code.substring(code.length - 1);
-    const masked = '*'.repeat(code.length - 3);
-    return `${firstTwo}${masked}${lastOne}`;
+    return `${code.substring(0, 2)}${'*'.repeat(code.length - 3)}${code.substring(code.length - 1)}`;
   };
 
   useEffect(() => {
@@ -191,11 +191,10 @@ export default function UserProfile() {
         const data = await StorageService.getProfile(user.personal_code, isPWA);
         if (data) {
           setTheme(data.app_theme || localStorage.getItem('theme') || 'light');
-
-          const cityFromDB = data.location_city;
-          const cityFromLocal = localStorage.getItem('user_city');
-          const finalCity = cityFromDB || cityFromLocal || 'Jakarta';
-
+          const finalCity =
+            data.location_city ||
+            localStorage.getItem('user_city') ||
+            'Jakarta';
           setLocationName(finalCity);
           setEditLocation(finalCity);
 
@@ -204,18 +203,14 @@ export default function UserProfile() {
             user.user_metadata?.full_name ||
             user.user_metadata?.name ||
             'Hamba Allah';
-          const userAvatar =
-            data.avatar_url || user.user_metadata?.avatar_url || null;
-
           setProfileData({
             name: userName,
             personalCode: maskPersonalCode(user.personal_code),
-            avatar: userAvatar,
+            avatar: data.avatar_url || user.user_metadata?.avatar_url || null,
           });
           setEditName(userName);
         }
       } catch (err) {
-        console.error('Gagal mengambil data profil:', err);
         const fbCity = localStorage.getItem('user_city') || 'Jakarta';
         setLocationName(fbCity);
         setEditLocation(fbCity);
@@ -223,9 +218,8 @@ export default function UserProfile() {
     };
 
     if (!loading) {
-      if (user) {
-        fetchUserProfile();
-      } else {
+      if (user) fetchUserProfile();
+      else {
         setTheme(localStorage.getItem('theme') || 'light');
         setLocationName(localStorage.getItem('user_city') || 'Jakarta');
       }
@@ -237,14 +231,12 @@ export default function UserProfile() {
     localStorage.setItem('theme', newTheme);
     if (newTheme === 'dark') document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
-
-    if (user) {
+    if (user)
       await StorageService.saveProfile(
         user.personal_code,
         { app_theme: newTheme },
         isPWA,
       );
-    }
     setActiveDrawer(null);
   };
 
@@ -252,7 +244,6 @@ export default function UserProfile() {
     if (!e.target.files || e.target.files.length === 0 || !user) return;
     const file = e.target.files[0];
     setIsUploading(true);
-
     try {
       let publicUrl = null;
       if (isPWA) {
@@ -266,18 +257,14 @@ export default function UserProfile() {
           reader.onerror = (err) => reject(err);
         });
       } else {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.personal_code}-${Math.random()}.${fileExt}`;
+        const fileName = `${user.personal_code}-${Math.random()}.${file.name.split('.').pop()}`;
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(fileName, file);
         if (uploadError) throw uploadError;
-        const { data: publicUrlData } = supabase.storage
-          .from('avatars')
-          .getPublicUrl(fileName);
-        publicUrl = publicUrlData.publicUrl;
+        publicUrl = supabase.storage.from('avatars').getPublicUrl(fileName)
+          .data.publicUrl;
       }
-
       setProfileData((prev) => ({ ...prev, avatar: publicUrl }));
       await StorageService.saveProfile(
         user.personal_code,
@@ -301,18 +288,11 @@ export default function UserProfile() {
         isPWA,
       );
       localStorage.setItem('user_city', editLocation);
-
       setProfileData((prev) => ({ ...prev, name: editName }));
       setLocationName(editLocation);
       setActiveDrawer(null);
-
-      if (
-        window.confirm(
-          'Profil disimpan! Halaman akan direfresh untuk memperbarui Jadwal Sholat.',
-        )
-      ) {
+      if (window.confirm('Profil disimpan! Halaman akan direfresh.'))
         window.location.reload();
-      }
     } catch (error) {
       alert('Gagal menyimpan profil.');
     } finally {
@@ -320,12 +300,10 @@ export default function UserProfile() {
     }
   };
 
-  // Filter kota untuk dropdown
   const filteredCities = CITIES.filter((city) =>
     city.toLowerCase().includes(searchCityTerm.toLowerCase()),
   );
 
-  // --- LOGIKA EXPORT & IMPORT DATA ---
   const handleExportData = () => {
     const dataToExport = {};
     for (let i = 0; i < localStorage.length; i++) {
@@ -344,7 +322,6 @@ export default function UserProfile() {
         dataToExport[key] = localStorage.getItem(key);
       }
     }
-
     const dataStr =
       'data:text/json;charset=utf-8,' +
       encodeURIComponent(JSON.stringify(dataToExport));
@@ -363,35 +340,29 @@ export default function UserProfile() {
   const handleImportData = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const importedData = JSON.parse(event.target.result);
-        Object.keys(importedData).forEach((key) => {
-          localStorage.setItem(key, importedData[key]);
-        });
+        Object.keys(importedData).forEach((key) =>
+          localStorage.setItem(key, importedData[key]),
+        );
         alert('Data berhasil diimpor! Halaman akan dimuat ulang.');
         window.location.reload();
       } catch (err) {
-        alert(
-          'Format file tidak valid. Pastikan Anda mengunggah file backup MyRamadhan yang benar.',
-        );
+        alert('Format file tidak valid.');
       }
     };
     reader.readAsText(file);
   };
 
-  // --- LOGIKA EKSEKUSI LOGOUT ---
   const executeLogout = async () => {
     if (!isPWA && user) await supabase.auth.signOut();
     localStorage.removeItem('myRamadhan_user');
-
     if (!isPWA) router.push('/auth/login');
     else window.location.reload();
   };
 
-  // --- LOGIKA EKSEKUSI RESET DATA ---
   const executeResetData = async () => {
     const keysToRemove = [
       'myRamadhan_quran_bookmarks',
@@ -409,7 +380,6 @@ export default function UserProfile() {
       'haid_tracker',
     ];
     keysToRemove.forEach((key) => localStorage.removeItem(key));
-
     if (user) await StorageService.clearAllData(user.personal_code, isPWA);
     router.reload();
   };
@@ -428,22 +398,25 @@ export default function UserProfile() {
         <title>Profil Saya - MyRamadhan</title>
       </Head>
 
-      {/* ── HEADER ── */}
-      <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center gap-4 transition-colors duration-300'>
-        <button
-          onClick={() => router.push('/')}
-          className='p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
-        >
-          <ArrowLeft size={20} className='text-slate-600 dark:text-slate-300' />
-        </button>
-        <h1 className='font-bold text-xl text-[#1e3a8a] dark:text-white'>
-          User Profile
-        </h1>
+      <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex items-center gap-4'>
+        <div className='max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto flex items-center gap-3 w-full'>
+          <button
+            onClick={() => router.push('/')}
+            className='p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors'
+          >
+            <ArrowLeft
+              size={20}
+              className='text-slate-600 dark:text-slate-300'
+            />
+          </button>
+          <h1 className='font-bold text-xl text-[#1e3a8a] dark:text-white'>
+            User Profile
+          </h1>
+        </div>
       </header>
 
-      <main className='max-w-md mx-auto p-5 space-y-6 mt-2'>
-        {/* ── PROFILE SECTION ── */}
-        <div className='bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-5 relative transition-colors duration-300'>
+      <main className='max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto p-5 space-y-6 mt-2'>
+        <div className='bg-white dark:bg-slate-900 rounded-[2rem] p-6 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-5 relative'>
           <button
             onClick={() =>
               user ? setActiveDrawer('edit_profil') : router.push('/auth/login')
@@ -467,7 +440,7 @@ export default function UserProfile() {
             )}
           </div>
           <div className='flex-1 overflow-hidden pr-4'>
-            <h2 className='font-bold text-xl text-slate-800 dark:text-slate-100 truncate'>
+            <h2 className='font-bold text-xl md:text-2xl text-slate-800 dark:text-slate-100 truncate'>
               {profileData.name}
             </h2>
             <div className='flex items-center gap-1.5 mb-2'>
@@ -486,258 +459,224 @@ export default function UserProfile() {
           </div>
         </div>
 
-        {/* ── APP SETTINGS ── */}
-        <div>
-          <p className='text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-2'>
-            Preferensi Aplikasi
-          </p>
-          <div className='bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-300'>
-            <button
-              onClick={() => setActiveDrawer('tema')}
-              className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
-            >
-              <div className='flex items-center gap-3'>
-                <div
-                  className={`p-2 rounded-xl ${theme === 'dark' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-400'}`}
+        {/* BUNGKUS DENGAN GRID DI DESKTOP */}
+        <div className='flex flex-col md:grid md:grid-cols-2 gap-6 items-start'>
+          {/* KOLOM KIRI: PREFERENSI & LOGOUT */}
+          <div className='space-y-6 w-full order-1'>
+            <div>
+              <p className='text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-2'>
+                Preferensi Aplikasi
+              </p>
+              <div className='bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden'>
+                <button
+                  onClick={() => setActiveDrawer('tema')}
+                  className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
                 >
-                  {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-                </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
-                  Tema Aplikasi
-                </span>
+                  <div className='flex items-center gap-3'>
+                    <div
+                      className={`p-2 rounded-xl ${theme === 'dark' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'bg-amber-100 dark:bg-amber-900/40 text-amber-500 dark:text-amber-400'}`}
+                    >
+                      {theme === 'dark' ? (
+                        <Moon size={18} />
+                      ) : (
+                        <Sun size={18} />
+                      )}
+                    </div>
+                    <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
+                      Tema Aplikasi
+                    </span>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-xs text-slate-400 dark:text-slate-500 font-medium'>
+                      {theme === 'dark' ? 'Gelap' : 'Terang'}
+                    </span>
+                    <ChevronRight
+                      size={16}
+                      className='text-slate-300 dark:text-slate-600'
+                    />
+                  </div>
+                </button>
+                <button
+                  onClick={() => setActiveDrawer('data_management')}
+                  className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
+                >
+                  <div className='flex items-center gap-3'>
+                    <div className='p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400'>
+                      <Database size={18} />
+                    </div>
+                    <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
+                      Manajemen Data
+                    </span>
+                  </div>
+                  <ChevronRight
+                    size={16}
+                    className='text-slate-300 dark:text-slate-600'
+                  />
+                </button>
+                <button
+                  onClick={() => setActiveDrawer('confirm_reset')}
+                  className='w-full flex items-center justify-between p-4 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors group'
+                >
+                  <div className='flex items-center gap-3'>
+                    <div className='p-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-500 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors'>
+                      <Trash2 size={18} />
+                    </div>
+                    <span className='font-semibold text-rose-600 dark:text-rose-400 text-sm'>
+                      Reset Semua Data
+                    </span>
+                  </div>
+                  <ChevronRight
+                    size={16}
+                    className='text-rose-300 dark:text-rose-700'
+                  />
+                </button>
               </div>
-              <div className='flex items-center gap-2'>
-                <span className='text-xs text-slate-400 dark:text-slate-500 font-medium'>
-                  {theme === 'dark' ? 'Gelap' : 'Terang'}
-                </span>
+            </div>
+
+            {/* LOGIN / LOGOUT (Gabung di Kolom Kiri Bawah agar seimbang) */}
+            <div className='w-full'>
+              {user ? (
+                <button
+                  onClick={() => setActiveDrawer('confirm_logout')}
+                  className='w-full py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-rose-500 dark:text-rose-400 font-bold rounded-2xl shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:border-rose-200 dark:hover:border-rose-800 transition-all flex items-center justify-center gap-2'
+                >
+                  <LogOut size={18} /> Keluar Akun
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push('/auth/login')}
+                  className='w-full py-4 bg-[#1e3a8a] text-white font-bold rounded-2xl shadow-md hover:bg-blue-800 transition-all flex items-center justify-center gap-2'
+                >
+                  <LogIn size={18} /> Login / Daftar Sekarang
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* KOLOM KANAN: BANTUAN & INFO (Termasuk Pengembang) */}
+          <div className='w-full order-2'>
+            <p className='text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-2'>
+              Bantuan & Info
+            </p>
+            <div className='bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col'>
+              <button
+                onClick={() => setActiveDrawer('bantuan')}
+                className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
+              >
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-500 dark:text-blue-400'>
+                    <HelpCircle size={18} />
+                  </div>
+                  <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
+                    Bantuan & FAQ
+                  </span>
+                </div>
                 <ChevronRight
                   size={16}
                   className='text-slate-300 dark:text-slate-600'
                 />
-              </div>
-            </button>
-            <button
-              onClick={() => setActiveDrawer('data_management')}
-              className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400'>
-                  <Database size={18} />
+              </button>
+              <button
+                onClick={() => setActiveDrawer('privasi')}
+                className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
+              >
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-500 dark:text-emerald-400'>
+                    <Shield size={18} />
+                  </div>
+                  <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
+                    Kebijakan Privasi
+                  </span>
                 </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
-                  Manajemen Data
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-slate-300 dark:text-slate-600'
-              />
-            </button>
-            <button
-              onClick={() => setActiveDrawer('confirm_reset')}
-              className='w-full flex items-center justify-between p-4 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors group'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-rose-100 dark:bg-rose-900/40 text-rose-500 dark:text-rose-400 group-hover:bg-rose-500 group-hover:text-white transition-colors'>
-                  <Trash2 size={18} />
-                </div>
-                <span className='font-semibold text-rose-600 dark:text-rose-400 text-sm'>
-                  Reset Semua Data
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-rose-300 dark:text-rose-700'
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* ── SUPPORT & ABOUT ── */}
-        <div>
-          <p className='text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-2'>
-            Bantuan & Info
-          </p>
-          <div className='bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-300'>
-            <button
-              onClick={() => setActiveDrawer('bantuan')}
-              className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-500 dark:text-blue-400'>
-                  <HelpCircle size={18} />
-                </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
-                  Bantuan & FAQ
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-slate-300 dark:text-slate-600'
-              />
-            </button>
-            <button
-              onClick={() => setActiveDrawer('privasi')}
-              className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-500 dark:text-emerald-400'>
-                  <Shield size={18} />
-                </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
-                  Kebijakan Privasi
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-slate-300 dark:text-slate-600'
-              />
-            </button>
-            <button
-              onClick={() => setActiveDrawer('tentang')}
-              className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-500 dark:text-purple-400'>
-                  <Info size={18} />
-                </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
-                  Tentang MyRamadhan
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-slate-300 dark:text-slate-600'
-              />
-            </button>
-            <button
-              onClick={() =>
-                window.open(
-                  'https://docs.google.com/forms/d/e/1FAIpQLSeB0TrSZDDrJ-xbmEjdiH5mV30Z4A28PFwSfAmTY0Y_qV265A/viewform?usp=publish-editor',
-                  '_blank',
-                )
-              }
-              className='w-full flex items-center justify-between p-4 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors border-b border-slate-50 dark:border-slate-800 group'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors'>
-                  <MessageSquare size={18} />
-                </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-teal-600 dark:group-hover:text-teal-400'>
-                  Kirim Feedback
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-slate-300 dark:text-slate-600'
-              />
-            </button>
-            <button
-              onClick={() => setActiveDrawer('donasi')}
-              className='w-full flex items-center justify-between p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-colors group'
-            >
-              <div className='flex items-center gap-3'>
-                <div className='p-2 rounded-xl bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors'>
-                  <Coffee size={18} />
-                </div>
-                <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-orange-600 dark:group-hover:text-orange-400'>
-                  Traktir Kopi
-                </span>
-              </div>
-              <ChevronRight
-                size={16}
-                className='text-slate-300 dark:text-slate-600'
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* ── DEVELOPER PROFILE ── */}
-        <div>
-          <p className='text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 ml-2'>
-            Pengembang Aplikasi
-          </p>
-          <div className='bg-gradient-to-br from-slate-800 to-slate-900 dark:from-slate-800/80 dark:to-slate-950 rounded-3xl p-6 shadow-md text-white border border-transparent dark:border-slate-700/50'>
-            <div className='flex items-center gap-4 mb-5'>
-              <div className='w-14 h-14 bg-gradient-to-tr from-blue-100 to-indigo-100 rounded-full flex items-center justify-center text-[#1e3a8a] shadow-inner shrink-0 relative overflow-hidden'>
-                <Image
-                  src={'/developer-profile.jpg'}
-                  alt='Profile'
-                  fill
-                  className='object-cover'
+                <ChevronRight
+                  size={16}
+                  className='text-slate-300 dark:text-slate-600'
                 />
-              </div>
-              <div>
-                <h3 className='font-bold text-base'>Rifky Muhammad Prayudhi</h3>
-                <p className='text-xs text-slate-400'>Software Engineer</p>
-              </div>
-            </div>
-            <p className='text-[13px] text-slate-300 leading-relaxed mb-5'>
-              Dibuat dengan sepenuh hati untuk membantu ibadah umat Muslim,
-              khususnya di bulan suci Ramadhan.
-            </p>
-            <div className='flex items-center gap-3'>
-              <a
-                href='https://github.com/MoCheeseKy'
-                target='_blank'
-                rel='noreferrer'
-                className='p-2.5 bg-slate-700 hover:bg-[#1e3a8a] rounded-xl transition-colors'
+              </button>
+              <button
+                onClick={() => setActiveDrawer('tentang')}
+                className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800'
               >
-                <Github size={18} />
-              </a>
-              <a
-                href='https://www.linkedin.com/in/rifkymprayudhi'
-                target='_blank'
-                rel='noreferrer'
-                className='p-2.5 bg-slate-700 hover:bg-[#0077b5] rounded-xl transition-colors'
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-500 dark:text-purple-400'>
+                    <Info size={18} />
+                  </div>
+                  <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm'>
+                    Tentang MyRamadhan
+                  </span>
+                </div>
+                <ChevronRight
+                  size={16}
+                  className='text-slate-300 dark:text-slate-600'
+                />
+              </button>
+              {/* TOMBOL PENGEMBANG BARU */}
+              <button
+                onClick={() => setActiveDrawer('pengembang')}
+                className='w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-50 dark:border-slate-800 group'
               >
-                <Linkedin size={18} />
-              </a>
-              <a
-                href='https://www.instagram.com/mocheeseky'
-                target='_blank'
-                rel='noreferrer'
-                className='p-2.5 bg-slate-700 hover:bg-[#e1306c] rounded-xl transition-colors'
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-500 dark:text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors'>
+                    <UserIcon size={18} />
+                  </div>
+                  <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-indigo-600 dark:group-hover:text-indigo-400'>
+                    Pengembang Aplikasi
+                  </span>
+                </div>
+                <ChevronRight
+                  size={16}
+                  className='text-slate-300 dark:text-slate-600'
+                />
+              </button>
+              <button
+                onClick={() =>
+                  window.open(
+                    'https://docs.google.com/forms/d/e/1FAIpQLSeB0TrSZDDrJ-xbmEjdiH5mV30Z4A28PFwSfAmTY0Y_qV265A/viewform?usp=publish-editor',
+                    '_blank',
+                  )
+                }
+                className='w-full flex items-center justify-between p-4 hover:bg-teal-50 dark:hover:bg-teal-950/30 transition-colors border-b border-slate-50 dark:border-slate-800 group'
               >
-                <Instagram size={18} />
-              </a>
-              <a
-                href='mailto:rifky.muhammadprayudhi@gmail.com'
-                className='p-2.5 bg-slate-700 hover:bg-rose-500 rounded-xl transition-colors'
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors'>
+                    <MessageSquare size={18} />
+                  </div>
+                  <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-teal-600 dark:group-hover:text-teal-400'>
+                    Kirim Feedback
+                  </span>
+                </div>
+                <ChevronRight
+                  size={16}
+                  className='text-slate-300 dark:text-slate-600'
+                />
+              </button>
+              <button
+                onClick={() => setActiveDrawer('donasi')}
+                className='w-full flex-1 flex items-center justify-between p-4 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-colors group'
               >
-                <Mail size={18} />
-              </a>
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 rounded-xl bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-colors'>
+                    <Coffee size={18} />
+                  </div>
+                  <span className='font-semibold text-slate-700 dark:text-slate-200 text-sm group-hover:text-orange-600 dark:group-hover:text-orange-400'>
+                    Traktir Kopi
+                  </span>
+                </div>
+                <ChevronRight
+                  size={16}
+                  className='text-slate-300 dark:text-slate-600'
+                />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* ── LOGIN / LOGOUT BUTTON ── */}
-        {user ? (
-          <button
-            onClick={() => setActiveDrawer('confirm_logout')}
-            className='w-full mt-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-rose-500 dark:text-rose-400 font-bold rounded-2xl shadow-sm hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:border-rose-200 dark:hover:border-rose-800 transition-all flex items-center justify-center gap-2'
-          >
-            <LogOut size={18} /> Keluar Akun
-          </button>
-        ) : (
-          <button
-            onClick={() => router.push('/auth/login')}
-            className='w-full mt-4 py-4 bg-[#1e3a8a] text-white font-bold rounded-2xl shadow-md hover:bg-blue-800 transition-all flex items-center justify-center gap-2'
-          >
-            <LogIn size={18} /> Login / Daftar Sekarang
-          </button>
-        )}
-
-        <p className='text-center text-[10px] font-medium text-slate-400 dark:text-slate-600 mt-6 mb-2'>
+        <p className='text-center text-[10px] font-medium text-slate-400 dark:text-slate-600 mt-6 md:mt-10 mb-2'>
           MyRamadhan App v1.1.0 &copy; {new Date().getFullYear()}
         </p>
       </main>
 
-      {/* ========================================================= */}
-      {/* KUMPULAN DRAWER / POPUP BOTTOM SHEET */}
-      {/* ========================================================= */}
-
-      {/* DRAWER: KONFIRMASI RESET DATA */}
+      {/* --- DRAWERS TETAP SAMA (DENGAN TAMBAHAN items-center UNTUK DESKTOP) --- */}
       <DrawerPanel
         open={activeDrawer === 'confirm_reset'}
         onClose={() => setActiveDrawer(null)}
@@ -775,7 +714,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: KONFIRMASI LOGOUT */}
       <DrawerPanel
         open={activeDrawer === 'confirm_logout'}
         onClose={() => setActiveDrawer(null)}
@@ -810,7 +748,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: EDIT PROFIL & LOKASI */}
       <DrawerPanel
         open={activeDrawer === 'edit_profil'}
         onClose={() => setActiveDrawer(null)}
@@ -856,7 +793,6 @@ export default function UserProfile() {
             className='hidden'
           />
         </div>
-
         <div className='space-y-4 pb-4'>
           <div>
             <label className='text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block'>
@@ -870,8 +806,6 @@ export default function UserProfile() {
               placeholder='Masukkan nama pengguna'
             />
           </div>
-
-          {/* PILIH KOTA DROPDOWN STYLE */}
           <div>
             <label className='text-xs font-bold text-slate-500 dark:text-slate-400 mb-1 block'>
               Lokasi Kota (Untuk Jadwal Sholat)
@@ -894,7 +828,6 @@ export default function UserProfile() {
                 className={`text-slate-400 transition-transform ${isCityPickerOpen ? 'rotate-180 text-[#1e3a8a] dark:text-blue-400' : ''}`}
               />
             </button>
-
             <AnimatePresence>
               {isCityPickerOpen && (
                 <motion.div
@@ -929,7 +862,7 @@ export default function UserProfile() {
                             }}
                             className={`w-full flex items-center justify-between px-3 py-2.5 rounded-md text-sm font-medium transition-all ${editLocation === city ? 'bg-blue-50 dark:bg-blue-900/40 text-[#1e3a8a] dark:text-blue-400' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'}`}
                           >
-                            {city}
+                            {city}{' '}
                             {editLocation === city && (
                               <CheckCircle2
                                 size={16}
@@ -949,7 +882,6 @@ export default function UserProfile() {
               )}
             </AnimatePresence>
           </div>
-
           <button
             onClick={handleSaveProfile}
             disabled={isSaving || !editName.trim()}
@@ -960,7 +892,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: MANAJEMEN DATA (EXPORT/IMPORT) */}
       <DrawerPanel
         open={activeDrawer === 'data_management'}
         onClose={() => setActiveDrawer(null)}
@@ -972,7 +903,6 @@ export default function UserProfile() {
           Pindahkan data Jurnal, Tracker, dan preferensi Anda jika ingin
           berpindah perangkat atau beralih ke Mode PWA secara offline.
         </p>
-
         <div className='space-y-4'>
           <div className='bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-800/50'>
             <h4 className='font-bold text-sm text-indigo-800 dark:text-indigo-300 mb-1 flex items-center gap-2'>
@@ -988,7 +918,6 @@ export default function UserProfile() {
               Unduh Backup Sekarang
             </button>
           </div>
-
           <div className='bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50'>
             <h4 className='font-bold text-sm text-emerald-800 dark:text-emerald-300 mb-1 flex items-center gap-2'>
               <Upload size={16} /> Import (Restore) Data
@@ -1014,7 +943,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: TEMA APLIKASI */}
       <DrawerPanel
         open={activeDrawer === 'tema'}
         onClose={() => setActiveDrawer(null)}
@@ -1043,7 +971,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: BANTUAN & FAQ */}
       <DrawerPanel
         open={activeDrawer === 'bantuan'}
         onClose={() => setActiveDrawer(null)}
@@ -1086,7 +1013,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: KEBIJAKAN PRIVASI */}
       <DrawerPanel
         open={activeDrawer === 'privasi'}
         onClose={() => setActiveDrawer(null)}
@@ -1143,7 +1069,6 @@ export default function UserProfile() {
         </div>
       </DrawerPanel>
 
-      {/* DRAWER: TENTANG APLIKASI */}
       <DrawerPanel
         open={activeDrawer === 'tentang'}
         onClose={() => setActiveDrawer(null)}
@@ -1174,7 +1099,74 @@ export default function UserProfile() {
         </p>
       </DrawerPanel>
 
-      {/* DRAWER: TRAKTIR KOPI */}
+      <DrawerPanel
+        open={activeDrawer === 'pengembang'}
+        onClose={() => setActiveDrawer(null)}
+        title='Pengembang Aplikasi'
+        icon={UserIcon}
+        titleColor='text-indigo-500 dark:text-indigo-400'
+      >
+        <div className='flex items-center gap-4 mb-5 mt-2'>
+          <div className='w-16 h-16 bg-gradient-to-tr from-blue-100 to-indigo-100 rounded-full flex items-center justify-center text-[#1e3a8a] shadow-inner shrink-0 relative overflow-hidden'>
+            <Image
+              src={'/developer-profile.jpg'}
+              alt='Profile'
+              fill
+              className='object-cover'
+            />
+          </div>
+          <div>
+            <h3 className='font-bold text-base text-slate-800 dark:text-slate-100'>
+              Rifky Muhammad Prayudhi
+            </h3>
+            <p className='text-xs text-slate-500 dark:text-slate-400'>
+              Software Engineer
+            </p>
+          </div>
+        </div>
+        <p className='text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed mb-6 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700'>
+          Dibuat secara independen di waktu luang dengan tujuan membantu ibadah
+          umat Muslim, khususnya di bulan suci Ramadhan, agar menjadi lebih
+          mudah dan bermakna.
+        </p>
+
+        <p className='text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center mb-3'>
+          Kunjungi Profil Saya
+        </p>
+        <div className='flex items-center justify-center gap-3'>
+          <a
+            href='https://github.com/MoCheeseKy'
+            target='_blank'
+            rel='noreferrer'
+            className='p-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-[#1e3a8a] hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl transition-colors'
+          >
+            <Github size={20} />
+          </a>
+          <a
+            href='https://www.linkedin.com/in/rifkymprayudhi'
+            target='_blank'
+            rel='noreferrer'
+            className='p-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-[#0077b5] hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl transition-colors'
+          >
+            <Linkedin size={20} />
+          </a>
+          <a
+            href='https://www.instagram.com/mocheeseky'
+            target='_blank'
+            rel='noreferrer'
+            className='p-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-[#e1306c] hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl transition-colors'
+          >
+            <Instagram size={20} />
+          </a>
+          <a
+            href='mailto:rifky.muhammadprayudhi@gmail.com'
+            className='p-3.5 bg-slate-100 dark:bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-600 dark:text-slate-300 rounded-2xl transition-colors'
+          >
+            <Mail size={20} />
+          </a>
+        </div>
+      </DrawerPanel>
+
       <DrawerPanel
         open={activeDrawer === 'donasi'}
         onClose={() => setActiveDrawer(null)}

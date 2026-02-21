@@ -98,7 +98,6 @@ const CATEGORIES = [
     color: 'lime',
     desc: 'Hukum dan tata cara zakat fitrah',
   },
-  // ✅ FIX: key sebelumnya 'itikafDan10Terakhir' → sesuai JSON: 'lailatulQadarDanItikaf'
   {
     key: 'lailatulQadarDanItikaf',
     label: "I'tikaf & Lailatul Qadar",
@@ -113,7 +112,6 @@ const CATEGORIES = [
     color: 'yellow',
     desc: 'Amalan hari raya dan puasa Syawal',
   },
-  // ✅ FIX: key sebelumnya 'hilalDanPenentuanRamadhan' → sesuai JSON: 'penentuanHilal'
   {
     key: 'penentuanHilal',
     label: 'Hilal & Penentuan Ramadhan',
@@ -286,19 +284,19 @@ function FiqihCard({ item, color }) {
   const c = COLOR_MAP[color] || COLOR_MAP.amber;
   return (
     <div
-      className={`bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-opacity-60 transition-all group p-5`}
+      className={`bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-opacity-60 transition-all group p-5 h-full flex flex-col`}
     >
       <div className='flex items-start justify-between gap-3 mb-2'>
         <h3
-          className={`font-bold text-slate-800 dark:text-slate-100 text-[15px] leading-snug group-hover:${c.text} transition-colors flex-1`}
+          className={`font-bold text-slate-800 dark:text-slate-100 text-[15px] md:text-base leading-snug group-hover:${c.text} transition-colors flex-1`}
         >
           {item.title}
         </h3>
-        <div className={`shrink-0 p-1.5 rounded-xl ${c.bg}`}>
-          <BookOpen size={15} className={c.text} />
+        <div className={`shrink-0 p-1.5 md:p-2 rounded-xl ${c.bg}`}>
+          <BookOpen size={15} className={`${c.text} md:w-5 md:h-5`} />
         </div>
       </div>
-      <p className='text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-3'>
+      <p className='text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-3 flex-1'>
         {item.content}
       </p>
       <div className='flex items-center gap-2 flex-wrap'>
@@ -382,9 +380,9 @@ export default function FiqihPage() {
         <title>Fiqih Ramadhan - MyRamadhan</title>
       </Head>
 
-      {/* ── HEADER ── */}
+      {/* ── HEADER ADAPTIF ── */}
       <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 px-5 py-3'>
-        <div className='max-w-md mx-auto'>
+        <div className='max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto'>
           {/* Baris atas: back + judul + badge */}
           <div className='flex items-center gap-3 mb-3'>
             <button
@@ -406,12 +404,14 @@ export default function FiqihPage() {
             <div className='flex-1 min-w-0'>
               {activeCategory && !isSearchMode ? (
                 <div className='flex items-center gap-2'>
-                  <span className='text-xl'>{activeCatConfig?.emoji}</span>
+                  <span className='text-xl md:text-2xl'>
+                    {activeCatConfig?.emoji}
+                  </span>
                   <div>
-                    <h1 className='font-bold text-base text-slate-800 dark:text-slate-100 leading-tight truncate'>
+                    <h1 className='font-bold text-base md:text-lg text-slate-800 dark:text-slate-100 leading-tight truncate'>
                       {activeCatConfig?.label}
                     </h1>
-                    <p className='text-[10px] text-slate-400 dark:text-slate-500'>
+                    <p className='text-[10px] md:text-xs text-slate-400 dark:text-slate-500'>
                       {displayItems.length} materi tersedia
                     </p>
                   </div>
@@ -420,9 +420,9 @@ export default function FiqihPage() {
                 <div className='flex items-center gap-2'>
                   <Scale
                     size={20}
-                    className='text-amber-500 dark:text-amber-400 shrink-0'
+                    className='text-amber-500 dark:text-amber-400 shrink-0 md:w-6 md:h-6'
                   />
-                  <h1 className='font-bold text-lg text-slate-800 dark:text-slate-100'>
+                  <h1 className='font-bold text-lg md:text-xl text-slate-800 dark:text-slate-100'>
                     Fiqih Ramadhan
                   </h1>
                 </div>
@@ -430,7 +430,7 @@ export default function FiqihPage() {
             </div>
 
             {isHomeView && (
-              <span className='text-[10px] font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full shrink-0'>
+              <span className='text-[10px] md:text-xs font-bold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 px-2.5 py-1 rounded-full shrink-0'>
                 {totalItems} Materi
               </span>
             )}
@@ -445,7 +445,7 @@ export default function FiqihPage() {
             <input
               type='text'
               placeholder='Cari topik fiqih (contoh: batal, niat, sunnah)...'
-              className='w-full pl-11 pr-10 py-3 bg-slate-100 dark:bg-slate-700 rounded-2xl border-none focus:ring-2 focus:ring-amber-400 outline-none text-sm transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
+              className='w-full pl-11 pr-10 py-3 bg-slate-100 dark:bg-slate-700 rounded-2xl border-none focus:ring-2 focus:ring-amber-400 outline-none text-[13px] md:text-sm transition-all text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500'
               onChange={(e) => setSearchQuery(e.target.value)}
               value={searchQuery}
             />
@@ -459,15 +459,15 @@ export default function FiqihPage() {
             )}
           </div>
 
-          {/* Chips kategori (strip horizontal saat di kategori atau search) */}
+          {/* Chips kategori (strip horizontal) */}
           {!isHomeView && (
-            <div className='flex gap-2 mt-2.5 overflow-x-auto scrollbar-hide pb-0.5'>
+            <div className='flex gap-2 mt-3 overflow-x-auto custom-scrollbar pb-1'>
               <button
                 onClick={() => {
                   setActiveCategory(null);
                   setSearchQuery('');
                 }}
-                className='shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
+                className='shrink-0 text-[11px] md:text-xs font-bold px-3 py-1.5 md:py-2 rounded-xl border border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
               >
                 Semua Kategori
               </button>
@@ -482,7 +482,7 @@ export default function FiqihPage() {
                         setActiveCategory(cat.key);
                         setSearchQuery('');
                       }}
-                      className={`shrink-0 text-[11px] font-bold px-3 py-1.5 rounded-xl border transition-colors ${
+                      className={`shrink-0 text-[11px] md:text-xs font-bold px-3 py-1.5 md:py-2 rounded-xl border transition-colors ${
                         isActive
                           ? `${c.bg} ${c.text} ${c.border}`
                           : 'border-slate-200 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -498,22 +498,22 @@ export default function FiqihPage() {
         </div>
       </header>
 
-      {/* ── MAIN ── */}
-      <main className='max-w-md mx-auto px-4 pt-4 pb-6'>
+      {/* ── MAIN ADAPTIF ── */}
+      <main className='max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-4 pb-6 md:pt-6'>
         {/* ── HOME VIEW: Grid Kategori ── */}
         {isHomeView && (
-          <div className='space-y-4'>
+          <div className='space-y-4 md:space-y-6'>
             {/* Hero strip */}
-            <div className='bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-3xl p-5 text-white relative overflow-hidden shadow-lg mb-2'>
+            <div className='bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 rounded-3xl md:rounded-[2.5rem] p-5 md:p-8 text-white relative overflow-hidden shadow-lg mb-2 md:mb-4'>
               <div className='absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.15),transparent_60%)]' />
               <div className='relative z-10'>
-                <p className='text-[10px] font-bold uppercase tracking-[0.25em] text-amber-100 mb-1'>
+                <p className='text-[10px] md:text-xs font-bold uppercase tracking-[0.25em] text-amber-100 mb-1 md:mb-2'>
                   Ensiklopedi
                 </p>
-                <h2 className='text-2xl font-black text-white leading-tight mb-1'>
+                <h2 className='text-2xl md:text-4xl font-black text-white leading-tight mb-2'>
                   Fiqih Puasa Ramadhan
                 </h2>
-                <p className='text-amber-100 text-xs leading-relaxed'>
+                <p className='text-amber-100 text-xs md:text-sm leading-relaxed'>
                   {totalItems} materi dari{' '}
                   {CATEGORIES.filter((c) => categoryCounts[c.key] > 0).length}{' '}
                   kategori · Rujukan lengkap hukum puasa
@@ -521,8 +521,8 @@ export default function FiqihPage() {
               </div>
             </div>
 
-            {/* Grid kategori */}
-            <div className='grid grid-cols-2 gap-3'>
+            {/* Grid kategori (2 mobile, 3 tablet, 4 desktop) */}
+            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4'>
               {CATEGORIES.map((cat) => {
                 const c = COLOR_MAP[cat.color];
                 const count = categoryCounts[cat.key];
@@ -532,25 +532,27 @@ export default function FiqihPage() {
                     key={cat.key}
                     onClick={() => !isEmpty && setActiveCategory(cat.key)}
                     disabled={isEmpty}
-                    className={`text-left p-4 rounded-2xl border transition-all ${
+                    className={`text-left p-4 md:p-5 rounded-2xl md:rounded-3xl border transition-all h-full flex flex-col justify-between min-h-[140px] md:min-h-[160px] ${
                       isEmpty
                         ? 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-700/50 opacity-40 cursor-not-allowed'
                         : `bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:${c.border} hover:shadow-md active:scale-95 cursor-pointer`
                     }`}
                   >
-                    <div
-                      className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg mb-3 ${isEmpty ? 'bg-slate-100 dark:bg-slate-700' : c.bg}`}
-                    >
-                      {cat.emoji}
+                    <div>
+                      <div
+                        className={`w-9 h-9 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-lg md:text-2xl mb-3 md:mb-4 ${isEmpty ? 'bg-slate-100 dark:bg-slate-700' : c.bg}`}
+                      >
+                        {cat.emoji}
+                      </div>
+                      <p className='font-bold text-slate-800 dark:text-slate-100 text-[13px] md:text-sm leading-tight mb-1 md:mb-2'>
+                        {cat.label}
+                      </p>
+                      <p className='text-[10px] md:text-xs text-slate-400 dark:text-slate-500 leading-snug line-clamp-2 mb-3'>
+                        {cat.desc}
+                      </p>
                     </div>
-                    <p className='font-bold text-slate-800 dark:text-slate-100 text-[13px] leading-tight mb-1'>
-                      {cat.label}
-                    </p>
-                    <p className='text-[10px] text-slate-400 dark:text-slate-500 leading-snug line-clamp-2 mb-2'>
-                      {cat.desc}
-                    </p>
                     <span
-                      className={`text-[10px] font-black px-2 py-0.5 rounded-lg ${isEmpty ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-600' : c.badge}`}
+                      className={`text-[10px] md:text-xs font-black px-2 md:px-2.5 py-0.5 md:py-1 rounded-lg w-fit ${isEmpty ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-600' : c.badge}`}
                     >
                       {count > 0 ? `${count} materi` : 'Segera hadir'}
                     </span>
@@ -564,8 +566,8 @@ export default function FiqihPage() {
         {/* ── SEARCH RESULT VIEW ── */}
         {isSearchMode && (
           <div className='space-y-3'>
-            <div className='flex items-center justify-between mb-1'>
-              <p className='text-xs text-slate-500 dark:text-slate-400'>
+            <div className='flex items-center justify-between mb-2 md:mb-4'>
+              <p className='text-xs md:text-sm text-slate-500 dark:text-slate-400'>
                 <span className='font-bold text-slate-700 dark:text-slate-300'>
                   {displayItems.length}
                 </span>{' '}
@@ -574,19 +576,25 @@ export default function FiqihPage() {
             </div>
 
             {displayItems.length > 0 ? (
-              displayItems.map((item) => (
-                <div key={`${item._catKey}-${item.id}`} className='relative'>
-                  {/* Label kategori mini */}
-                  <div className='flex items-center gap-1.5 mb-1.5 ml-1'>
-                    <span
-                      className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${COLOR_MAP[item._catColor]?.badge}`}
-                    >
-                      {item._catEmoji} {item._catLabel}
-                    </span>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-5'>
+                {displayItems.map((item) => (
+                  <div
+                    key={`${item._catKey}-${item.id}`}
+                    className='relative h-full flex flex-col'
+                  >
+                    <div className='flex items-center gap-1.5 mb-1.5 ml-1 shrink-0'>
+                      <span
+                        className={`text-[9px] md:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${COLOR_MAP[item._catColor]?.badge}`}
+                      >
+                        {item._catEmoji} {item._catLabel}
+                      </span>
+                    </div>
+                    <div className='flex-1'>
+                      <FiqihCard item={item} color={item._catColor} />
+                    </div>
                   </div>
-                  <FiqihCard item={item} color={item._catColor} />
-                </div>
-              ))
+                ))}
+              </div>
             ) : (
               <EmptyState query={searchQuery} router={router} />
             )}
@@ -597,15 +605,17 @@ export default function FiqihPage() {
         {activeCategory && !isSearchMode && (
           <div className='space-y-3'>
             {displayItems.length > 0 ? (
-              displayItems.map((item) => (
-                <FiqihCard
-                  key={item.id}
-                  item={item}
-                  color={activeCatConfig?.color || 'amber'}
-                />
-              ))
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-5'>
+                {displayItems.map((item) => (
+                  <FiqihCard
+                    key={item.id}
+                    item={item}
+                    color={activeCatConfig?.color || 'amber'}
+                  />
+                ))}
+              </div>
             ) : (
-              <div className='text-center py-20 border border-dashed border-slate-200 dark:border-slate-700 rounded-3xl'>
+              <div className='text-center py-20 border border-dashed border-slate-200 dark:border-slate-700 rounded-3xl md:max-w-xl md:mx-auto'>
                 <div className='text-4xl mb-3'>🚧</div>
                 <p className='font-bold text-slate-600 dark:text-slate-400 mb-1'>
                   Materi Segera Hadir
@@ -620,7 +630,7 @@ export default function FiqihPage() {
 
         {/* Footer count */}
         {!isHomeView && displayItems.length > 0 && (
-          <div className='text-center pt-6'>
+          <div className='text-center pt-8 md:pt-10'>
             <p className='text-xs text-slate-400 dark:text-slate-500'>
               Menampilkan {displayItems.length} materi
             </p>
@@ -634,14 +644,14 @@ export default function FiqihPage() {
 // ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ query, router }) {
   return (
-    <div className='text-center py-16 px-4'>
-      <div className='w-16 h-16 bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600 rounded-full flex items-center justify-center mx-auto mb-4'>
-        <AlertCircle size={30} />
+    <div className='text-center py-16 md:py-24 px-4 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-3xl md:max-w-2xl md:mx-auto shadow-sm'>
+      <div className='w-16 h-16 md:w-20 md:h-20 bg-slate-100 dark:bg-slate-700 text-slate-300 dark:text-slate-500 rounded-full flex items-center justify-center mx-auto mb-4'>
+        <AlertCircle size={30} className='md:w-10 md:h-10' />
       </div>
-      <h3 className='font-bold text-slate-700 dark:text-slate-300 mb-2'>
+      <h3 className='font-bold text-slate-700 dark:text-slate-300 mb-2 md:text-lg'>
         Materi tidak ditemukan
       </h3>
-      <p className='text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed'>
+      <p className='text-sm md:text-base text-slate-500 dark:text-slate-400 mb-6 leading-relaxed px-4 md:px-12'>
         Pertanyaan fiqihmu belum ada di database. Tanyakan langsung ke Konsultan
         AI Ramatalk!
       </p>
@@ -649,9 +659,9 @@ function EmptyState({ query, router }) {
         onClick={() =>
           router.push(`/ramatalk?mode=fiqih&q=${encodeURIComponent(query)}`)
         }
-        className='px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-bold text-sm shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto'
+        className='px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-bold text-sm md:text-base shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 mx-auto'
       >
-        <Sparkles size={16} /> Tanya Fiqih ke Ramatalk
+        <Sparkles size={16} className='md:w-5 md:h-5' /> Tanya Fiqih ke Ramatalk
       </button>
     </div>
   );

@@ -23,7 +23,16 @@ import {
   ChevronDown,
   ChevronUp,
   Info,
+  Type,
+  Navigation,
 } from 'lucide-react';
+
+const ARAB_SIZES = [
+  { key: 'sm', label: 'S', size: '22px' },
+  { key: 'md', label: 'M', size: '28px' },
+  { key: 'lg', label: 'L', size: '36px' },
+  { key: 'xl', label: 'XL', size: '42px' },
+];
 
 const TAJWID_RULES = [
   {
@@ -70,7 +79,6 @@ const TAJWID_RULES = [
   },
 ];
 
-// Dark mode tajwid backgrounds (lighter opacity for dark bg)
 const TAJWID_DARK_BG = {
   mad: 'rgba(37,99,235,0.25)',
   ghunnah: 'rgba(219,39,119,0.25)',
@@ -124,8 +132,10 @@ function AyatCard({
 }) {
   const [revealed, setRevealed] = useState(false);
   const highlights = settings.tajwid ? applyTajwid(ayat.teksArab) : [];
+  const isAnchor =
+    typeof window !== 'undefined' &&
+    window.location.hash === `#ayat-${surahId}-${ayat.nomorAyat}`;
 
-  // Detect dark mode via class on <html>
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
     const check = () =>
@@ -139,12 +149,19 @@ function AyatCard({
     return () => observer.disconnect();
   }, []);
 
+  const arabSizeConfig =
+    ARAB_SIZES.find((s) => s.key === settings.arabSize) || ARAB_SIZES[1];
+
   const renderArabic = () => {
+    const fontClass =
+      'font-amiri text-slate-800 dark:text-slate-100 text-right leading-[2.4] md:leading-[2.6]';
+
     if (!highlights.length) {
       return (
         <p
-          className='font-amiri text-[2rem] leading-[2.4] text-slate-800 dark:text-slate-100 text-right'
+          className={fontClass}
           dir='rtl'
+          style={{ fontSize: arabSizeConfig.size }}
         >
           {ayat.teksArab}
         </p>
@@ -176,10 +193,12 @@ function AyatCard({
       });
     if (last < ayat.teksArab.length)
       parts.push(<span key='tail'>{ayat.teksArab.slice(last)}</span>);
+
     return (
       <p
-        className='font-amiri text-[2rem] leading-[2.4] text-slate-800 dark:text-slate-100 text-right'
+        className={fontClass}
         dir='rtl'
+        style={{ fontSize: arabSizeConfig.size }}
       >
         {parts}
       </p>
@@ -191,39 +210,40 @@ function AyatCard({
   return (
     <div
       id={`ayat-${surahId}-${ayat.nomorAyat}`}
-      className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
+      className={`rounded-3xl border transition-all duration-300 overflow-hidden scroll-mt-36 md:scroll-mt-40 ${
         isLastRead
           ? 'bg-blue-50/60 dark:bg-blue-950/30 border-[#1e3a8a] dark:border-blue-700 ring-2 ring-[#1e3a8a]/20 dark:ring-blue-700/20'
-          : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-100 dark:hover:border-blue-800'
+          : isAnchor
+            ? 'bg-indigo-50/40 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-600'
+            : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 hover:border-blue-100 dark:hover:border-blue-800'
       }`}
     >
-      {/* HEADER */}
-      <div className='flex items-center justify-between px-5 py-3 border-b border-slate-50 dark:border-slate-700/50'>
-        <div className='flex items-center gap-2'>
+      <div className='flex items-center justify-between px-5 md:px-7 py-3 md:py-4 border-b border-slate-50 dark:border-slate-700/50'>
+        <div className='flex items-center gap-2 md:gap-3'>
           <div
-            className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black ${isLastRead ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white' : 'bg-blue-50 dark:bg-blue-950/50 text-[#1e3a8a] dark:text-blue-400'}`}
+            className={`w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center text-xs md:text-sm font-black ${isLastRead ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white' : 'bg-blue-50 dark:bg-blue-950/50 text-[#1e3a8a] dark:text-blue-400'}`}
           >
             {ayat.nomorAyat}
           </div>
-          <span className='text-[10px] font-semibold text-slate-400 dark:text-slate-500'>
+          <span className='text-[10px] md:text-xs font-semibold text-slate-400 dark:text-slate-500'>
             {surahName}
           </span>
         </div>
-        <div className='flex items-center gap-1'>
+        <div className='flex items-center gap-1 md:gap-2'>
           <button
             onClick={() => onPlayAudio(ayat)}
             className={`p-2 rounded-full transition-colors ${isPlaying ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
           >
-            {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+            {isPlaying ? <Pause size={16} /> : <Play size={16} />}
           </button>
           <button
             onClick={() => onCopy(ayat, surahName)}
             className='p-2 rounded-full text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
           >
             {copiedId === copyKey ? (
-              <Check size={15} className='text-emerald-500' />
+              <Check size={16} className='text-emerald-500' />
             ) : (
-              <Copy size={15} />
+              <Copy size={16} />
             )}
           </button>
           <button
@@ -231,76 +251,77 @@ function AyatCard({
             className={`p-2 rounded-full transition-colors ${isBookmarked ? 'text-amber-500 bg-amber-50 dark:bg-amber-900/30' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
           >
             {isBookmarked ? (
-              <BookmarkCheck size={15} />
+              <BookmarkCheck size={16} />
             ) : (
-              <Bookmark size={15} />
+              <Bookmark size={16} />
             )}
           </button>
         </div>
       </div>
 
-      {/* BODY */}
-      <div className='px-5 py-4'>
+      <div className='px-5 py-4 md:px-7 md:py-6'>
         {hafalanMode && !revealed ? (
           <div className='relative'>
             <div className='blur-[6px] select-none pointer-events-none'>
               {settings.arab && (
                 <p
-                  className='font-amiri text-[2rem] leading-[2.4] text-right dark:text-slate-100'
+                  className='font-amiri text-right dark:text-slate-100 mb-3'
                   dir='rtl'
+                  style={{ fontSize: arabSizeConfig.size }}
                 >
                   {ayat.teksArab}
                 </p>
               )}
               {settings.latin && (
-                <p className='text-slate-500 dark:text-slate-400 text-[13px] italic mt-2'>
+                <p className='text-slate-500 dark:text-slate-400 text-[13px] md:text-sm italic mt-2'>
                   {ayat.teksLatin}
                 </p>
               )}
               {settings.terjemahan && (
-                <p className='text-slate-700 dark:text-slate-300 text-sm mt-3'>
+                <p className='text-slate-700 dark:text-slate-300 text-sm md:text-base mt-3'>
                   "{ayat.teksIndonesia}"
                 </p>
               )}
             </div>
             <button
               onClick={() => setRevealed(true)}
-              className='absolute inset-0 flex items-center justify-center gap-2 text-[#1e3a8a] dark:text-blue-400 font-bold text-sm'
+              className='absolute inset-0 flex items-center justify-center gap-2 text-[#1e3a8a] dark:text-blue-400 font-bold text-sm md:text-base'
             >
               <Eye size={18} /> Intip Ayat
             </button>
           </div>
         ) : (
           <>
-            {settings.arab && <div className='mb-3'>{renderArabic()}</div>}
+            {settings.arab && (
+              <div className='mb-3 md:mb-5'>{renderArabic()}</div>
+            )}
             {settings.latin && (
-              <p className='text-slate-500 dark:text-slate-400 text-[13px] italic mt-1 mb-2'>
+              <p className='text-slate-500 dark:text-slate-400 text-[13px] md:text-sm italic mt-1 mb-2 md:mb-3'>
                 {ayat.teksLatin}
               </p>
             )}
             {settings.terjemahan && (
-              <p className='text-slate-700 dark:text-slate-300 text-sm mt-2 pb-1'>
+              <p className='text-slate-700 dark:text-slate-300 text-sm md:text-base mt-2 pb-1'>
                 "{ayat.teksIndonesia}"
               </p>
             )}
             {hafalanMode && revealed && (
               <button
                 onClick={() => setRevealed(false)}
-                className='mt-3 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-300'
+                className='mt-3 md:mt-4 text-xs md:text-sm font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1.5 hover:text-slate-600 dark:hover:text-slate-300'
               >
-                <EyeOff size={12} /> Sembunyikan lagi
+                <EyeOff size={14} /> Sembunyikan lagi
               </button>
             )}
           </>
         )}
       </div>
 
-      {/* LAST READ BUTTON */}
-      <div className='px-5 pb-4'>
+      <div className='px-5 pb-4 md:px-7 md:pb-6'>
         <button
           onClick={() => !isLastRead && onLastRead(ayat)}
           disabled={isLastRead}
-          className={`w-full py-2.5 rounded-2xl border text-xs font-bold transition-all ${
+          className={`w-full py-2.5 md:py-3 rounded-2xl border text-xs md:text-sm font-bold transition-all ${
             isLastRead
               ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white border-[#1e3a8a] dark:border-blue-700 cursor-default'
               : 'border-dashed border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 hover:text-[#1e3a8a] dark:hover:text-blue-400 hover:border-[#1e3a8a]/40 dark:hover:border-blue-700/40 hover:bg-blue-50/30 dark:hover:bg-blue-950/20'
@@ -348,15 +369,15 @@ function AudioPlayer({ currentAyat, label, onPrev, onNext, onClose }) {
 
   return (
     <div className='fixed bottom-0 left-0 right-0 z-50 px-4 pb-6'>
-      <div className='max-w-md mx-auto bg-white dark:bg-slate-800 rounded-t-3xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden'>
-        <div className='h-1 bg-gradient-to-r from-[#1e3a8a] via-indigo-500 to-purple-500' />
-        <div className='p-4'>
+      <div className='max-w-md md:max-w-2xl lg:max-w-3xl mx-auto bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-700 overflow-hidden'>
+        <div className='h-1.5 bg-gradient-to-r from-[#1e3a8a] via-indigo-500 to-purple-500' />
+        <div className='p-4 md:p-5'>
           <div className='flex items-center justify-between mb-3'>
             <div>
-              <p className='text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500'>
+              <p className='text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500'>
                 Memutar
               </p>
-              <p className='font-bold text-slate-800 dark:text-slate-100 text-sm'>
+              <p className='font-bold text-slate-800 dark:text-slate-100 text-sm md:text-base'>
                 {label}
               </p>
             </div>
@@ -364,11 +385,11 @@ function AudioPlayer({ currentAyat, label, onPrev, onNext, onClose }) {
               onClick={onClose}
               className='p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
             >
-              <X size={16} className='text-slate-500 dark:text-slate-400' />
+              <X size={18} className='text-slate-500 dark:text-slate-400' />
             </button>
           </div>
           <div className='flex items-center gap-3 mb-3'>
-            <span className='text-[10px] tabular-nums text-slate-400 dark:text-slate-500 w-8'>
+            <span className='text-[10px] md:text-xs tabular-nums text-slate-400 dark:text-slate-500 w-8 md:w-10'>
               {fmt(curTime)}
             </span>
             <input
@@ -381,30 +402,30 @@ function AudioPlayer({ currentAyat, label, onPrev, onNext, onClose }) {
                   audioRef.current.currentTime =
                     (e.target.value / 100) * audioRef.current.duration;
               }}
-              className='flex-1 h-1.5 rounded-full accent-[#1e3a8a] cursor-pointer'
+              className='flex-1 h-1.5 md:h-2 rounded-full accent-[#1e3a8a] cursor-pointer'
             />
-            <span className='text-[10px] tabular-nums text-slate-400 dark:text-slate-500 w-8'>
+            <span className='text-[10px] md:text-xs tabular-nums text-slate-400 dark:text-slate-500 w-8 md:w-10'>
               {fmt(duration)}
             </span>
           </div>
-          <div className='flex items-center justify-center gap-4'>
+          <div className='flex items-center justify-center gap-4 md:gap-6'>
             <button
               onClick={onPrev}
               className='p-2 text-slate-500 dark:text-slate-400 hover:text-[#1e3a8a] dark:hover:text-blue-400 transition-colors'
             >
-              <SkipBack size={22} />
+              <SkipBack size={24} />
             </button>
             <button
               onClick={togglePlay}
-              className='w-12 h-12 rounded-full bg-[#1e3a8a] dark:bg-blue-700 text-white flex items-center justify-center hover:bg-[#162d6e] dark:hover:bg-blue-800 shadow-lg transition-colors'
+              className='w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#1e3a8a] dark:bg-blue-700 text-white flex items-center justify-center hover:bg-[#162d6e] dark:hover:bg-blue-800 shadow-lg transition-colors'
             >
-              {isPlaying ? <Pause size={22} /> : <Play size={22} />}
+              {isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
             <button
               onClick={onNext}
               className='p-2 text-slate-500 dark:text-slate-400 hover:text-[#1e3a8a] dark:hover:text-blue-400 transition-colors'
             >
-              <SkipForward size={22} />
+              <SkipForward size={24} />
             </button>
           </div>
         </div>
@@ -441,10 +462,14 @@ export default function JuzReader() {
     latin: true,
     terjemahan: true,
     tajwid: false,
+    arabSize: 'md',
   });
   const [hafalanMode, setHafalanMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showTajwidInfo, setShowTajwidInfo] = useState(false);
+
+  const [jumpSurah, setJumpSurah] = useState('');
+  const [jumpAyat, setJumpAyat] = useState('');
 
   const [bookmarks, setBookmarks] = useState([]);
   const [lastRead, setLastRead] = useState(null);
@@ -507,19 +532,31 @@ export default function JuzReader() {
     if (user) {
       const { data } = await supabase
         .from('users')
-        .select('quran_bookmarks, quran_last_read')
+        .select('quran_bookmarks, quran_last_read, quran_settings')
         .eq('personal_code', user.personal_code)
         .single();
       if (data?.quran_bookmarks) setBookmarks(data.quran_bookmarks);
       if (data?.quran_last_read) setLastRead(data.quran_last_read);
+      if (data?.quran_settings) setSettings(data.quran_settings);
     } else {
       setBookmarks(
         JSON.parse(localStorage.getItem('myRamadhan_quran_bookmarks')) || [],
       );
       const lr = JSON.parse(localStorage.getItem('myRamadhan_quran_lastread'));
       if (lr) setLastRead(lr);
+      const ls = JSON.parse(localStorage.getItem('myRamadhan_quran_settings'));
+      if (ls) setSettings(ls);
     }
   };
+
+  useEffect(() => {
+    localStorage.setItem('myRamadhan_quran_settings', JSON.stringify(settings));
+    if (user)
+      supabase
+        .from('users')
+        .update({ quran_settings: settings })
+        .eq('personal_code', user.personal_code);
+  }, [settings, user]);
 
   const saveBookmarks = async (newB) => {
     setBookmarks(newB);
@@ -606,6 +643,25 @@ export default function JuzReader() {
       });
   };
 
+  const handleJump = (e) => {
+    e.preventDefault();
+    if (!jumpSurah || !jumpAyat) {
+      alert('Pilih Surah dan masukkan Ayat.');
+      return;
+    }
+    const element = document.getElementById(`ayat-${jumpSurah}-${jumpAyat}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.classList.add('ring-4', 'ring-[#1e3a8a]');
+      setTimeout(
+        () => element.classList.remove('ring-4', 'ring-[#1e3a8a]'),
+        2000,
+      );
+    } else {
+      alert('Ayat tidak ditemukan di Juz ini.');
+    }
+  };
+
   useEffect(() => {
     if (juzSurahs.length > 0 && window.location.hash) {
       const hashId = window.location.hash.replace('#', '');
@@ -623,137 +679,211 @@ export default function JuzReader() {
   return (
     <div
       className='min-h-screen bg-[#F6F9FC] dark:bg-slate-900 text-slate-800 dark:text-slate-100 selection:bg-blue-200 dark:selection:bg-blue-900'
-      style={{ paddingBottom: showPlayer ? '148px' : '80px' }}
+      style={{ paddingBottom: showPlayer ? '160px' : '100px' }}
     >
       <Head>
         <title>Juz {number} - MyRamadhan</title>
       </Head>
 
-      {/* HEADER */}
-      <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 px-5 py-3'>
-        <div className='max-w-md mx-auto flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <button
-              onClick={() => router.back()}
-              className='p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
-            >
-              <ArrowLeft
-                size={20}
-                className='text-slate-600 dark:text-slate-400'
-              />
-            </button>
-            <div>
-              <h1 className='font-bold text-base text-slate-800 dark:text-slate-100'>
-                Juz {number}
-              </h1>
-              {!loading && firstSurah && (
-                <p className='text-[10px] text-slate-400 dark:text-slate-500'>
-                  {firstSurah.namaLatin}
-                  {firstSurah.surahId !== lastSurah?.surahId
-                    ? ` — ${lastSurah?.namaLatin}`
-                    : ''}
-                </p>
-              )}
-            </div>
-          </div>
-          <div className='flex items-center gap-1'>
-            <button
-              onClick={() => setHafalanMode(!hafalanMode)}
-              className={`p-2 rounded-full transition-all border ${
-                hafalanMode
-                  ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white border-[#1e3a8a] dark:border-blue-700'
-                  : 'text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-[#1e3a8a]/30 dark:hover:border-blue-700/30'
-              }`}
-            >
-              {hafalanMode ? <Eye size={16} /> : <EyeOff size={16} />}
-            </button>
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`p-2 rounded-full transition-colors ${showSettings ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
-            >
-              <Settings2 size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* SETTINGS PANEL */}
-        {showSettings && (
-          <div className='max-w-md mx-auto mt-3 pt-3 border-t border-slate-100 dark:border-slate-700'>
-            <div className='grid grid-cols-4 gap-2 mb-3'>
-              {[
-                { key: 'arab', label: 'Arab' },
-                { key: 'latin', label: 'Latin' },
-                { key: 'terjemahan', label: 'Terjemah' },
-                { key: 'tajwid', label: 'Tajwid' },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => setSettings((s) => ({ ...s, [key]: !s[key] }))}
-                  className={`py-2 rounded-xl text-[11px] font-bold transition-all border ${
-                    settings[key]
-                      ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white border-[#1e3a8a] dark:border-blue-700'
-                      : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {settings.tajwid && (
+      {/* HEADER ADAPTIF */}
+      <header className='sticky top-0 z-40 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 px-5 py-3 md:py-4'>
+        <div className='max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto w-full'>
+          <div className='flex items-center justify-between mb-4'>
+            <div className='flex items-center gap-3 md:gap-4'>
               <button
-                onClick={() => setShowTajwidInfo(!showTajwidInfo)}
-                className='flex items-center gap-1.5 text-[11px] text-[#1e3a8a] dark:text-blue-400 font-semibold hover:underline mb-2'
+                onClick={() => router.back()}
+                className='p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors'
               >
-                <Info size={13} /> Keterangan warna tajwid
-                {showTajwidInfo ? (
-                  <ChevronUp size={13} />
-                ) : (
-                  <ChevronDown size={13} />
-                )}
+                <ArrowLeft
+                  size={22}
+                  className='text-slate-600 dark:text-slate-400'
+                />
               </button>
-            )}
+              <div>
+                <h1 className='font-bold text-base md:text-lg text-slate-800 dark:text-slate-100'>
+                  Juz {number}
+                </h1>
+                {!loading && firstSurah && (
+                  <p className='text-[10px] md:text-xs font-medium text-slate-400 dark:text-slate-500'>
+                    {firstSurah.namaLatin}{' '}
+                    {firstSurah.surahId !== lastSurah?.surahId
+                      ? ` — ${lastSurah?.namaLatin}`
+                      : ''}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className='flex items-center gap-2 md:gap-3'>
+              <button
+                onClick={() => setHafalanMode(!hafalanMode)}
+                className={`px-4 py-2 md:py-2.5 rounded-full text-[11px] md:text-xs font-bold transition-all border flex items-center gap-1.5 ${hafalanMode ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white border-[#1e3a8a] dark:border-blue-700' : 'text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-[#1e3a8a]/30'}`}
+              >
+                {hafalanMode ? <Eye size={15} /> : <EyeOff size={15} />}
+                <span className='hidden sm:block'>Hafalan</span>
+              </button>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-2.5 rounded-full transition-colors ${showSettings ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+              >
+                <Settings2 size={18} />
+              </button>
+            </div>
+          </div>
 
-            {showTajwidInfo && settings.tajwid && (
-              <div className='grid grid-cols-2 gap-2 pb-2'>
-                {TAJWID_RULES.map((r) => (
-                  <div key={r.key} className='flex items-start gap-2'>
-                    <span
-                      className='w-3 h-3 rounded-full mt-0.5 shrink-0'
-                      style={{ backgroundColor: r.color }}
-                    />
-                    <div>
-                      <p
-                        className='text-[11px] font-bold'
-                        style={{ color: r.color }}
-                      >
-                        {r.label}
-                      </p>
-                      <p className='text-[10px] text-slate-400 dark:text-slate-500 leading-tight'>
-                        {r.desc}
-                      </p>
-                    </div>
-                  </div>
+          {/* Kolom Loncat Nomor Juz (Beda format dgn surah tunggal) */}
+          <form onSubmit={handleJump} className='flex gap-2 w-full'>
+            <div className='flex-1 flex gap-2'>
+              <div className='relative w-1/2'>
+                <select
+                  value={jumpSurah}
+                  onChange={(e) => setJumpSurah(e.target.value)}
+                  className='w-full pl-3 pr-8 py-2.5 md:py-3 bg-slate-100/80 dark:bg-slate-800 rounded-2xl border-none outline-none text-[13px] md:text-sm text-slate-800 dark:text-slate-100 appearance-none'
+                >
+                  <option value='' disabled>
+                    Pilih Surah
+                  </option>
+                  {juzSurahs.map((s) => (
+                    <option key={s.surahId} value={s.surahId}>
+                      {s.namaLatin}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none'
+                />
+              </div>
+              <input
+                type='number'
+                min='1'
+                placeholder='Ayat'
+                value={jumpAyat}
+                onChange={(e) => setJumpAyat(e.target.value)}
+                className='w-1/2 px-4 py-2.5 md:py-3 bg-slate-100/80 dark:bg-slate-800 rounded-2xl border-none outline-none text-[13px] md:text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400'
+              />
+            </div>
+            <button
+              type='submit'
+              className='bg-[#1e3a8a] dark:bg-blue-700 hover:bg-blue-800 text-white font-bold px-5 py-2.5 md:py-3 rounded-2xl transition-colors text-[13px] md:text-sm shadow-sm shrink-0'
+            >
+              Loncat
+            </button>
+          </form>
+
+          {/* SETTINGS PANEL ADAPTIF */}
+          {showSettings && (
+            <div className='max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 pb-2'>
+              <div className='grid grid-cols-4 md:flex md:justify-center md:gap-4 gap-2 mb-3'>
+                {[
+                  { key: 'arab', label: 'Arab' },
+                  { key: 'latin', label: 'Latin' },
+                  { key: 'terjemahan', label: 'Terjemah' },
+                  { key: 'tajwid', label: 'Tajwid' },
+                ].map(({ key, label }) => (
+                  <button
+                    key={key}
+                    onClick={() =>
+                      setSettings((s) => ({ ...s, [key]: !s[key] }))
+                    }
+                    className={`py-2.5 md:px-8 rounded-xl text-[11px] md:text-xs font-bold transition-all border ${settings[key] ? 'bg-[#1e3a8a] dark:bg-blue-700 text-white border-[#1e3a8a] dark:border-blue-700' : 'bg-slate-50 dark:bg-slate-700 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600'}`}
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
-            )}
-          </div>
-        )}
+
+              <div className='flex flex-col md:flex-row md:items-start md:justify-center gap-5 md:gap-12 border-t border-slate-100 dark:border-slate-800 pt-4'>
+                {/* Ukuran Teks Control */}
+                <div className='flex flex-col items-center gap-2'>
+                  <span className='text-[10px] md:text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500'>
+                    Ukuran Arab
+                  </span>
+                  <div className='flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1'>
+                    {ARAB_SIZES.map((size) => (
+                      <button
+                        key={size.key}
+                        onClick={() =>
+                          setSettings((s) => ({ ...s, arabSize: size.key }))
+                        }
+                        className={`w-12 h-9 flex items-center justify-center rounded-lg font-bold transition-all ${settings.arabSize === size.key ? 'bg-white dark:bg-slate-700 shadow-sm text-[#1e3a8a] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'}`}
+                      >
+                        <span
+                          className={
+                            size.key === 'sm'
+                              ? 'text-sm'
+                              : size.key === 'md'
+                                ? 'text-base'
+                                : size.key === 'lg'
+                                  ? 'text-lg'
+                                  : 'text-xl'
+                          }
+                        >
+                          A
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tajwid Info Control */}
+                {settings.tajwid && (
+                  <div className='flex flex-col items-center md:items-start'>
+                    <button
+                      onClick={() => setShowTajwidInfo(!showTajwidInfo)}
+                      className='flex items-center justify-center gap-1.5 text-[11px] md:text-xs text-[#1e3a8a] dark:text-blue-400 font-bold hover:underline mb-3 w-full md:w-auto'
+                    >
+                      <Info size={14} /> Keterangan warna tajwid
+                      {showTajwidInfo ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
+                    </button>
+                    {showTajwidInfo && (
+                      <div className='grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5 pb-2'>
+                        {TAJWID_RULES.map((r) => (
+                          <div key={r.key} className='flex items-start gap-2.5'>
+                            <span
+                              className='w-3 h-3 md:w-3.5 md:h-3.5 rounded-full mt-0.5 shrink-0'
+                              style={{ backgroundColor: r.color }}
+                            />
+                            <div>
+                              <p
+                                className='text-[11px] md:text-xs font-bold'
+                                style={{ color: r.color }}
+                              >
+                                {r.label}
+                              </p>
+                              <p className='text-[10px] md:text-[11px] text-slate-400 dark:text-slate-500 leading-tight'>
+                                {r.desc}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* MAIN */}
-      <main className='max-w-md mx-auto p-5 space-y-2'>
-        {/* Hero Banner */}
-        <div className='bg-gradient-to-br from-[#1e3a8a] to-[#312e81] rounded-3xl p-5 text-white text-center relative overflow-hidden mb-4'>
+      {/* MAIN ADAPTIF */}
+      <main className='max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto p-5 md:py-8 space-y-3 md:space-y-5'>
+        <div className='bg-gradient-to-br from-[#1e3a8a] to-[#312e81] rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-12 text-white text-center relative overflow-hidden mb-4 md:mb-6'>
           <div className='absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,0.12),transparent_70%)]' />
           <div className='relative z-10'>
-            <p className='text-[10px] uppercase tracking-[0.3em] text-indigo-200 mb-1'>
+            <p className='text-[10px] md:text-xs uppercase tracking-[0.3em] font-bold text-indigo-200 mb-2'>
               Al-Qur'an
             </p>
-            <h2 className='text-4xl font-black text-white'>Juz {number}</h2>
+            <h2 className='text-4xl md:text-5xl font-black text-white'>
+              Juz {number}
+            </h2>
             {!loading && firstSurah && (
-              <p className='text-indigo-200 text-sm mt-1'>
-                {firstSurah.namaLatin}
+              <p className='text-indigo-200 text-sm md:text-base font-medium mt-2'>
+                {firstSurah.namaLatin}{' '}
                 {firstSurah.surahId !== lastSurah?.surahId
                   ? ` — ${lastSurah?.namaLatin}`
                   : ''}
@@ -762,51 +892,47 @@ export default function JuzReader() {
           </div>
         </div>
 
-        {/* Hafalan Banner */}
         {hafalanMode && (
-          <div className='bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl px-4 py-3 flex items-center gap-2 mb-2'>
+          <div className='bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-2xl px-5 py-4 flex items-center gap-3 mb-2'>
             <EyeOff
-              size={16}
+              size={20}
               className='text-amber-600 dark:text-amber-400 shrink-0'
             />
-            <p className='text-amber-700 dark:text-amber-400 text-xs font-semibold'>
+            <p className='text-amber-700 dark:text-amber-400 text-xs md:text-sm font-bold'>
               Mode Hafalan aktif — klik "Intip Ayat" untuk melihat tiap ayat
             </p>
           </div>
         )}
 
-        {/* Loading Skeleton */}
         {loading && (
-          <div className='space-y-3'>
-            <div className='h-8 w-48 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-full mx-auto' />
+          <div className='space-y-4 md:space-y-6'>
+            <div className='h-8 w-48 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-full mx-auto mb-6' />
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className='h-48 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-3xl'
+                className='h-48 md:h-56 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-3xl'
               />
             ))}
           </div>
         )}
 
-        {/* Surah List */}
         {!loading &&
           juzSurahs.map((surah) => (
-            <div key={surah.surahId}>
-              {/* Surah Header Divider */}
-              <div className='flex items-center gap-3 py-3 my-1'>
+            <div key={surah.surahId} className='md:mt-6'>
+              <div className='flex items-center gap-4 py-4 md:py-6 my-2'>
                 <div className='flex-1 h-px bg-slate-200 dark:bg-slate-700' />
-                <div className='flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-full px-4 py-2'>
-                  <span className='font-amiri text-lg text-[#1e3a8a] dark:text-blue-400'>
+                <div className='flex items-center gap-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900 rounded-full px-5 py-2.5 md:py-3'>
+                  <span className='font-amiri text-xl md:text-2xl text-[#1e3a8a] dark:text-blue-400'>
                     {surah.nama}
                   </span>
-                  <span className='text-[11px] font-bold text-[#1e3a8a] dark:text-blue-400'>
+                  <span className='text-xs md:text-sm font-bold text-[#1e3a8a] dark:text-blue-400'>
                     {surah.namaLatin}
                   </span>
                 </div>
                 <div className='flex-1 h-px bg-slate-200 dark:bg-slate-700' />
               </div>
 
-              <div className='space-y-3'>
+              <div className='space-y-4 md:space-y-6'>
                 {surah.ayat.map((ayat) => (
                   <AyatCard
                     key={`${surah.surahId}-${ayat.nomorAyat}`}
@@ -846,24 +972,23 @@ export default function JuzReader() {
             </div>
           ))}
 
-        {/* Navigasi Juz Prev/Next */}
         {!loading && (
-          <div className='flex gap-3 pt-4'>
+          <div className='flex gap-4 md:gap-5 pt-6 md:pt-8'>
             {Number(number) > 1 && (
               <button
                 onClick={() => router.push(`/quran/juz/${Number(number) - 1}`)}
-                className='flex-1 py-3 rounded-2xl border border-slate-200 dark:border-slate-600 text-sm font-bold text-slate-600 dark:text-slate-300 hover:border-[#1e3a8a] dark:hover:border-blue-600 hover:text-[#1e3a8a] dark:hover:text-blue-400 transition-all flex items-center justify-center gap-2'
+                className='flex-1 py-4 rounded-2xl border-2 border-slate-200 dark:border-slate-600 text-sm md:text-base font-bold text-slate-600 dark:text-slate-300 hover:border-[#1e3a8a] dark:hover:border-blue-600 hover:text-[#1e3a8a] dark:hover:text-blue-400 transition-all flex items-center justify-center gap-2'
               >
-                <ArrowLeft size={16} /> Juz {Number(number) - 1}
+                <ArrowLeft size={18} /> Juz {Number(number) - 1}
               </button>
             )}
             {Number(number) < 30 && (
               <button
                 onClick={() => router.push(`/quran/juz/${Number(number) + 1}`)}
-                className='flex-1 py-3 rounded-2xl bg-[#1e3a8a] dark:bg-blue-700 text-white text-sm font-bold hover:bg-[#162d6e] dark:hover:bg-blue-800 transition-all flex items-center justify-center gap-2'
+                className='flex-1 py-4 rounded-2xl bg-[#1e3a8a] dark:bg-blue-700 text-white text-sm md:text-base font-bold hover:bg-[#162d6e] dark:hover:bg-blue-800 transition-all flex items-center justify-center gap-2'
               >
                 Juz {Number(number) + 1}{' '}
-                <ArrowLeft size={16} className='rotate-180' />
+                <ArrowLeft size={18} className='rotate-180' />
               </button>
             )}
           </div>

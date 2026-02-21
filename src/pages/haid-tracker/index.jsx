@@ -315,301 +315,323 @@ export default function HaidTrackerPage() {
           <title>Haid Tracker - MyRamadhan</title>
         </Head>
 
-        {/* Header */}
+        {/* HEADER ADAPTIF */}
         <header className='sticky top-0 z-40 px-6 py-4 flex items-center justify-between bg-[#FDF2F8]/80 dark:bg-slate-900/80 backdrop-blur-md'>
-          <button
-            onClick={() => router.push('/')}
-            className='p-2 -ml-2 rounded-full hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors'
-          >
-            <ArrowLeft
-              size={20}
-              className='text-slate-600 dark:text-slate-400'
-            />
-          </button>
-          <h1 className='font-bold text-lg text-pink-700 dark:text-pink-400 flex items-center gap-2'>
-            <Droplets
-              size={20}
-              className='text-pink-500 dark:text-pink-400 fill-pink-500 dark:fill-pink-400'
-            />{' '}
-            Haid Tracker
-          </h1>
-          <div className='w-8' />
+          <div className='max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto flex justify-between items-center w-full'>
+            <button
+              onClick={() => router.push('/')}
+              className='p-2 -ml-2 rounded-full hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors'
+            >
+              <ArrowLeft
+                size={20}
+                className='text-slate-600 dark:text-slate-400'
+              />
+            </button>
+            <h1 className='font-bold text-lg text-pink-700 dark:text-pink-400 flex items-center gap-2'>
+              <Droplets
+                size={20}
+                className='text-pink-500 dark:text-pink-400 fill-pink-500 dark:fill-pink-400'
+              />{' '}
+              Haid Tracker
+            </h1>
+            <div className='w-8' />
+          </div>
         </header>
 
-        <main className='max-w-md mx-auto p-5 space-y-6'>
-          {/* --- STATUS CARD --- */}
-          <div
-            className={`relative overflow-hidden rounded-[2.5rem] p-8 text-center shadow-xl transition-all duration-500 ${
-              activePeriod
-                ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-pink-200 dark:shadow-pink-900'
-                : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-pink-100 dark:border-pink-900'
-            }`}
-          >
-            <div className='absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2' />
-
-            <div className='relative z-10'>
-              <p
-                className={`text-xs font-bold uppercase tracking-widest mb-2 ${
+        {/* KONTEN UTAMA ADAPTIF (GRID) */}
+        <main className='max-w-md md:max-w-3xl lg:max-w-5xl xl:max-w-6xl mx-auto p-5'>
+          <div className='flex flex-col lg:flex-row gap-6 lg:gap-8'>
+            {/* KOLOM KIRI (UTAMA) */}
+            <div className='flex-1 space-y-6'>
+              {/* --- STATUS CARD --- */}
+              <div
+                className={`relative overflow-hidden rounded-[2.5rem] p-8 text-center shadow-xl transition-all duration-500 ${
                   activePeriod
-                    ? 'text-pink-200'
-                    : 'text-slate-400 dark:text-slate-500'
+                    ? 'bg-gradient-to-br from-pink-500 to-rose-600 text-white shadow-pink-200 dark:shadow-pink-900'
+                    : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-pink-100 dark:border-pink-900'
                 }`}
               >
-                Status Saat Ini
-              </p>
+                <div className='absolute top-0 right-0 w-32 h-32 bg-white/10 dark:bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2' />
 
-              <h2 className='text-4xl font-black mb-2'>
-                {activePeriod ? 'SEDANG HAID' : 'SUCI'}
-              </h2>
-
-              {activePeriod ? (
-                <div className='animate-fadeUp'>
-                  <p className='text-pink-100 mb-6'>
-                    Hari ke-{' '}
-                    <span className='text-2xl font-bold text-white'>
-                      {getDuration(activePeriod.start_date)}
-                    </span>
-                  </p>
-                  <button
-                    onClick={() => {
-                      setInputDate(dayjs().format('YYYY-MM-DD'));
-                      setActionModal({ isOpen: true, type: 'end' });
-                    }}
-                    className='bg-white text-pink-600 px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto'
+                <div className='relative z-10'>
+                  <p
+                    className={`text-xs font-bold uppercase tracking-widest mb-2 ${
+                      activePeriod
+                        ? 'text-pink-200'
+                        : 'text-slate-400 dark:text-slate-500'
+                    }`}
                   >
-                    <CheckCircle size={18} /> Tandai Selesai
-                  </button>
-                  <p className='text-[10px] text-pink-200 mt-4 opacity-80'>
-                    Dimulai:{' '}
-                    {dayjs(activePeriod.start_date).format('DD MMMM YYYY')}
+                    Status Saat Ini
                   </p>
-                </div>
-              ) : (
-                <div className='animate-fadeUp'>
-                  <p className='text-slate-400 dark:text-slate-500 mb-6 text-sm'>
-                    Semoga harimu menyenangkan!
-                  </p>
-                  <button
-                    onClick={() => {
-                      setInputDate(dayjs().format('YYYY-MM-DD'));
-                      setActionModal({ isOpen: true, type: 'start' });
-                    }}
-                    className='bg-pink-500 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-pink-300 dark:shadow-pink-900 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto'
-                  >
-                    <Plus size={18} /> Mulai Haid Baru
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
 
-          {/* === UI BARU: PREDIKSI FASE TUBUH === */}
-          {currentPhase && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className='bg-white dark:bg-slate-900 rounded-3xl p-6 border border-pink-100 dark:border-pink-900 shadow-sm'
-            >
-              <div className='flex justify-between items-center mb-4'>
-                <div className='flex items-center gap-2'>
-                  <Activity
-                    size={18}
-                    className='text-pink-500 dark:text-pink-400'
-                  />
-                  <h3 className='font-bold text-slate-700 dark:text-slate-200'>
-                    Prediksi Fase Tubuh
-                  </h3>
-                </div>
-                <div
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${currentPhase.bg} ${currentPhase.color}`}
-                >
-                  Hari ke-{currentPhase.day}
-                </div>
-              </div>
+                  <h2 className='text-4xl font-black mb-2'>
+                    {activePeriod ? 'SEDANG HAID' : 'SUCI'}
+                  </h2>
 
-              <div className='mb-4'>
-                <div className='flex justify-between items-end mb-2'>
-                  <span className={`font-black text-lg ${currentPhase.color}`}>
-                    {currentPhase.phase}
-                  </span>
-                </div>
-
-                {/* Progress Bar Siklus */}
-                <div className='h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex'>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${currentPhase.progress}%` }}
-                    transition={{ duration: 1, ease: 'easeOut' }}
-                    className={`h-full ${currentPhase.bar} rounded-full relative`}
-                  >
-                    <div className='absolute top-0 right-0 bottom-0 w-4 bg-white/30 animate-pulse' />
-                  </motion.div>
-                </div>
-                <div className='flex justify-between text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1.5 px-1 uppercase tracking-widest'>
-                  <span>Haid</span>
-                  <span>Folikuler</span>
-                  <span>Ovulasi</span>
-                  <span>Luteal</span>
-                </div>
-              </div>
-
-              <p className='text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700'>
-                💡 {currentPhase.desc}
-              </p>
-            </motion.div>
-          )}
-
-          {/* --- AMALAN SAAT HAID --- */}
-          {activePeriod && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className='mb-6'
-            >
-              <div className='flex items-center gap-2 mb-3 px-2'>
-                <Heart size={16} className='text-pink-500 dark:text-pink-400' />
-                <h3 className='font-bold text-slate-600 dark:text-slate-300 text-sm uppercase tracking-wide'>
-                  Amalan Pengganti
-                </h3>
-              </div>
-              <div className='flex gap-3 overflow-x-auto pb-4 custom-scrollbar px-2'>
-                {AMALAN_HAID.map((amalan) => (
-                  <div
-                    key={amalan.id}
-                    className='min-w-[140px] bg-white dark:bg-slate-900 border border-pink-100 dark:border-pink-900 rounded-2xl p-4 shadow-sm shrink-0'
-                  >
-                    <div className='w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-3'>
-                      <amalan.icon
-                        size={16}
-                        className='text-pink-500 dark:text-pink-400'
-                      />
-                    </div>
-                    <h4 className='font-bold text-slate-700 dark:text-slate-200 text-xs mb-1'>
-                      {amalan.title}
-                    </h4>
-                    <p className='text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed'>
-                      {amalan.desc}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* --- STATS SUMMARY --- */}
-          <div className='grid grid-cols-2 gap-3'>
-            <div className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-pink-100 dark:border-pink-900 flex flex-col items-center text-center shadow-sm'>
-              <span className='w-10 h-10 rounded-full bg-pink-50 dark:bg-pink-900/30 text-pink-500 dark:text-pink-400 flex items-center justify-center mb-2'>
-                <History size={20} />
-              </span>
-              <h3 className='text-2xl font-bold text-slate-700 dark:text-slate-200'>
-                {logs.length}
-              </h3>
-              <p className='text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase'>
-                Total Siklus
-              </p>
-            </div>
-
-            <div className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-100 dark:border-rose-900 flex flex-col items-center text-center shadow-sm'>
-              <span className='w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 flex items-center justify-center mb-2'>
-                <Clock size={20} />
-              </span>
-              <h3 className='text-2xl font-bold text-slate-700 dark:text-slate-200'>
-                {totalMissedFasting}
-              </h3>
-              <p className='text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase'>
-                Utang Puasa
-              </p>
-            </div>
-          </div>
-
-          {/* --- RIWAYAT (HISTORY) --- */}
-          <div className='mt-8'>
-            <div className='flex items-center gap-2 mb-4 px-2'>
-              <Calendar
-                size={16}
-                className='text-slate-400 dark:text-slate-500'
-              />
-              <h3 className='font-bold text-slate-600 dark:text-slate-300 text-sm uppercase tracking-wide'>
-                Riwayat Siklus
-              </h3>
-            </div>
-
-            <div className='space-y-3'>
-              {loading ? (
-                [1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className='h-20 bg-white dark:bg-slate-800 rounded-2xl animate-pulse'
-                  />
-                ))
-              ) : logs.length === 0 ? (
-                <div className='text-center py-10 opacity-50 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-pink-200 dark:border-pink-800'>
-                  <p className='text-sm text-slate-500 dark:text-slate-400'>
-                    Belum ada data riwayat.
-                  </p>
-                </div>
-              ) : (
-                logs.map((log) => {
-                  const isOngoing = log.end_date === null;
-                  const duration = getDuration(log.start_date, log.end_date);
-                  const qadhaDays = getQadhaDays(log.start_date, log.end_date);
-
-                  return (
-                    <div
-                      key={log.id}
-                      className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-pink-50 dark:border-pink-900 shadow-sm flex justify-between items-center group relative overflow-hidden'
-                    >
-                      <div className='flex items-center gap-4'>
-                        <div
-                          className={`w-1.5 h-12 rounded-full ${
-                            isOngoing
-                              ? 'bg-pink-500 animate-pulse'
-                              : 'bg-slate-200 dark:bg-slate-700'
-                          }`}
-                        />
-                        <div>
-                          <p className='text-[11px] text-slate-400 dark:text-slate-500 font-bold mb-0.5 uppercase tracking-wider'>
-                            {dayjs(log.start_date).format('DD MMM')} -{' '}
-                            {isOngoing
-                              ? 'Sekarang'
-                              : dayjs(log.end_date).format('DD MMM')}
-                          </p>
-                          <div className='flex items-center gap-3'>
-                            <h4
-                              className={`font-black text-lg ${
-                                isOngoing
-                                  ? 'text-pink-600 dark:text-pink-400'
-                                  : 'text-slate-700 dark:text-slate-300'
-                              }`}
-                            >
-                              {duration} Hari
-                            </h4>
-                            {qadhaDays > 0 && (
-                              <span className='bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-md'>
-                                {qadhaDays} Qadha
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
+                  {activePeriod ? (
+                    <div className='animate-fadeUp'>
+                      <p className='text-pink-100 mb-6'>
+                        Hari ke-{' '}
+                        <span className='text-2xl font-bold text-white'>
+                          {getDuration(activePeriod.start_date)}
+                        </span>
+                      </p>
                       <button
-                        type='button'
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDeleteModal({ isOpen: true, id: log.id });
+                        onClick={() => {
+                          setInputDate(dayjs().format('YYYY-MM-DD'));
+                          setActionModal({ isOpen: true, type: 'end' });
                         }}
-                        className='p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors relative z-10'
-                        aria-label='Hapus riwayat'
+                        className='bg-white text-pink-600 px-6 py-3 rounded-full font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto'
                       >
-                        <Trash2 size={18} />
+                        <CheckCircle size={18} /> Tandai Selesai
+                      </button>
+                      <p className='text-[10px] text-pink-200 mt-4 opacity-80'>
+                        Dimulai:{' '}
+                        {dayjs(activePeriod.start_date).format('DD MMMM YYYY')}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className='animate-fadeUp'>
+                      <p className='text-slate-400 dark:text-slate-500 mb-6 text-sm'>
+                        Semoga harimu menyenangkan!
+                      </p>
+                      <button
+                        onClick={() => {
+                          setInputDate(dayjs().format('YYYY-MM-DD'));
+                          setActionModal({ isOpen: true, type: 'start' });
+                        }}
+                        className='bg-pink-500 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-pink-300 dark:shadow-pink-900 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 mx-auto'
+                      >
+                        <Plus size={18} /> Mulai Haid Baru
                       </button>
                     </div>
-                  );
-                })
+                  )}
+                </div>
+              </div>
+
+              {/* === UI BARU: PREDIKSI FASE TUBUH === */}
+              {currentPhase && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='bg-white dark:bg-slate-900 rounded-3xl p-6 border border-pink-100 dark:border-pink-900 shadow-sm'
+                >
+                  <div className='flex justify-between items-center mb-4'>
+                    <div className='flex items-center gap-2'>
+                      <Activity
+                        size={18}
+                        className='text-pink-500 dark:text-pink-400'
+                      />
+                      <h3 className='font-bold text-slate-700 dark:text-slate-200'>
+                        Prediksi Fase Tubuh
+                      </h3>
+                    </div>
+                    <div
+                      className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${currentPhase.bg} ${currentPhase.color}`}
+                    >
+                      Hari ke-{currentPhase.day}
+                    </div>
+                  </div>
+
+                  <div className='mb-4'>
+                    <div className='flex justify-between items-end mb-2'>
+                      <span
+                        className={`font-black text-lg ${currentPhase.color}`}
+                      >
+                        {currentPhase.phase}
+                      </span>
+                    </div>
+
+                    {/* Progress Bar Siklus */}
+                    <div className='h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden flex'>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${currentPhase.progress}%` }}
+                        transition={{ duration: 1, ease: 'easeOut' }}
+                        className={`h-full ${currentPhase.bar} rounded-full relative`}
+                      >
+                        <div className='absolute top-0 right-0 bottom-0 w-4 bg-white/30 animate-pulse' />
+                      </motion.div>
+                    </div>
+                    <div className='flex justify-between text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1.5 px-1 uppercase tracking-widest'>
+                      <span>Haid</span>
+                      <span>Folikuler</span>
+                      <span>Ovulasi</span>
+                      <span>Luteal</span>
+                    </div>
+                  </div>
+
+                  <p className='text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700'>
+                    💡 {currentPhase.desc}
+                  </p>
+                </motion.div>
               )}
+
+              {/* --- AMALAN SAAT HAID --- */}
+              {activePeriod && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className='mb-6'
+                >
+                  <div className='flex items-center gap-2 mb-3 px-2'>
+                    <Heart
+                      size={16}
+                      className='text-pink-500 dark:text-pink-400'
+                    />
+                    <h3 className='font-bold text-slate-600 dark:text-slate-300 text-sm uppercase tracking-wide'>
+                      Amalan Pengganti
+                    </h3>
+                  </div>
+                  <div className='flex gap-3 overflow-x-auto pb-4 custom-scrollbar px-2'>
+                    {AMALAN_HAID.map((amalan) => (
+                      <div
+                        key={amalan.id}
+                        className='min-w-[140px] bg-white dark:bg-slate-900 border border-pink-100 dark:border-pink-900 rounded-2xl p-4 shadow-sm shrink-0'
+                      >
+                        <div className='w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/30 flex items-center justify-center mb-3'>
+                          <amalan.icon
+                            size={16}
+                            className='text-pink-500 dark:text-pink-400'
+                          />
+                        </div>
+                        <h4 className='font-bold text-slate-700 dark:text-slate-200 text-xs mb-1'>
+                          {amalan.title}
+                        </h4>
+                        <p className='text-[10px] text-slate-400 dark:text-slate-500 leading-relaxed'>
+                          {amalan.desc}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* KOLOM KANAN (SIDEBAR DI DESKTOP) */}
+            <div className='w-full lg:w-[350px] xl:w-[400px] flex-shrink-0 space-y-6'>
+              {/* --- STATS SUMMARY --- */}
+              <div className='grid grid-cols-2 gap-3'>
+                <div className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-pink-100 dark:border-pink-900 flex flex-col items-center text-center shadow-sm'>
+                  <span className='w-10 h-10 rounded-full bg-pink-50 dark:bg-pink-900/30 text-pink-500 dark:text-pink-400 flex items-center justify-center mb-2'>
+                    <History size={20} />
+                  </span>
+                  <h3 className='text-2xl font-bold text-slate-700 dark:text-slate-200'>
+                    {logs.length}
+                  </h3>
+                  <p className='text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase'>
+                    Total Siklus
+                  </p>
+                </div>
+
+                <div className='bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-100 dark:border-rose-900 flex flex-col items-center text-center shadow-sm'>
+                  <span className='w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-900/30 text-rose-500 dark:text-rose-400 flex items-center justify-center mb-2'>
+                    <Clock size={20} />
+                  </span>
+                  <h3 className='text-2xl font-bold text-slate-700 dark:text-slate-200'>
+                    {totalMissedFasting}
+                  </h3>
+                  <p className='text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase'>
+                    Utang Puasa
+                  </p>
+                </div>
+              </div>
+
+              {/* --- RIWAYAT (HISTORY) --- */}
+              <div className='mt-8'>
+                <div className='flex items-center gap-2 mb-4 px-2'>
+                  <Calendar
+                    size={16}
+                    className='text-slate-400 dark:text-slate-500'
+                  />
+                  <h3 className='font-bold text-slate-600 dark:text-slate-300 text-sm uppercase tracking-wide'>
+                    Riwayat Siklus
+                  </h3>
+                </div>
+
+                <div className='space-y-3'>
+                  {loading ? (
+                    [1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className='h-20 bg-white dark:bg-slate-800 rounded-2xl animate-pulse'
+                      />
+                    ))
+                  ) : logs.length === 0 ? (
+                    <div className='text-center py-10 opacity-50 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-pink-200 dark:border-pink-800'>
+                      <p className='text-sm text-slate-500 dark:text-slate-400'>
+                        Belum ada data riwayat.
+                      </p>
+                    </div>
+                  ) : (
+                    logs.map((log) => {
+                      const isOngoing = log.end_date === null;
+                      const duration = getDuration(
+                        log.start_date,
+                        log.end_date,
+                      );
+                      const qadhaDays = getQadhaDays(
+                        log.start_date,
+                        log.end_date,
+                      );
+
+                      return (
+                        <div
+                          key={log.id}
+                          className='bg-white dark:bg-slate-900 p-4 rounded-2xl border border-pink-50 dark:border-pink-900 shadow-sm flex justify-between items-center group relative overflow-hidden'
+                        >
+                          <div className='flex items-center gap-4'>
+                            <div
+                              className={`w-1.5 h-12 rounded-full ${
+                                isOngoing
+                                  ? 'bg-pink-500 animate-pulse'
+                                  : 'bg-slate-200 dark:bg-slate-700'
+                              }`}
+                            />
+                            <div>
+                              <p className='text-[11px] text-slate-400 dark:text-slate-500 font-bold mb-0.5 uppercase tracking-wider'>
+                                {dayjs(log.start_date).format('DD MMM')} -{' '}
+                                {isOngoing
+                                  ? 'Sekarang'
+                                  : dayjs(log.end_date).format('DD MMM')}
+                              </p>
+                              <div className='flex items-center gap-3'>
+                                <h4
+                                  className={`font-black text-lg ${
+                                    isOngoing
+                                      ? 'text-pink-600 dark:text-pink-400'
+                                      : 'text-slate-700 dark:text-slate-300'
+                                  }`}
+                                >
+                                  {duration} Hari
+                                </h4>
+                                {qadhaDays > 0 && (
+                                  <span className='bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 text-[9px] font-bold px-2 py-0.5 rounded-md'>
+                                    {qadhaDays} Qadha
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            type='button'
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setDeleteModal({ isOpen: true, id: log.id });
+                            }}
+                            className='p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors relative z-10'
+                            aria-label='Hapus riwayat'
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </main>
@@ -677,7 +699,7 @@ export default function HaidTrackerPage() {
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              className='fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-[2rem] p-6 z-50 shadow-2xl'
+              className='fixed bottom-0 left-0 right-0 max-w-md md:max-w-xl mx-auto bg-white dark:bg-slate-900 rounded-t-[2rem] p-6 z-50 shadow-2xl'
             >
               <div className='flex justify-between items-center mb-6'>
                 <div>
