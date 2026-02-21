@@ -22,7 +22,7 @@ import {
   Navigation,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import useUser from '@/hook/useUser';
+import useUser from '@/hooks/useUser';
 
 const API_BASE = 'https://api.hadith.gading.dev';
 

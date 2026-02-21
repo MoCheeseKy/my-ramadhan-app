@@ -19,8 +19,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 
-import useUser from '@/hook/useUser';
-import useAppMode from '@/hook/useAppMode';
+import useUser from '@/hooks/useUser';
+import useAppMode from '@/hooks/useAppMode';
 import localforage from 'localforage';
 
 dayjs.locale('id');

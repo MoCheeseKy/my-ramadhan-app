@@ -5,9 +5,9 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { ArrowLeft, LogOut, LogIn } from 'lucide-react';
 
-import useUser from '@/hook/useUser';
-import useAppMode from '@/hook/useAppMode';
-import useUserProfile from '@/hook/useUserProfile';
+import useUser from '@/hooks/useUser';
+import useAppMode from '@/hooks/useAppMode';
+import useUserProfile from '@/hooks/useUserProfile';
 
 // Komponen UI
 import UserProfileCard from '@/components/user/UserProfileCard';

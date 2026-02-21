@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Smartphone, Download, X } from 'lucide-react';
-import useAppMode from '@/hook/useAppMode';
-import useInstallPrompt from '@/hook/useInstallPrompt';
+import useAppMode from '@/hooks/useAppMode';
+import useInstallPrompt from '@/hooks/useInstallPrompt';
 
 export default function GlobalInstallPrompt() {
   const { isPWA } = useAppMode();

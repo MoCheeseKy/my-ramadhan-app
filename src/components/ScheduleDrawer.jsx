@@ -15,7 +15,7 @@ import {
 import dayjs from 'dayjs';
 import 'dayjs/locale/id';
 import { supabase } from '@/lib/supabase';
-import useUser from '@/hook/useUser';
+import useUser from '@/hooks/useUser';
 
 dayjs.locale('id');
 

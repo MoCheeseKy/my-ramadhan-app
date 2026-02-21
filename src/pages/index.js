@@ -6,17 +6,17 @@ import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/id';
 
-import useUser from '@/hook/useUser';
-import useAppMode from '@/hook/useAppMode';
+import useUser from '@/hooks/useUser';
+import useAppMode from '@/hooks/useAppMode';
 import { studyMaterials } from '@/data/studyMaterials';
 import { quotesData } from '@/data/quotes';
 
 // Custom hooks
-import useHijriDate from '@/hook/useHijriDate';
-import usePrayerTimes from '@/hook/usePrayerTimes';
-import useHeroMode from '@/hook/useHeroMode';
-import useNotifications from '@/hook/useNotifications';
-import useTrackerSummary from '@/hook/useTrackerSummary';
+import useHijriDate from '@/hooks/useHijriDate';
+import usePrayerTimes from '@/hooks/usePrayerTimes';
+import useHeroMode from '@/hooks/useHeroMode';
+import useNotifications from '@/hooks/useNotifications';
+import useTrackerSummary from '@/hooks/useTrackerSummary';
 
 // Home components
 import HomeHeader from '@/components/home/HomeHeader';

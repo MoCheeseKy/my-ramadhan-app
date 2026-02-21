@@ -15,8 +15,8 @@ import { supabase } from '@/lib/supabase';
 import { journalPrompts, moods } from '@/data/journalPrompts';
 
 // --- TAMBAHAN IMPORT LOKAL ---
-import useUser from '@/hook/useUser';
-import useAppMode from '@/hook/useAppMode';
+import useUser from '@/hooks/useUser';
+import useAppMode from '@/hooks/useAppMode';
 import localforage from 'localforage';
 
 const catStyles = {

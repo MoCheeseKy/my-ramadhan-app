@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import useUser from '@/hook/useUser';
+import useUser from '@/hooks/useUser';
 import { Moon } from 'lucide-react';
 
 export default function ProtectedRoute({ children }) {

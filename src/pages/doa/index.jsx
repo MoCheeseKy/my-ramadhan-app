@@ -29,7 +29,7 @@ import {
   Filter,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import useUser from '@/hook/useUser';
+import useUser from '@/hooks/useUser';
 import { doaCollections } from '@/data/doa';
 
 const ICONS = { Sun, Moon, BookOpen, Users, Heart, Sunrise, Sunset, Star };

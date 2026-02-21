@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import useAppMode from '@/hook/useAppMode';
+import useAppMode from '@/hooks/useAppMode';
 import { StorageService } from '@/lib/storageService';
 
 export default function useUser() {

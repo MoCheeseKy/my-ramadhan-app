@@ -17,8 +17,8 @@ import 'dayjs/locale/id';
 import { useRouter } from 'next/router';
 
 // --- TAMBAHAN: Import Hook dan StorageService ---
-import useUser from '@/hook/useUser';
-import useAppMode from '@/hook/useAppMode';
+import useUser from '@/hooks/useUser';
+import useAppMode from '@/hooks/useAppMode';
 import { StorageService } from '@/lib/storageService';
 
 dayjs.locale('id');

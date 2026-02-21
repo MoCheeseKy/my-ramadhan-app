@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Moon, ShieldAlert, ArrowRight, ShieldCheck } from 'lucide-react';
-import useAppMode from '@/hook/useAppMode';
+import useAppMode from '@/hooks/useAppMode';
 
 export default function Login() {
   const [username, setUsername] = useState('');
